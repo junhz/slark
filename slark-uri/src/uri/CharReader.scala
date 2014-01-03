@@ -18,7 +18,7 @@ trait CharReader { self: Parsers with ReaderApi =>
     override def head = if (atEnd) ??? else str.charAt(index)
     override lazy val tail = if (atEnd) ??? else new StringCharReader(str, index + 1)
     override def atEnd = index >= str.length()
-    override def toString = "\"" + str.substring(index) + "\""
+    override def toString = "\""+str.substring(index)+"\""
   }
 
   implicit val stringCharReader: String => CharReader = new StringCharReader(_, 0)
@@ -33,6 +33,14 @@ trait CharReader { self: Parsers with ReaderApi =>
       }
     }
 
+    /**
+     * case insensitive:
+     * pct-encode uppercase
+     * scheme lowercase
+     * host lowercase (ipfuture 'v' header)
+     *
+     * The other generic syntax components are assumed to be case-sensitive unless specifically defined otherwise by the scheme
+     */
     def ignoreCase: Parser[String] = new Parser[String] {
       override def parse(input: Input) = {
         @tailrec

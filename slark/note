@@ -1,0 +1,19 @@
+diary:
+configuration
+moved script
+diff on outputs
+generic Resource
+
+http:
+headers and parameters
+
+logger:
+better writer and more open formatter
+
+parser:
+remove formats
+
+test:
+diaryWriter for log
+
+uri:

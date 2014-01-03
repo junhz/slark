@@ -1,7 +1,0 @@
-case:
-pct-encode uppercase
-scheme lowercase
-host lowercase (ipfuture 'v' header)
-
-all above are case insensitive
-The other generic syntax components are assumed to be case-sensitive unless specifically defined otherwise by the scheme
