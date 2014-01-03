@@ -1,3 +1,6 @@
+better merger
+better source
+
 diary:
 configuration
 moved script
@@ -15,6 +18,7 @@ improve performance of record.message
 
 parser:
 remove formats
+default value for opt - and ?
 
 test:
 diaryWriter for log

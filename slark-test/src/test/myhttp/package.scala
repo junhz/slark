@@ -16,8 +16,8 @@ package object myhttp {
         if (cnt < 0) None
         else Some(cnt.toChar, input.tail)
       }
-
     }
+    
   }
 
 }

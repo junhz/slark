@@ -11,7 +11,7 @@ trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
 
   val digit = %(0x30, 0x39) | fail("digit wanted")
 
-  val hexdig = (digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | fail("hex digit wanted"))
+  val hexdig = digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | fail("hex digit wanted")
 
   val unreserved = alpha | digit | '-' | '.' | '_' | '~' | fail("unreserved character wanted")
 
