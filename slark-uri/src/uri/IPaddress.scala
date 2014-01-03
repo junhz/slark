@@ -11,38 +11,26 @@ trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst wi
    * return Int from 0 - 255(0xfe)
    */
   val dec_octet =
-    "25" :^ ("0" | "1" | "2" | "3" | "4" | "5") -> { case Digit(digits) => 250 + digits } |
-      ("2" :^ ("0" | "1" | "2" | "3" | "4") ^ digit) -> { case (Digit(tens), Digit(digits)) => 200 + tens * 10 + digits } |
-      ("1" :^ digit ^ digit) -> { case (Digit(tens), Digit(digits)) => 100 + tens * 10 + digits } |
-      (("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9") ^ digit) -> { case (Digit(tens), Digit(digits)) => tens * 10 + digits } |
-      digit -> { case Digit(digits) => digits }
+    "25" :^ ("0" | "1" | "2" | "3" | "4" | "5") -> { case Natural0(digits) => 250 + digits } |
+      ("2" :^ ("0" | "1" | "2" | "3" | "4") ^ digit) -> { case (Natural0(tens), Natural0(digits)) => 200 + tens * 10 + digits } |
+      ("1" :^ digit ^ digit) -> { case (Natural0(tens), Natural0(digits)) => 100 + tens * 10 + digits } |
+      (("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9") ^ digit) -> { case (Natural0(tens), Natural0(digits)) => tens * 10 + digits } |
+      digit -> { case Natural0(digits) => digits }
 
   /**
    * return Int from 0x0000 - 0xffff
    */
-  val h16 = (hexdig ^ 3(hexdig).-) -> {
-    case (HexDig(digits), Nil) => digits
-    case (HexDig(tens), List(HexDig(digits))) => tens << 4 | digits
-    case (HexDig(hundreds), List(HexDig(tens), HexDig(digits))) => hundreds << 8 | tens << 4 | digits
-    case (HexDig(thousands), List(HexDig(hundreds), HexDig(tens), HexDig(digits))) => thousands << 12 | hundreds << 8 | tens << 4 | digits
-  }
+  val h16 = (hexdig ^ 3(hexdig).-) -> { case (head, tail) => head :: tail } -> { case Natural0.Hex(i) => i }
 
   /**
    * 32-bit
    */
-  final class IPv4address(val byte1: Int, val byte2: Int, val byte3: Int, val byte4: Int) {
+  case class IPv4address(val byte1: Int, val byte2: Int, val byte3: Int, val byte4: Int) {
     override def toString = byte1+"."+byte2+"."+byte3+"."+byte4
   }
 
   val ipv4address = (dec_octet ^ "." :^ dec_octet ^ "." :^ dec_octet ^ "." :^ dec_octet) -> {
-    case (((byte1, byte2), byte3), byte4) => new IPv4address(byte1, byte2, byte3, byte4)
-  }
-
-  object IPv4address {
-    def unapply(ipv4: IPv4address): Option[(Int, Int, Int, Int)] = {
-      import ipv4._
-      Some((byte1, byte2, byte3, byte4))
-    }
+    case (((byte1, byte2), byte3), byte4) => IPv4address(byte1, byte2, byte3, byte4)
   }
 
   val ls32 =
@@ -84,5 +72,5 @@ trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst wi
     override def toString = s"v$version.$address"
   }
 
-  val ipvFuture = ("v".ignoreCase :^ 1(hexdig).+ ^ "." :^ 1(unreserved | sub_delims | ":").+) -> { case (version, address) => new IPvFuture(version.mkString.toLowerCase(), address.mkString.toLowerCase()) }
+  val ipvFuture = ("v".ignoreCase :^ 1(hexdig).+ ^ "." :^ 1(unreserved | sub_delims | ':').+) -> { case (version, address) => new IPvFuture(version.mkString.toLowerCase(), address.mkString.toLowerCase()) }
 }
