@@ -9,7 +9,6 @@ import scala.language.experimental.macros
 trait Log {
   protected[this] def newLogger = Log.factory.lift.apply(this).getOrElse(Logger.silent)
 
-  //TODO: improve performance of record.message
   /**
    * create Logger.Record instance with message built by standard string interpolation
    */
@@ -24,7 +23,6 @@ object Log {
   type Factory = PartialFunction[Log, Logger]
   lazy val factory: Factory = {
     try {
-      //TODO: wrap this logic and provide a trait of config location for testing
       import scala.reflect.runtime.universe
       val runtime = universe.runtimeMirror(getClass.getClassLoader)
       val configs = runtime.staticModule("configs.package")

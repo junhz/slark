@@ -6,9 +6,12 @@ generic Resource
 
 http:
 headers and parameters
+better datatime: http://en.wikipedia.org/wiki/Gregorian_calendar http://www.wikihow.com/Calculate-the-Day-of-the-Week
 
 logger:
-better writer and more open formatter
+better writer(pickler) and more open formatter
+file writer
+improve performance of record.message
 
 parser:
 remove formats
@@ -17,3 +20,4 @@ test:
 diaryWriter for log
 
 uri:
+replacing | with % for better performance

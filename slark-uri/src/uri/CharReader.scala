@@ -3,7 +3,6 @@ package uri
 
 import parser._
 
-// TODO: extract trait of logic String to parser and case sensitive
 trait CharReader { self: Parsers with ReaderApi =>
 
   private[this]type Builder[A, B] = A => Parser[B]
