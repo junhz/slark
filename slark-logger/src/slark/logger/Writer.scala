@@ -8,6 +8,7 @@ trait Writer {
 }
 
 object Writer {
+  // TODO: write monoid
 
   val console = new Writer {
     override def write(message: String) {
@@ -15,4 +16,5 @@ object Writer {
     }
   }
 
+  // TODO: file writer
 }

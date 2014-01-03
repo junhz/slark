@@ -11,7 +11,7 @@ trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with 
   import parsers._
 
   val scheme: Parser[String] = {
-    (alpha ^ (alpha | digit | '+' | '-' | '.').*) parse schemeName match {
+    (alpha ^ (alpha | digit | "+" | "-" | ".").*) parse schemeName match {
       case Succ(_, n) if (n.atEnd) => schemeName.toLowerCase.ignoreCase
       case _ => throw new IllegalArgumentException(s"invalid scheme name ${schemeName}")
     }
@@ -43,13 +43,19 @@ trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with 
 
   val host = ("[" :^ (ipv6address -> (Host(_)) | ipvFuture -> (Host(_))) ^: "]") | ipv4address -> (Host(_)) | reg_name -> (Host(_))
 
-  val fragment = (pchar | '/' | '?').* -> (_.mkString)
+  val fragment = (pchar | "/" | "?").* -> (_.mkString)
 
-  val query = (pchar | '|' | '?').* -> (_.mkString)
+  val query = (pchar | "|" | "?").* -> (_.mkString)
 
-  val userinfo = (unreserved | pct_encoded | sub_delims | ':').* -> (_.mkString)
+  val userinfo = (unreserved | pct_encoded | sub_delims | ":").* -> (_.mkString)
 
   val port = digit.* -> (_.mkString)
+
+  object Port {
+    def unapply(portStr: String): Option[Int] = try { Some(Integer.parseInt(portStr)) } catch {
+      case _: Throwable => None
+    }
+  }
 
   trait Authority {
 
@@ -66,9 +72,9 @@ trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with 
 
   val authority = ((userinfo ^: "@").? ^ host ^ (":" :^ port).?) -> {
     case ((None, host), None) => Authority.annoymous(host, defaultPort)
-    case ((None, host), Some(Natural0(port))) => Authority.annoymous(host, port)
+    case ((None, host), Some(Port(port))) => Authority.annoymous(host, port)
     case ((Some(userinfo), host), None) => Authority.as(userinfo, host, defaultPort)
-    case ((Some(userinfo), host), Some(Natural0(port))) => Authority.as(userinfo, host, port)
+    case ((Some(userinfo), host), Some(Port(port))) => Authority.as(userinfo, host, port)
   }
 
   trait UriReference
