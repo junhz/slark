@@ -3,7 +3,7 @@ package uri
 
 import parser._
 
-trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader with Formats] with Literals =>
+trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader] with Literals =>
 
   import parsers._
 
@@ -48,25 +48,37 @@ trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst wi
     override def toString = hex"$dByte1:$dByte2:$dByte3:$dByte4:$dByte5:$dByte6:$dByte7:$dByte8".toLowerCase()
   }
 
+  object IPv6address {
+    def compressed(prefix: List[Int], suffix: List[Int]): IPv6address = {
+      val buf = (prefix ++: (0 +: 0 +: 0 +: 0 +: 0 +: 0 +: 0 +: 0 +: Vector.empty).drop(prefix.length)).dropRight(suffix.length) ++ suffix
+      new IPv6address(buf(0), buf(1), buf(2), buf(3), buf(4), buf(5), buf(6), buf(7))
+    }
+  }
+
+  def flatten(opt: Option[(Int, List[Int])]): List[Int] = opt match {
+    case None => Nil
+    case Some((head, tail)) => head :: tail
+  }
+
   val ipv6address =
     (6(h16 ^: ":") ^ ls32) ->
       { case (List(dByte1, dByte2, dByte3, dByte4, dByte5, dByte6), (dByte7, dByte8)) => new IPv6address(dByte1, dByte2, dByte3, dByte4, dByte5, dByte6, dByte7, dByte8) } |
       ("::" :^ 5(h16 ^: ":") ^ ls32) ->
-      { case (List(dByte2, dByte3, dByte4, dByte5, dByte6), (dByte7, dByte8)) => new IPv6address(0, dByte2, dByte3, dByte4, dByte5, dByte6, dByte7, dByte8) } |
-      (h16.? ^ "::" :^ 4(h16 ^: ":") ^ ls32) -> ^(^(?(0), __), __) ->
-      { case ((dbyte1, List(dByte3, dByte4, dByte5, dByte6)), (dByte7, dByte8)) => new IPv6address(dbyte1, 0, dByte3, dByte4, dByte5, dByte6, dByte7, dByte8) } |
-      ((h16 ^ 1(":" :^ h16).-).? ^ "::" :^ 3(h16 ^: ":") ^ ls32) -> ^(^(?((0, Nil)), __), __) -> ^(^(^(__, *(?(0))), __), __) ->
-      { case (((dByte1, dByte2), List(dByte4, dByte5, dByte6)), (dByte7, dByte8)) => new IPv6address(dByte1, dByte2, 0, dByte4, dByte5, dByte6, dByte7, dByte8) } |
-      ((h16 ^ 2(":" :^ h16).-).? ^ "::" :^ 2(h16 ^: ":") ^ ls32) -> ^(^(?((0, Nil)), __), __) -> ^(^(^(__, *(?(0), ?(0))), __), __) ->
-      { case (((dByte1, (dByte2, dByte3)), List(dByte5, dByte6)), (dByte7, dByte8)) => new IPv6address(dByte1, dByte2, dByte3, 0, dByte5, dByte6, dByte7, dByte8) } |
-      ((h16 ^ 3(":" :^ h16).-).? ^ "::" :^ h16 ^ ":" :^ ls32) -> ^(^(?((0, Nil)), __), __) -> ^(^(^(__, *(?(0), ?(0), ?(0))), __), __) ->
-      { case (((dByte1, (dByte2, dByte3, dByte4)), dByte6), (dByte7, dByte8)) => new IPv6address(dByte1, dByte2, dByte3, dByte4, 0, dByte6, dByte7, dByte8) } |
-      ((h16 ^ 4(":" :^ h16).-).? ^ "::" :^ ls32) -> ^(?((0, Nil)), __) -> ^(^(__, *(?(0), ?(0), ?(0), ?(0))), __) ->
-      { case ((dByte1, (dByte2, dByte3, dByte4, dByte5)), (dByte7, dByte8)) => new IPv6address(dByte1, dByte2, dByte3, dByte4, dByte5, 0, dByte7, dByte8) } |
-      ((h16 ^ 5(":" :^ h16).-).? ^ "::" :^ h16) -> ^(?((0, Nil)), __) -> ^(^(__, *(?(0), ?(0), ?(0), ?(0), ?(0))), __) ->
-      { case ((dByte1, (dByte2, dByte3, dByte4, dByte5, dByte6)), dByte8) => new IPv6address(dByte1, dByte2, dByte3, dByte4, dByte5, dByte6, 0, dByte8) } |
-      ((h16 ^ 6(":" :^ h16).-).? ^: "::") -> ?((0, Nil)) -> ^(__, *(?(0), ?(0), ?(0), ?(0), ?(0), ?(0))) ->
-      { case (dByte1, (dByte2, dByte3, dByte4, dByte5, dByte6, dByte7)) => new IPv6address(dByte1, dByte2, dByte3, dByte4, dByte5, dByte6, dByte7, 0) }
+      { case (dBytes2_6, (dByte7, dByte8)) => IPv6address.compressed(Nil, dBytes2_6 ::: dByte7 :: dByte8 :: Nil) } |
+      (h16.? ^ "::" :^ 4(h16 ^: ":") ^ ls32) ->
+      { case ((dbyte1, dBytes3_6), (dByte7, dByte8)) => IPv6address.compressed(dbyte1.getOrElse(0) :: Nil, dBytes3_6 ::: dByte7 :: dByte8 :: Nil) } |
+      ((h16 ^ 1(":" :^ h16).-).? ^ "::" :^ 3(h16 ^: ":") ^ ls32) ->
+      { case ((dBytes1_2, List(dByte4, dByte5, dByte6)), (dByte7, dByte8)) => IPv6address.compressed(flatten(dBytes1_2), dByte4 :: dByte5 :: dByte6 :: dByte7 :: dByte8 :: Nil) } |
+      ((h16 ^ 2(":" :^ h16).-).? ^ "::" :^ 2(h16 ^: ":") ^ ls32) ->
+      { case ((dBytes1_3, List(dByte5, dByte6)), (dByte7, dByte8)) => IPv6address.compressed(flatten(dBytes1_3), dByte5 :: dByte6 :: dByte7 :: dByte8 :: Nil) } |
+      ((h16 ^ 3(":" :^ h16).-).? ^ "::" :^ h16 ^ ":" :^ ls32) ->
+      { case ((dBytes1_4, dByte6), (dByte7, dByte8)) => IPv6address.compressed(flatten(dBytes1_4), dByte6 :: dByte7 :: dByte8 :: Nil) } |
+      ((h16 ^ 4(":" :^ h16).-).? ^ "::" :^ ls32) ->
+      { case (dBytes1_5, (dByte7, dByte8)) => IPv6address.compressed(flatten(dBytes1_5), dByte7 :: dByte8 :: Nil) } |
+      ((h16 ^ 5(":" :^ h16).-).? ^ "::" :^ h16) ->
+      { case (dBytes1_6, dByte8) => IPv6address.compressed(flatten(dBytes1_6), dByte8 :: Nil) } |
+      ((h16 ^ 6(":" :^ h16).-).? ^: "::") ->
+      { case dBytes1_7 => IPv6address.compressed(flatten(dBytes1_7), Nil) }
 
   final class IPvFuture(version: String, address: String) {
     override def toString = s"v$version.$address"

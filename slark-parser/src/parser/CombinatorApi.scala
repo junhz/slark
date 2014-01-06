@@ -22,7 +22,7 @@ trait CombinatorApi { self: Parsers =>
     override def toString = parser.toString()
   }
 
-  case class CombinedParser[S](ops: List[Operation]) extends Parser[S] {
+  case class CombinedParser[+S](ops: List[Operation]) extends Parser[S] {
     override def parse(input: Input) = {
 
       @tailrec

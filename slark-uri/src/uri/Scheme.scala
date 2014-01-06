@@ -3,7 +3,7 @@ package uri
 
 import parser._
 
-trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader with Formats] with Literals with IPaddress with Path =>
+trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader] with Literals with IPaddress with Path =>
 
   def schemeName: String
   def defaultPort: Int
@@ -105,11 +105,11 @@ trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with 
     path_rootless -> (Part.relative(_)) |
     default(Part.empty)
 
-  val uri = (scheme ^ ":" :^ hier_part ^ ("?" :^ query).? ^ ("#" :^ fragment).?) -> ^(^(__, ?("")), ?("")) ->
-    { case (((schema, part), query), fragment) => UriReference(schema, part, query, fragment) }
+  val uri = (scheme ^ ":" :^ hier_part ^ ("?" :^ query).? ^ ("#" :^ fragment).?) ->
+    { case (((schema, part), query), fragment) => UriReference(schema, part, query.getOrElse(""), fragment.getOrElse("")) }
 
-  val relative_ref = (relative_part ^ ("?" :^ query).? ^ ("#" :^ fragment).?) -> ^(^(__, ?("")), ?("")) ->
-    { case ((part, query), fragment) => UriReference(part, query, fragment) }
+  val relative_ref = (relative_part ^ ("?" :^ query).? ^ ("#" :^ fragment).?) ->
+    { case ((part, query), fragment) => UriReference(part, query.getOrElse(""), fragment.getOrElse("")) }
 
   val absolute_uri = (scheme ^ ":" :^ hier_part ^ ("?" :^ query).?)
 
@@ -117,7 +117,7 @@ trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with 
 }
 
 object Scheme {
-  abstract class AbstractScheme[+P <: Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader with Formats](
+  abstract class AbstractScheme[+P <: Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader](
     val schemeName: String,
     val defaultPort: Int,
     val parsers: P) extends Symbols[P] with Literals with IPaddress with Path with Scheme

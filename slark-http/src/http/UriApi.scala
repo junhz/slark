@@ -7,7 +7,7 @@ import uri.{ Literals => UriLiterals }
 
 trait UriApi { self: Symbols[Parsers] =>
 
-  val uriSymbols = new Scheme.AbstractScheme("http", 80, new CombinatorParsers with ReaderApi with CharReader with Formats) {
+  val uriSymbols = new Scheme.AbstractScheme("http", 80, new CombinatorParsers with ReaderApi with CharReader) {
     override def formatPath(path: List[String]) = path
   }
 

@@ -20,7 +20,7 @@ trait CombinatorAst { self: Parsers with CombinatorApi =>
       map(seq(fn1(self), fn2(that)))(_._2)
   }
 
-  implicit class SurfixOps[T](self: T) {
+  implicit class SuffixOps[T](self: T) {
     def !(implicit fn: Builder[T, _]): Parser[Unit] = not(fn(self))
 
     def ?[S](implicit fn: Builder[T, S]): Parser[Option[S]] = map(rep[S](fn(self))(_ < 1)(_ => true))(_.headOption)

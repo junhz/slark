@@ -28,8 +28,8 @@ object SchemeDiary extends Diary {
     Source(segment_nz parse ":") :: 
     Source(segment_nz parse ":#") :: 
     Source(segment_nz parse "%25%E7%8C%98") :: 
-// ipv4
     Source(ipv4address parse "127.0.0.1") :: 
+    Source(IPv6address.compressed(1 :: 2 :: 3 :: 4 :: Nil, 5 :: 6 :: 7 :: 8 :: Nil)) :: 
 // ipv61
     Source(ipv6address parse "0:0:0:0:0:0:0:0") :: 
     Source(ipv6address parse "0:0:0:0:0:0:127.0.0.1") :: 
