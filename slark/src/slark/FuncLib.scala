@@ -12,7 +12,7 @@ object FuncLib {
     final def `with`[T](t: T): Funct3[A, B, T, F] = new Funct3[A, B, T, F] {
       def apply[U](f: A => B => T => U): F => U = (ff: F) => self.apply(f)(ff)(t)
     }
-    final def append[C, F_](that: Funct1[C, F_]): Funct3[A, B, C, (F, F_)] = new Funct3[A, B, C, (F, F_)] {
+    final def and[C, F_](that: Funct1[C, F_]): Funct3[A, B, C, (F, F_)] = new Funct3[A, B, C, (F, F_)] {
       def apply[U](f: A => B => C => U): ((F, F_)) => U = (ff: (F, F_)) => that.apply(self.apply(f)(ff._1))(ff._2)
     }
   }
