@@ -10,7 +10,8 @@ object FuncLibDiary extends Diary {
     Source((open2 `then` cons[Int])(1, Nil)) :: 
     Source(optEx(None, 3)) :: 
     Source(optEx(Some(1, None), 3)) :: 
-    Source(optEx(Some(1, Some(2)), 3)) :: Nil
+    Source(optEx(Some(1, Some(2)), 3)) :: 
+    Source(List(1).map(as(_))) :: Nil
     
   val sum: (Int, Int, Int) => String = (a: Int, b: Int, c: Int) => s"$a + $b + $c"
   
