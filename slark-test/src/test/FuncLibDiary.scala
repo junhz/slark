@@ -11,7 +11,7 @@ object FuncLibDiary extends Diary {
     Source(optEx(None, 3)) :: 
     Source(optEx(Some(1, None), 3)) :: 
     Source(optEx(Some(1, Some(2)), 3)) :: 
-    Source(List(1).map(as(_))) :: Nil
+    Source(List(((1, 2), 3)).map(as and as[Int] and as[Int] `then` sum apply _)) :: Nil
     
   val sum: (Int, Int, Int) => String = (a: Int, b: Int, c: Int) => s"$a + $b + $c"
   
