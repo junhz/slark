@@ -13,10 +13,10 @@ import jcifs.util.Base64;
 public class StdGenMsg {
 
 	public static void main(String[] args) throws IOException {
-		String user = prompt("user: ");
-        String host = prompt("host: ");
-        String dom = prompt("domain: ");
-        String password = prompt("password: ");
+		String user = "a554114@statestr.com";//prompt("user: ");
+        String host = "HZPCIT-R8DN15G";//prompt("host: ");
+        String dom = "";//prompt("domain: ");
+        String password = "tooBad$3721";//prompt("password: ");
         
         System.out.println(generateType1Msg(dom, host));
         

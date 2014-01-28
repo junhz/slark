@@ -33,6 +33,6 @@ object ParserContextDiary extends Diary {
     Source(a -> (_.length()) parse stringReader("a")) ::
     Source(a -> (_.length()) parse stringReader("b")) ::
     Source(a -> (_.charAt(2)) parse stringReader("a")) ::
-    Source(fail("1") | default("2") parse stringReader("3")) :: Nil
+    Source(fail("1") | succ("2") parse stringReader("3")) :: Nil
 
 }

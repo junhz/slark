@@ -10,6 +10,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
+import java.util.Random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -32,15 +33,14 @@ public class GenType {
      * @throws Exception 
      */
     public static void main(String[] args) throws Exception {
-        String user = prompt("user: ");
-        String host = prompt("host: ");
-        String dom = prompt("domain: ");
-        String password = prompt("password: ");
+        String user = "a554114@statestr.com";//prompt("user: ");
+        String host = "HZPCIT-R8DN15G";//prompt("host: ");
+        String dom = "";//prompt("domain: ");
+        String password = "tooBad$3721";//prompt("password: ");
         
         System.out.println(DatatypeConverter.printBase64Binary(encodeType1Message(host.toUpperCase().getBytes(), dom.toUpperCase().getBytes(), NTLMFlags.NEGOTIATE_UNICODE)));
         String type2Message = prompt("replied type2message: ");
-        printBytes(DatatypeConverter.parseBase64Binary(type2Message));
-        Type3MsgBuilder builder = decodeType2Message(DatatypeConverter.parseBase64Binary(type2Message));
+        Type3MsgBuilder builder = decodeType2Message(DatatypeConverter.parseBase64Binary(type2Message), true);
         System.out.println(DatatypeConverter.printBase64Binary(builder.build(host, dom, user, password)));
     }
     
@@ -59,18 +59,20 @@ public class GenType {
     private static byte[] encodeType1Message(byte[] host, byte[] dom, NTLMFlags... flags) {
         byte[] protocol = "NTLMSSP\0".getBytes();
         byte[] type = new byte[] { 0x01, 0x00, 0x00, 0x00 };
-        byte[] domLen = new byte[] { (byte) dom.length, (byte) (dom.length >> 8) };
-        byte[] domOff = new byte[] { (byte) (32 + host.length), (byte) ((32 + host.length) >> 8), 0x00, 0x00 };
-        byte[] hostLen = new byte[] { (byte) (host.length), (byte) (host.length >> 8) };
-        byte[] hostOff = new byte[] { 0x20, 0x00, 0x00, 0x00 };
+        //byte[] domLen = new byte[] { (byte) dom.length, (byte) (dom.length >> 8) };
+        //byte[] domOff = new byte[] { (byte) (32 + host.length), (byte) ((32 + host.length) >> 8), 0x00, 0x00 };
+        //byte[] hostLen = new byte[] { (byte) (host.length), (byte) (host.length >> 8) };
+        //byte[] hostOff = new byte[] { 0x20, 0x00, 0x00, 0x00 };
 
-        return ByteBuffer.allocate(32 + host.length + dom.length).put(protocol).put(type).put(ByteOrder.LITTLE_ENDIAN.allocate(4).putInt(NTLMFlags.intValue(flags)).array()).put(domLen).put(domLen).put(domOff).put(hostLen).put(hostLen).put(hostOff).put(host).put(dom)
-                .array();
+        return ByteBuffer.allocate(32/* + host.length + dom.length*/).put(protocol).put(type).put(ByteOrder.LITTLE_ENDIAN.allocate(4).putInt(NTLMFlags.intValue(flags)).array())//.put(domLen).put(domLen).put(domOff).put(hostLen).put(hostLen).put(hostOff).put(host).put(dom)
+                .putLong(0L).putLong(0L).array();
     }
 
-    private static Type3MsgBuilder decodeType2Message(byte[] msg) {
+    private static Type3MsgBuilder decodeType2Message(byte[] msg, boolean v1) {
     	int flags = ByteOrder.LITTLE_ENDIAN.wrap(Arrays.copyOfRange(msg, 20, 24)).getInt();
     	final byte[] nonce = Arrays.copyOfRange(msg, 24, 32);
+    	System.out.print("nonce: ");
+    	printBytes(nonce);
         final String encoding;
     	if(NTLMFlags.supportUnicode(flags)) {
     		encoding = "UTF-16LE";
@@ -78,14 +80,21 @@ public class GenType {
     		encoding = "US-ASCII";
     	}
     	
-    	if(NTLMFlags.echoTargetInfo(flags)) {
+    	if(v1) {
+    		return new Type3MsgBuilder() {
+				
+				@Override
+				public byte[] build(String host, String dom, String user, String password)
+						throws Exception {
+					return encodeType3Messagev2(host.toUpperCase().getBytes("UTF-16LE"), dom.toUpperCase().getBytes("UTF-16LE"), user.getBytes("UTF-16LE"), password, nonce);
+				}
+			};
+    	} else {
     		short targetInfoLen = ByteOrder.LITTLE_ENDIAN.wrap(Arrays.copyOfRange(msg, 40, 42)).getShort();
     		int targetInfoOff = ByteOrder.LITTLE_ENDIAN.wrap(Arrays.copyOfRange(msg, 44, 48)).getInt();
     		final byte[] targetInfoBytes = Arrays.copyOfRange(msg, targetInfoOff, targetInfoOff + targetInfoLen);
     		
     		return new NTLMv2Type3MsgBuilder(encoding, nonce, targetInfoBytes);
-    	} else {
-    		throw new UnsupportedOperationException();
     	}
     }
 
@@ -93,9 +102,7 @@ public class GenType {
             IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, UnsupportedEncodingException {
         byte[] lmRes = calcResponse(calclmHash(password), nonce);
         byte[] ntRes = calcResponse(calcNtHash(password), nonce);
-        System.out.println(DatatypeConverter.printBase64Binary(lmRes));
-        System.out.println(DatatypeConverter.printBase64Binary(ntRes));
-        int userStart = 64 + dom.length;
+        int userStart = 52 + dom.length;
         int hostStart = userStart + user.length;
         int lmRespStart = hostStart + host.length;
         int ntRespStart = lmRespStart + 24;
@@ -114,20 +121,24 @@ public class GenType {
         byte[] hostLen = new byte[] { (byte) host.length, (byte) (host.length >> 8) };
         byte[] hostOff = new byte[] { (byte) hostStart, (byte) (hostStart >> 8), 0x00, 0x00 };
         byte[] msgLen = new byte[] { 0x00, 0x00, 0x00, 0x00, (byte) len, (byte) (len >> 8), 0x00, 0x00 };
-        byte[] flags = new byte[] { 0x01, (byte) 0x82, 0x00, 0x00 };
 
         return ByteBuffer.allocate(len).put(protocol).put(type).put(lmRespLen).put(lmRespLen).put(lmRespOff).put(ntRespLen).put(ntRespLen).put(ntRespOff).put(domLen).put(domLen).put(domOff)
-                .put(userLen).put(userLen).put(userOff).put(hostLen).put(hostLen).put(hostOff).put(msgLen).put(flags).put(dom).put(user).put(host).put(lmRes).put(ntRes).array();
+                .put(userLen).put(userLen).put(userOff).put(hostLen).put(hostLen).put(hostOff).put(msgLen).put(dom).put(user).put(host).put(lmRes).put(ntRes).array();
     }
     
     private static byte[] encodeType3Messagev2(byte[] host, byte[] dom, byte[] user, String password, byte[] nonce) throws NoSuchAlgorithmException, InvalidKeyException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeySpecException, UnsupportedEncodingException {
-        byte[] clientNonce = new byte[] { (byte)0xff, (byte)0xff, (byte)0xff, 0x00, 0x11, 0x22, 0x33, 0x44 };
+        Random r = new Random();
+    	byte[] clientNonce = new byte[8];// { (byte)0x61, (byte)0x45, (byte)0x30, (byte)0x86, (byte)0xab, (byte)0x3f, (byte)0x9c, (byte)0xdb };
+    	r.nextBytes(clientNonce);
+    	System.out.print("client nonce: ");
+    	printBytes(clientNonce);
         byte[] lmRes = ByteBuffer.allocate(24).put(clientNonce).array();
         byte[] sessionNonce = ByteBuffer.allocate(16).put(nonce).put(clientNonce).array();
         byte[] sessionHash = Arrays.copyOfRange(MessageDigest.getInstance("MD5").digest(sessionNonce), 0, 8);
         byte[] ntRes = calcResponse(calcNtHash(password), sessionHash);
         
-        int userStart = 64 + dom.length;
+        int domStart = 72;
+        int userStart = domStart + dom.length;
         int hostStart = userStart + user.length;
         int lmRespStart = hostStart + host.length;
         int ntRespStart = lmRespStart + 24;
@@ -140,16 +151,16 @@ public class GenType {
         byte[] ntRespLen = new byte[] { 0x18, 0x00 };
         byte[] ntRespOff = new byte[] { (byte) ntRespStart, (byte) (ntRespStart >> 8), 0x00, 0x00 };
         byte[] domLen = new byte[] { (byte) dom.length, (byte) (dom.length >> 8) };
-        byte[] domOff = new byte[] { 0x40, 0x00, 0x00, 0x00 };
+        byte[] domOff = new byte[] { (byte)domStart, (byte)(domStart >> 8), 0x00, 0x00 };
         byte[] userLen = new byte[] { (byte) user.length, (byte) (user.length >> 8) };
         byte[] userOff = new byte[] { (byte) userStart, (byte) (userStart >> 8), 0x00, 0x00 };
         byte[] hostLen = new byte[] { (byte) host.length, (byte) (host.length >> 8) };
         byte[] hostOff = new byte[] { (byte) hostStart, (byte) (hostStart >> 8), 0x00, 0x00 };
         byte[] msgLen = new byte[] { 0x00, 0x00, 0x00, 0x00, (byte) len, (byte) (len >> 8), 0x00, 0x00 };
-        byte[] flags = new byte[] { 0x01, (byte) 0x82, 0x00, 0x00 };
+        byte[] flags = new byte[] { 0x05, (byte) 0x82, (byte)0x88, (byte)0xa2 };
 
         return ByteBuffer.allocate(len).put(protocol).put(type).put(lmRespLen).put(lmRespLen).put(lmRespOff).put(ntRespLen).put(ntRespLen).put(ntRespOff).put(domLen).put(domLen).put(domOff)
-                .put(userLen).put(userLen).put(userOff).put(hostLen).put(hostLen).put(hostOff).put(msgLen).put(flags).put(dom).put(user).put(host).put(lmRes).put(ntRes).array();
+                .put(userLen).put(userLen).put(userOff).put(hostLen).put(hostLen).put(hostOff).put(msgLen).putInt(0).putLong(0x0501280A0000000Fl).put(dom).put(user).put(host).put(lmRes).put(ntRes).array();
     }
 
     private static byte[] calclmHash(String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidKeySpecException, IllegalBlockSizeException,
@@ -188,6 +199,7 @@ public class GenType {
 
     private static byte[] calcResponse(byte[] key16, byte[] challenge) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException,
             InvalidKeySpecException {
+    	System.out.print("key16: ");
         printBytes(key16);
         byte[] padded = ByteBuffer.allocate(21).put(key16).array();
         byte[][] newKeys = new byte[3][7];

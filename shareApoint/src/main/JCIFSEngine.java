@@ -8,7 +8,6 @@ import jcifs.ntlmssp.Type3Message;
 import jcifs.util.Base64;
 
 import org.apache.http.impl.auth.NTLMEngine;
-import org.apache.http.impl.auth.NTLMEngineException;
 
 public final class JCIFSEngine implements NTLMEngine {
 

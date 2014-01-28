@@ -2,6 +2,7 @@ package slark
 package uri
 
 import parser._
+import FuncLib._
 
 trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader] with Literals with IPaddress with Path =>
 
@@ -95,21 +96,23 @@ trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with 
     val empty: Part = new Part { override def toString = "" }
   }
 
-  val relative_part = ("//" :^ authority ^ path_abempty) -> { case (authority, path) => Part.network(authority, path) } |
+  val relative_part = (
+    ("//" :^ authority ^ path_abempty) -> { case (authority, path) => Part.network(authority, path) } |
     path_absolute -> (Part.absolute(_)) |
     path_noscheme -> (Part.relative(_)) |
-    default(Part.empty)
+    succ(Part.empty))
 
-  val hier_part = ("//" :^ authority ^ path_abempty) -> { case (authority, path) => Part.network(authority, path) } |
+  val hier_part = (
+    ("//" :^ authority ^ path_abempty) -> { case (authority, path) => Part.network(authority, path) } |
     path_absolute -> (Part.absolute(_)) |
     path_rootless -> (Part.relative(_)) |
-    default(Part.empty)
+    succ(Part.empty))
 
-  val uri = (scheme ^ ":" :^ hier_part ^ ("?" :^ query).? ^ ("#" :^ fragment).?) ->
-    { case (((schema, part), query), fragment) => UriReference(schema, part, query.getOrElse(""), fragment.getOrElse("")) }
+  val uri = (scheme ^ ":" :^ hier_part ^ ("?" :^ query).? ^ ("#" :^ fragment).?) -> (
+    as[String] and as[Part] and as[String].default("") and as[String].default("") `then` UriReference.apply)
 
-  val relative_ref = (relative_part ^ ("?" :^ query).? ^ ("#" :^ fragment).?) ->
-    { case ((part, query), fragment) => UriReference(part, query.getOrElse(""), fragment.getOrElse("")) }
+  val relative_ref = (relative_part ^ ("?" :^ query).? ^ ("#" :^ fragment).?) -> (
+    as[Part] and as[String].default("") and as[String].default("") `then` UriReference.apply)
 
   val absolute_uri = (scheme ^ ":" :^ hier_part ^ ("?" :^ query).?)
 

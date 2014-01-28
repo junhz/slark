@@ -33,7 +33,7 @@ trait Path { self: Symbols[Parsers with CombinatorApi with CombinatorAst with Re
 
   val segment_nz_nc = 1(":".! :^ pchar).+ -> (_.mkString)
 
-  val path_empty = default(List[String]())
+  val path_empty = succ(List[String]())
 
   val path_abempty = ("/" :^ segment).*
 
