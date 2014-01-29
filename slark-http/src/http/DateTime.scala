@@ -2,9 +2,8 @@ package slark
 package http
 
 import parser._
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Calendar
+import java.util.TimeZone
 
 trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with OctetReader] with Literals =>
 
@@ -26,8 +25,14 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
     case _ => throw new IllegalArgumentException("month abbr wanted")
   }
 
-  def currentYY = Integer.valueOf(new SimpleDateFormat("yy").format(new Date()))
-  def currentYYYY = Integer.valueOf(new SimpleDateFormat("yyyy").format(new Date()))
+  def y2k(yy: Int, cntYYYY: Int): Int = {
+    val cntYY = cntYYYY % 100
+    val cntCentury = cntYYYY / 100
+    if (yy - cntYY > 50) (cntCentury - 1) * 100 + yy
+    else cntCentury * 100 + yy
+  }
+  
+  def cntYYYY = new slark.DateTime(System.currentTimeMillis()).year
 
   val wkday = ("Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun")
   val weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"
@@ -44,8 +49,7 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
   }
   val rfc850_date = (weekday ^ ", " :^ date2 ^ sp :^ time ^: " GMT") -> {
     case ((weekday, ((Natural0(dd), _MMM), Natural0(yy))), (_HH, mm, ss)) => {
-      val yyyy = if (yy - currentYY > 50) currentYYYY - currentYY - 100 + yy
-      else currentYYYY - currentYY + yy
+      val yyyy = y2k(yy, cntYYYY)
 
       GmtDateTime(yyyy, _MMM, dd, _HH, mm, ss)
     }
@@ -55,12 +59,7 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
   }
 
   case class GmtDateTime(yyyy: Int, _MMM: String, dd: Int, HH: Int, mm: Int, ss: Int) {
-    val date = {
-      val c = Calendar.getInstance()
-      c.set(yyyy, monthOrd(_MMM), dd, HH, mm, ss)
-      c.getTime()
-    }
-    val wkday: String = new SimpleDateFormat("EE").format(date)
+    
     def asRfc1123Date = s"$wkday, $dd ${_MMM} $yyyy $HH:$mm:$ss GMT"
   }
 
