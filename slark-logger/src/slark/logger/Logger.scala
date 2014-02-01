@@ -24,7 +24,6 @@ sealed trait Logger {
   }
 
   final def apply(record: Logger.Record, ex: Throwable) {
-    val exLines = ex.fullMessage
     @tailrec
     def rec(configs: Iterable[Logger.Config]) {
       if (configs.isEmpty) {}
@@ -32,12 +31,26 @@ sealed trait Logger {
         val (level, formatter, writer) = configs.head
         if (record.level reaches level) {
           writer.write(formatter.format(record.date, record.level, record.source, record.message))
-          exLines.foreach(writer.write(_))
+          logException(ex, writer)
         } else {}
         rec(configs.tail)
       }
     }
     rec(configs)
+  }
+
+  private[this] def logException(e: Throwable, writer: Writer): Unit = {
+    @tailrec
+    def rec(throwns: List[Thrown[_]]): Unit = {
+      if (throwns.isEmpty) {}
+      else {
+        writer.write(s"Caused by: ${throwns.head}\r\n")
+        rec(throwns.tail)
+      }
+    }
+    val throwns = Thrown.wrap(e)
+    writer.write(s"${throwns.head}\r\n")
+    rec(throwns.tail)
   }
 
   def configs: Iterable[Logger.Config]

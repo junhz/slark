@@ -4,7 +4,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros.Context
 
 class Source[+T](val srcTree: String, private[this] val ret: => T) {
-  def output: Either[T, Throwable] = try Left(ret) catch { case e: Throwable => Right(e) }
+  def output: Either[T, List[Thrown[_]]] = try Left(ret) catch { case e: Throwable => Right(Thrown.wrap(new Exception(e)).tail) }
 }
 
 object Source {

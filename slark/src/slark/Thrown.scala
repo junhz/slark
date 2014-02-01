@@ -2,51 +2,38 @@ package slark
 
 import scala.collection.mutable.ListBuffer
 
-final class Thrown(ex: Throwable) {
-  def fullMessage: List[String] = fullMessageAbove(0)
-  def fullMessageAbove(ignoreFrames: Int): List[String] = {
-    val buffer = new ListBuffer[String]
-    var isOutMost = true
-    val it = new Thrown.ExceptionChain(ex, ignoreFrames)
-    while (it.hasNext) {
-      val cnt = it.next
-      buffer.append(if (isOutMost) cnt._1 else s"Caused by: ${cnt._1}")
-      while (cnt._2.hasNext) {
-        buffer.append(s"\tat ${cnt._2.next}")
-      }
-      isOutMost = false
+case class Thrown[E <: Throwable](msg: Option[String], tpe: Class[E], stack: List[StackTraceElement]) {
+  override def toString = {
+    val message = msg match {
+      case None => tpe.getName()
+      case Some(s) => s"${tpe.getName()}: $s"
     }
-    buffer.toList
+    stack match {
+      case Nil => message
+      case _ => s"$message\r\n${stack.mkString("\tat ", "\r\n\tat ", "")}"
+    }
   }
 }
-
 object Thrown {
-
-  class Trace(trace: Array[StackTraceElement], depth: Int) extends Iterator[String] {
-    val limit = trace.length - depth
-    var index = 0
-
-    def hasNext = index < limit
-    def next = if (hasNext) {
-      val tmp = trace(index)
-      index = index + 1
-      tmp.toString()
-    } else Iterator.empty.next
+  def cnt(): List[Thrown[_]] = wrap(new Exception)
+  def wrap[E <: Throwable](e: E): List[Thrown[_]] = {
+    @tailrec
+    def rec(e: Throwable, pre: List[Thrown[_]], depth: Int): List[Thrown[_]] = {
+      val cnt = Thrown(if(e.getMessage() == null) None else Some(e.getMessage()), e.getClass(), toList(e.getStackTrace(), depth))
+      
+      if(e.getCause() == e || e.getCause() == null) {
+        (cnt :: pre).reverse
+      } else rec(e.getCause(), cnt :: pre, e.getStackTrace().length)
+    }
+    rec(e, Nil, 0)
   }
-
-  class ExceptionChain(ex: Throwable, initDepth: Int) extends Iterator[(String, Iterator[String])] {
-    var cnt = ex
-    var depth = initDepth
-
-    def hasNext = cnt != null
-    def next = if (hasNext) {
-      val msg = cnt.toString()
-      val trace = ex.getStackTrace()
-      val tmp = (msg, new Trace(trace, depth))
-      depth = trace.length
-      cnt = cnt.getCause()
-      tmp
-    } else Iterator.empty.next
+  private[this] def toList(stack: Array[StackTraceElement], depth: Int): List[StackTraceElement] = {
+    @tailrec
+    def rec(off: Int, end: Int, pre: List[StackTraceElement]): List[StackTraceElement] = {
+      if(off < end) {
+        rec(off + 1, end, stack(off) :: pre)
+      } else pre.reverse
+    }
+    rec(0, stack.length - depth, Nil)
   }
-
 }

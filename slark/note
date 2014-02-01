@@ -19,8 +19,7 @@ file writer
 improve performance of record.message
 
 parser:
-remove formats
-default value for opt - and ?
+parser builder?
 
 test:
 diaryWriter for log

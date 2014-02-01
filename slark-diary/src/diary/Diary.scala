@@ -17,7 +17,7 @@ trait Diary {
             case null => "null"
             case _ => t.toString
           }
-          case Right(ex) => ex.fullMessageAbove(new Exception().getStackTrace().length + 1).mkString("\r\n")
+          case Right(ex) => ex.mkString("\r\nCaused By: ")
         })
       })
       Merger.SimpleAutoMerger(Diff.MyersDiff(source, modified)(_._1 equals _._1), source, modified)

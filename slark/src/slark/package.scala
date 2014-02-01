@@ -3,6 +3,4 @@ package object slark {
   
   type tailrec = scala.annotation.tailrec
   
-  implicit def throwableToThrown(ex: Throwable): Thrown = new Thrown(ex)
-  
 }

@@ -14,7 +14,7 @@ object LogDiary {
         is 
         a 
         multi-line
-        """, new Exception)
+        """, new Exception("a", new Exception))
   }
 
   val + = new {
