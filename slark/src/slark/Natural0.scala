@@ -15,12 +15,12 @@ object Natural0 {
     rec(0, 0)
   }
 
-  def unapply(src: List[Byte]): Option[Int] = {
+  def unapply[T : Integral](src: List[T]): Option[Int] = {
     @tailrec
-    def rec(rest: List[Byte], result: Int): Option[Int] = {
+    def rec(rest: List[T], result: Int): Option[Int] = {
       if (rest.isEmpty) Some(result)
       else {
-        unapply(rest.head.toChar) match {
+        unapply(implicitly[Integral[T]].toInt(rest.head).toChar) match {
           case None => None
           case Some(i) => rec(rest.tail, result * 10 + i)
         }

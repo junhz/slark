@@ -28,9 +28,9 @@ trait Parsers {
   /**
    * A | B | default(symbol)
    */
-  final def default[T](sym: T): Parser[T] = new Parser[T] {
+  final def succ[T](sym: T): Parser[T] = new Parser[T] {
     override def parse(input: Input) = Succ(sym, input)
-    override def toString = s"default($sym)"
+    override def toString = s"succ($sym)"
   }
 
   def p[T, S](self: T)(implicit fn: Builder[T, S]): Parser[S] = fn(self)

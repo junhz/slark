@@ -18,5 +18,4 @@ object FuncLibDiary extends Diary {
   def cons[T]: (T, List[T]) => List[T] = (head: T, tail: List[T]) => head :: tail
 
   val optEx = ((as[Int] and as[Int].default(2)).default(1, 2) and as[Int] `then` sum)
-  
 }
