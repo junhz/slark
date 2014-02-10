@@ -9,22 +9,6 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
 
   import parsers._
 
-  def monthOrd(_MMM: String): Int = _MMM match {
-    case "Jan" => 1
-    case "Feb" => 2
-    case "Mar" => 3
-    case "Apr" => 4
-    case "May" => 5
-    case "Jun" => 6
-    case "Jul" => 7
-    case "Aug" => 8
-    case "Sep" => 9
-    case "Oct" => 10
-    case "Nov" => 11
-    case "Dec" => 12
-    case _ => throw new IllegalArgumentException("month abbr wanted")
-  }
-
   def y2k(yy: Int, cntYYYY: Int): Int = {
     val cntYY = cntYYYY % 100
     val cntCentury = cntYYYY / 100
@@ -32,7 +16,7 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
     else cntCentury * 100 + yy
   }
   
-  def cntYYYY = new slark.DateTime(System.currentTimeMillis()).year
+  def cntYYYY = slark.DateTime.since1970(System.currentTimeMillis()).year
 
   val wkday = ("Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun")
   val weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"
