@@ -29,22 +29,22 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
   val date2 = 2(digit) ^ "-" :^ month ^ "-" :^ 2(digit)
   val date3 = month ^ sp :^ (2(digit) | (sp :^ 1(digit)))
   val rfc1123_date = (wkday ^ ", " :^ date1 ^ sp :^ time ^: " GMT") -> {
-    case ((wkday, ((Natural0(dd), _MMM), Natural0(yyyy))), (_HH, mm, ss)) => GmtDateTime(yyyy, _MMM, dd, _HH, mm, ss)
+    case ((_, ((Natural0(dd), _MMM), Natural0(yyyy))), (_HH, mm, ss)) => Rfc1123Date(yyyy, _MMM, dd, _HH, mm, ss)
   }
   val rfc850_date = (weekday ^ ", " :^ date2 ^ sp :^ time ^: " GMT") -> {
-    case ((weekday, ((Natural0(dd), _MMM), Natural0(yy))), (_HH, mm, ss)) => {
+    case ((_, ((Natural0(dd), _MMM), Natural0(yy))), (_HH, mm, ss)) => {
       val yyyy = y2k(yy, cntYYYY)
 
-      GmtDateTime(yyyy, _MMM, dd, _HH, mm, ss)
+      Rfc1123Date(yyyy, _MMM, dd, _HH, mm, ss)
     }
   }
   val asctime_date = (wkday ^ sp :^ date3 ^ sp :^ time ^ sp :^ 4(digit)) -> {
-    case (((wkday, (_MMM, Natural0(dd))), (_HH, mm, ss)), Natural0(yyyy)) => GmtDateTime(yyyy, _MMM, dd, _HH, mm, ss)
+    case (((_, (_MMM, Natural0(dd))), (_HH, mm, ss)), Natural0(yyyy)) => Rfc1123Date(yyyy, _MMM, dd, _HH, mm, ss)
   }
 
-  case class GmtDateTime(yyyy: Int, _MMM: String, dd: Int, HH: Int, mm: Int, ss: Int) {
-    
-    def asRfc1123Date = s"$wkday, $dd ${_MMM} $yyyy $HH:$mm:$ss GMT"
+  case class Rfc1123Date(yyyy: Int, _MMM: String, dd: Int, _HH: Int, mm: Int, ss: Int) {
+    private[this] val d: slark.DateTime = slark.DateTime.apply(yyyy, slark.DateTime.Month.shortName(_MMM), dd, _HH, mm, ss, 0)
+    override def toString: String = f"${d.dayOfWeek.shortName}, ${d.dayOfMonth}%02d ${d.month.shortName} ${d.year}%04d ${d.hour}%02d:${d.minute}%02d:${d.second}%02d GMT"
   }
 
   val http_date = rfc1123_date | rfc850_date | asctime_date | fail("not a valid http-date")
