@@ -2,8 +2,6 @@ package slark
 package http
 
 import parser._
-import java.util.Calendar
-import java.util.TimeZone
 
 trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with OctetReader] with Literals =>
 
@@ -33,9 +31,7 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
   }
   val rfc850_date = (weekday ^ ", " :^ date2 ^ sp :^ time ^: " GMT") -> {
     case ((_, ((Natural0(dd), _MMM), Natural0(yy))), (_HH, mm, ss)) => {
-      val yyyy = y2k(yy, cntYYYY)
-
-      Rfc1123Date(yyyy, _MMM, dd, _HH, mm, ss)
+      Rfc1123Date(y2k(yy, cntYYYY), _MMM, dd, _HH, mm, ss)
     }
   }
   val asctime_date = (wkday ^ sp :^ date3 ^ sp :^ time ^ sp :^ 4(digit)) -> {

@@ -2,7 +2,6 @@ package slark
 package logger
 
 import scala.collection.immutable.Iterable
-import java.util.Date
 
 /**
  * log logic
@@ -59,7 +58,7 @@ sealed trait Logger {
 object Logger {
   type Config = (Level, Formatter, Writer)
   final class Record(val source: String, val level: Level, context: StringContext, args: List[Any]) {
-    val date = new Date
+    val date = DateTime.since1970(System.currentTimeMillis())
     lazy val message = context.s(args: _*)
   }
 

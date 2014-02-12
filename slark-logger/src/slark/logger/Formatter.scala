@@ -1,14 +1,13 @@
-package slark.logger
-
-import java.util.Date
+package slark
+package logger
 
 trait Formatter {
-  def format(date: Date, level: Level, source: String, message: String): String
+  def format(date: DateTime, level: Level, source: String, message: String): String
 }
 
 object Formatter {
   val default = new Formatter {
-    override def format(date: Date, level: Level, source: String, message: String) =
+    override def format(date: DateTime, level: Level, source: String, message: String) =
       s"""[$date] $level $source: $message"""
   }
 }

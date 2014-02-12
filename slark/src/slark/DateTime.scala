@@ -120,110 +120,110 @@ object DateTime {
     31 :: (if (isLeap) 29 else 28) :: 31 :: 30 :: 31 :: 30 :: 31 :: 31 :: 30 :: 31 :: 30 :: 31 :: Nil
   }
 
-  private[this] trait Calc {
-    def apply(cnt: Long): (Int, Long)
-    def unapply(input: Int, cnt: Long): Option[Long]
+  private[this] trait TimeUnit {
+    def unpickle(in: Long): (Int, Long)
+    def pickle(src: Int, out: Long): Option[Long]
   }
 
-  private[this] object MillisecondOfSecond extends Calc {
+  private[this] object MillisecondOfSecond extends TimeUnit {
     val millisecondsOfSecond = 1000
-    override def apply(cnt: Long) = ((cnt % millisecondsOfSecond).toInt, cnt / millisecondsOfSecond)
-    override def unapply(input: Int, cnt: Long): Option[Long] =
-      if (input < millisecondsOfSecond && input >= 0) Some(cnt * millisecondsOfSecond + input) else None
+    override def unpickle(in: Long) = ((in % millisecondsOfSecond).toInt, in / millisecondsOfSecond)
+    override def pickle(src: Int, out: Long): Option[Long] =
+      if (src < millisecondsOfSecond && src >= 0) Some(out * millisecondsOfSecond + src) else None
   }
 
-  private[this] object SecondOfMinute extends Calc {
+  private[this] object SecondOfMinute extends TimeUnit {
     val secondsOfMinute = 60
-    override def apply(cnt: Long) = ((cnt % secondsOfMinute).toInt, cnt / secondsOfMinute)
-    override def unapply(input: Int, cnt: Long): Option[Long] =
-      if (input < secondsOfMinute && input >= 0) Some(cnt * secondsOfMinute + input) else None
+    override def unpickle(in: Long) = ((in % secondsOfMinute).toInt, in / secondsOfMinute)
+    override def pickle(src: Int, out: Long): Option[Long] =
+      if (src < secondsOfMinute && src >= 0) Some(out * secondsOfMinute + src) else None
   }
 
-  private[this] object MinuteOfHour extends Calc {
+  private[this] object MinuteOfHour extends TimeUnit {
     val minutesOfHour = 60
-    override def apply(cnt: Long) = ((cnt % minutesOfHour).toInt, cnt / minutesOfHour)
-    override def unapply(input: Int, cnt: Long): Option[Long] =
-      if (input < minutesOfHour && input >= 0) Some(cnt * minutesOfHour + input) else None
+    override def unpickle(in: Long) = ((in % minutesOfHour).toInt, in / minutesOfHour)
+    override def pickle(src: Int, out: Long): Option[Long] =
+      if (src < minutesOfHour && src >= 0) Some(out * minutesOfHour + src) else None
   }
 
-  private[this] object HourOfDay extends Calc {
+  private[this] object HourOfDay extends TimeUnit {
     val hoursOfDay = 24
-    override def apply(cnt: Long) = ((cnt % hoursOfDay).toInt, cnt / hoursOfDay)
-    override def unapply(input: Int, cnt: Long): Option[Long] =
-      if (input < hoursOfDay && input >= 0) Some(cnt * hoursOfDay + input) else None
+    override def unpickle(in: Long) = ((in % hoursOfDay).toInt, in / hoursOfDay)
+    override def pickle(src: Int, out: Long): Option[Long] =
+      if (src < hoursOfDay && src >= 0) Some(out * hoursOfDay + src) else None
   }
 
-  private[this] object QuadCenturies extends Calc {
+  private[this] object QuadCenturies extends TimeUnit {
     val daysOfQuadCentury = 146097
-    override def apply(cnt: Long) = ((cnt / daysOfQuadCentury).toInt, cnt % daysOfQuadCentury)
-    override def unapply(input: Int, cnt: Long): Option[Long] = Some(input * daysOfQuadCentury + cnt)
+    override def unpickle(in: Long) = ((in / daysOfQuadCentury).toInt, in % daysOfQuadCentury)
+    override def pickle(src: Int, out: Long): Option[Long] = Some(src * daysOfQuadCentury + out)
   }
 
-  private[this] object CenturyOfQuadCentury extends Calc {
+  private[this] object CenturyOfQuadCentury extends TimeUnit {
     /**
      * ignore the year divisible by 400
      */
     protected val daysOfCentury = 36524
-    override def apply(cnt: Long) = {
-      val centuries = cnt / daysOfCentury
-      val rest = cnt % daysOfCentury
+    override def unpickle(in: Long) = {
+      val centuries = in / daysOfCentury
+      val rest = in % daysOfCentury
       if (centuries == 4 && rest == 0) (3, daysOfCentury)
       else (centuries.toInt, rest)
     }
-    override def unapply(input: Int, cnt: Long): Option[Long] = Some(input * daysOfCentury + cnt)
+    override def pickle(src: Int, out: Long): Option[Long] = Some(src * daysOfCentury + out)
   }
 
-  private[this] object QuadYearOfCentury extends Calc {
+  private[this] object QuadYearOfCentury extends TimeUnit {
     /**
      * ignore the year divisible by 100
      */
     protected val daysOfQuadYears = 1461
-    override def apply(cnt: Long) = ((cnt / daysOfQuadYears).toInt, cnt % daysOfQuadYears)
-    override def unapply(input: Int, cnt: Long): Option[Long] = Some(input * daysOfQuadYears + cnt)
+    override def unpickle(in: Long) = ((in / daysOfQuadYears).toInt, in % daysOfQuadYears)
+    override def pickle(src: Int, out: Long): Option[Long] = Some(src * daysOfQuadYears + out)
   }
 
-  private[this] object YearOfQuadYear extends Calc {
+  private[this] object YearOfQuadYear extends TimeUnit {
     /**
      * ignore leap year
      */
     protected val daysOfYear = 365
-    override def apply(cnt: Long) = {
-      val years = cnt / daysOfYear
-      val rest = cnt % daysOfYear
+    override def unpickle(in: Long) = {
+      val years = in / daysOfYear
+      val rest = in % daysOfYear
       if (years == 4 && rest == 0) (3, 365)
       else (years.toInt, rest)
     }
-    override def unapply(input: Int, cnt: Long): Option[Long] = Some(cnt + daysOfYear * input)
+    override def pickle(src: Int, out: Long): Option[Long] = Some(src * daysOfYear + out)
   }
 
   def since1970(timeMillis: Long): DateTime = {
-    def calc(calcs: List[Calc], input: Long): (List[Int], Long) = {
+    def unpickle(timeUnits: List[TimeUnit], in: Long): (List[Int], Long) = {
       @tailrec
-      def rec(rest: List[Calc], results: List[Int], cnt: Long): (List[Int], Long) = {
-        if (rest.isEmpty) (results, cnt)
+      def rec(restTimeUnits: List[TimeUnit], results: List[Int], in: Long): (List[Int], Long) = {
+        if (restTimeUnits.isEmpty) (results, in)
         else {
-          val (r, c) = rest.head.apply(cnt)
-          rec(rest.tail, r :: results, c)
+          val (r, i) = restTimeUnits.head.unpickle(in)
+          rec(restTimeUnits.tail, r :: results, i)
         }
       }
-      rec(calcs, Nil, input)
+      rec(timeUnits, Nil, in)
     }
 
     val time = MillisecondOfSecond :: SecondOfMinute :: MinuteOfHour :: HourOfDay :: Nil
     val date = QuadCenturies :: CenturyOfQuadCentury :: QuadYearOfCentury :: YearOfQuadYear :: Nil
-    val (hourOfDay :: minuteOfHour :: secondOfMinute :: millisecondOfSecond :: Nil, daysSince1970) = calc(time, timeMillis)
-    val (yearOfQuadYear :: quadYearOfCentury :: centuryOfQuadCentury :: quadCenturies :: Nil, dayOfYear) = calc(date, daysSince1970 + `0001.1.1-1970.1.1`)
+    val (hourOfDay :: minuteOfHour :: secondOfMinute :: millisecondOfSecond :: Nil, daysSince1970) = unpickle(time, timeMillis)
+    val (yearOfQuadYear :: quadYearOfCentury :: centuryOfQuadCentury :: quadCenturies :: Nil, dayOfYear) = unpickle(date, daysSince1970 + `0001.1.1-1970.1.1`)
 
-    def floor(src: Int, floors: List[Int]): (Int, Int) = {
+    def jump(height: Int, floors: List[Int]): (Int, Int) = {
       @tailrec
       def rec(rest: Int, floorOrd: Int, restFloors: List[Int]): (Int, Int) = {
         if (restFloors.isEmpty) (floorOrd, rest)
         else if (rest > restFloors.head) rec(rest - restFloors.head, floorOrd + 1, restFloors.tail)
         else (floorOrd, rest)
       }
-      rec(src, 1, floors)
+      rec(height, 1, floors)
     }
-    val (monthOrd, dayOrd) = floor(dayOfYear.toInt + 1, daysOfMonths(yearOfQuadYear, quadYearOfCentury, centuryOfQuadCentury))
+    val (monthOrd, dayOrd) = jump(dayOfYear.toInt + 1, daysOfMonths(yearOfQuadYear, quadYearOfCentury, centuryOfQuadCentury))
     return new DateTime(
       year = 1 /*since 0001*/ + quadCenturies * 400 + centuryOfQuadCentury * 100 + quadYearOfCentury * 4 + yearOfQuadYear,
       month = Month.order(monthOrd),
@@ -237,7 +237,7 @@ object DateTime {
   }
 
   def apply(year: Int, month: Month, day: Int, hour: Int, minute: Int, second: Int, millisecond: Int): DateTime = {
-    val yearsSince0001 = year - 1
+    val yearsSince0001 = year - 1 /*since 0001*/
     val yearOfQuadYear = yearsSince0001 % 4
     val quadYearOfCentury = yearsSince0001 % 100 / 4
     val centuryOfQuadCentury = yearsSince0001 % 400 / 100
@@ -259,11 +259,11 @@ object DateTime {
       case Some(s) => s - 1
     }
 
-    def calc(inputs: List[Int], calcs: List[Calc], out: Long): Option[Long] = {
-      if (inputs.isEmpty && calcs.isEmpty) Some(out)
-      else if (inputs.isEmpty ^ calcs.isEmpty) None
-      else calcs.head.unapply(inputs.head, out) match {
-        case Some(r) => calc(inputs.tail, calcs.tail, r)
+    def pickle(srcs: List[Int], timeUnits: List[TimeUnit], out: Long): Option[Long] = {
+      if (srcs.isEmpty && timeUnits.isEmpty) Some(out)
+      else if (srcs.isEmpty ^ timeUnits.isEmpty) None
+      else timeUnits.head.pickle(srcs.head, out) match {
+        case Some(r) => pickle(srcs.tail, timeUnits.tail, r)
         case _ => None
       }
     }
@@ -271,11 +271,11 @@ object DateTime {
     val date = YearOfQuadYear :: QuadYearOfCentury :: CenturyOfQuadCentury :: QuadCenturies :: Nil
     val time = HourOfDay :: MinuteOfHour :: SecondOfMinute :: MillisecondOfSecond :: Nil
 
-    val daysSince1970 = calc(yearOfQuadYear :: quadYearOfCentury :: centuryOfQuadCentury :: quadCenturies :: Nil, date, -`0001.1.1-1970.1.1`) match {
+    val daysSince1970 = pickle(yearOfQuadYear :: quadYearOfCentury :: centuryOfQuadCentury :: quadCenturies :: Nil, date, -`0001.1.1-1970.1.1`) match {
       case None => throw new IllegalArgumentException
       case Some(s) => s + dayOfYear
     }
-    val timeMillis = calc(hour :: minute :: second :: millisecond :: Nil, time, daysSince1970) match {
+    val timeMillis = pickle(hour :: minute :: second :: millisecond :: Nil, time, daysSince1970) match {
       case None => throw new IllegalArgumentException
       case Some(s) => s
     }

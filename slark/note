@@ -12,7 +12,6 @@ generic Resource
 
 http:
 headers and parameters
-better datatime: http://en.wikipedia.org/wiki/Gregorian_calendar http://www.wikihow.com/Calculate-the-Day-of-the-Week
 
 logger:
 better writer(pickler) and more open formatter
