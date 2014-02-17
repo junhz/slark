@@ -21,6 +21,19 @@ improve performance of record.message
 parser:
 parser builder?
 
+succ, fail, flatmap, or
+
+p map f = p flatmap { x => Succ(f(x)) }
+
+p ^ q = p flatmap { x => q map { y => (x, y) } }
+
+p | q = p or q
+
+! p = (p ^ fail("")) | succ(())
+
+rep cnt p endWhenSucc liveWithError = if(endWhenSucc(cnt)) succ(Nil) 
+                                                                          else (p flatmap { x => rep cnt + 1 p endWhenSucc liveWithError map { xs => x :: xs } }) | if(liveWithError(cnt)) succ(Nil) else fail("")
+
 test:
 diaryWriter for log
 
