@@ -1,5 +1,4 @@
-package junhz
-package http
+package slark.http
 
 class Registry[K, V](cache: Map[K, V], fn: V => K) {
 

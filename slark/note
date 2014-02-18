@@ -31,8 +31,11 @@ p | q = p or q
 
 ! p = (p ^ fail("")) | succ(())
 
-rep cnt p endWhenSucc liveWithError = if(endWhenSucc(cnt)) succ(Nil) 
-                                                                          else (p flatmap { x => rep cnt + 1 p endWhenSucc liveWithError map { xs => x :: xs } }) | if(liveWithError(cnt)) succ(Nil) else fail("")
+rep p = p flatmap { x => rep p map { xs => x :: xs } }
+m p = if(m > 0) p flatmap { x => (m - 1) p map { xs => x :: xs } }
+           else succ(Nil)
+? m p = if(m > 0) (p flatmap { x => ? (m - 1) p map { xs => x :: xs } }) | succ(Nil)
+              else succ(Nil)
 
 test:
 diaryWriter for log

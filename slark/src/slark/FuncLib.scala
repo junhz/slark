@@ -132,7 +132,7 @@ object FuncLib {
     }
     final def `then`[R](fn: (R1, R2, R3, R4) => R): Funct1[R, T] = new Funct1[R, T] {
       override def apply(t: T): R = self.apply(t) match {
-        case (r1, r2, r3, r4) => fn(r1 ,r2, r3, r4)
+        case (r1, r2, r3, r4) => fn(r1, r2, r3, r4)
       }
     }
     def apply(t: T): (R1, R2, R3, R4)
@@ -217,12 +217,12 @@ object FuncLib {
     }
     def apply(t: T): (R1, R2, R3, R4, R5, R6, R7, R8)
   }
-  
+
   final class VarargsFunct[R, T](fn: T => Product) extends Funct1[List[R], T] {
     def apply(t: T): List[R] = {
       val it = fn(t).productIterator
       val buffer = new ListBuffer[R]
-      while(it.hasNext) {
+      while (it.hasNext) {
         buffer.append(it.next.asInstanceOf[R])
       }
       buffer.toList
@@ -275,32 +275,37 @@ object FuncLib {
   }
 
   def take2[T]: Funct2[T, T, List[T]] = new Funct2[T, T, List[T]] {
-    override def apply(t: List[T]): (T, T) = t match {
-      case t1 :: t2 :: _ => (t1, t2)
+    override def apply(t: List[T]): (T, T) = {
+      val (t1 :: t2 :: _) = t
+      (t1, t2)
     }
   }
 
   def take3[T]: Funct3[T, T, T, List[T]] = new Funct3[T, T, T, List[T]] {
-    override def apply(t: List[T]): (T, T, T) = t match {
-      case t1 :: t2 :: t3 :: _ => (t1, t2, t3)
+    override def apply(t: List[T]): (T, T, T) = {
+      val (t1 :: t2 :: t3 :: _) = t
+      (t1, t2, t3)
     }
   }
 
   def take4[T]: Funct4[T, T, T, T, List[T]] = new Funct4[T, T, T, T, List[T]] {
-    override def apply(t: List[T]): (T, T, T, T) = t match {
-      case t1 :: t2 :: t3 :: t4 :: _ => (t1, t2, t3, t4)
+    override def apply(t: List[T]): (T, T, T, T) = {
+      val (t1 :: t2 :: t3 :: t4 :: _) = t
+      (t1, t2, t3, t4)
     }
   }
 
   def take5[T]: Funct5[T, T, T, T, T, List[T]] = new Funct5[T, T, T, T, T, List[T]] {
-    override def apply(t: List[T]): (T, T, T, T, T) = t match {
-      case t1 :: t2 :: t3 :: t4 :: t5 :: _ => (t1, t2, t3, t4, t5)
+    override def apply(t: List[T]): (T, T, T, T, T) = {
+      val (t1 :: t2 :: t3 :: t4 :: t5 :: _) = t
+      (t1, t2, t3, t4, t5)
     }
   }
 
   def take6[T]: Funct6[T, T, T, T, T, T, List[T]] = new Funct6[T, T, T, T, T, T, List[T]] {
-    override def apply(t: List[T]): (T, T, T, T, T, T) = t match {
-      case t1 :: t2 :: t3 :: t4 :: t5 :: t6 :: _ => (t1, t2, t3, t4, t5, t6)
+    override def apply(t: List[T]): (T, T, T, T, T, T) = {
+      val (t1 :: t2 :: t3 :: t4 :: t5 :: t6 :: _) = t
+      (t1, t2, t3, t4, t5, t6)
     }
   }
 

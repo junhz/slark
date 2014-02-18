@@ -1,5 +1,4 @@
-package junhz
-package http
+package slark.http
 
 trait ContentCodings {
 

@@ -1,4 +1,5 @@
-package slark.parser
+package slark
+package parser
 
 trait Symbols[+P <: Parsers] {
 

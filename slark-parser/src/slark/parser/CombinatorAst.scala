@@ -1,4 +1,5 @@
-package slark.parser
+package slark
+package parser
 
 trait CombinatorAst { self: Parsers with CombinatorApi =>
 
