@@ -1,5 +1,6 @@
-package slark
-package parser
+package slark.combinator.parser
+
+import scala.annotation.tailrec
 
 trait ReaderApi {
 
@@ -26,7 +27,6 @@ trait ReaderApi {
         if (rhs.atEnd) Some(lhs)
         else if (lhs.atEnd) None
         else {
-          //log(info"lhs head: ${lhs.head}, rhs.head: ${rhs.head}")
           if (isSame(lhs.head, rhs.head)) {
             rec(lhs.tail, rhs.tail)
           } else None
