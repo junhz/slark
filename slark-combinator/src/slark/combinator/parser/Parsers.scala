@@ -57,26 +57,27 @@ trait Parsers {
 
   trait Trampoline[+S] {
     @tailrec
-    final def resume: Either[() => Trampoline[S], ParseResult[S]] =
+    final def resume: Trampoline[S] =
       this match {
-        case Strict(r) => Right(r)
-        case Lazy(fn) => Left(fn)
-        case FlatMap(sub, fn) => sub match {
+        case FlatMap(t, fn) => t match {
           case Strict(r) => fn(r).resume
-          case Lazy(fn1) => Left(() =>
-            FlatMap(fn1(), fn))
-          case FlatMap(sub1, fn1) => (FlatMap(sub1,
-            (result: ParseResult[Any]) => FlatMap(fn1(result), fn)): Trampoline[S]).resume
+          case Lazy(input, lazyParse) => FlatMap(lazyParse(input), fn)
+          case FlatMap(t_, fn_) => (t_ flatmap { result => fn_(result) flatmap fn }).resume
         }
+        case t => t
       }
     @tailrec
     final def run: ParseResult[S] = resume match {
-      case Right(a) => a
-      case Left(k) => k().run
+      case Strict(r) => r
+      case t => t.run
+    }
+    final def flatmap[T](fn: ParseResult[S] => Trampoline[T]): Trampoline[T] = this match {
+      case FlatMap(t, fn_) => FlatMap(t, (result: ParseResult[Any]) => fn_(result) flatmap fn)
+      case t => FlatMap(t, fn)
     }
   }
   case class Strict[+S](result: ParseResult[S]) extends Trampoline[S]
-  case class Lazy[+S](fn: () => Trampoline[S]) extends Trampoline[S]
+  case class Lazy[+S](input: Input, lazyParse: Input => Trampoline[S]) extends Trampoline[S]
   case class FlatMap[S, +T](sub: Trampoline[S], fn: ParseResult[S] => Trampoline[T]) extends Trampoline[T]
 
   final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => Strict(fn(input)))
@@ -85,23 +86,27 @@ trait Parsers {
     override def parse(input: Input) = lazyParse(input).run
     override def >>[T](fn: S => Parser[T]): Parser[T] =
       StateParser[T] { input =>
-        FlatMap(lazyParse(input), (result: ParseResult[S]) => result match {
-          case Succ(r, n) => fn(r) match {
-            case StateParser(lazyParse) => Lazy(() => lazyParse(n))
-            case p => Strict(p parse n)
+        lazyParse(input) flatmap {
+          _ match {
+            case Succ(r, n) => fn(r) match {
+              case StateParser(lazyParse) => Lazy(n, lazyParse)
+              case p => Strict(p parse n)
+            }
+            case f: Fail => Strict(f)
           }
-          case Fail(msg) => Strict(Fail(msg))
-        })
+        }
       }
     override def |[T >: S](that: Parser[T]): Parser[T] =
       StateParser[T] { input =>
-        FlatMap(lazyParse(input), (result: ParseResult[S]) => result match {
-          case Succ(r, n) => Strict(Succ(r, n))
-          case Fail(msg) => that match {
-            case StateParser(lazyParse) => Lazy(() => lazyParse(input))
-            case p => Strict(p parse input)
+        lazyParse(input) flatmap {
+          _ match {
+            case s: Succ[S] => Strict(s)
+            case f: Fail => that match {
+              case StateParser(lazyParse) => Lazy(input, lazyParse)
+              case p => Strict(p parse input)
+            }
           }
-        })
+        }
       }
   }
 

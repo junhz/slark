@@ -35,7 +35,7 @@ object Main extends Parsers with ReaderApi {
     println("a".* parse "aa")
     println("a".* parse "")
     println(("a" | ("b" ^ ("c" | "d")) | "be") parse "be")
-    "a"{1 << 20} parse List.fill(1 << 20)("a").mkString
+    println("a"{1 << 20} -> (_.length) parse List.fill(1 << 20)("a").mkString)
   }
 
 }

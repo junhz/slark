@@ -33,7 +33,8 @@ object ParserContextDiary extends Diary {
     Source(a -> (_.length()) parse stringReader("a")) ::
     Source(a -> (_.length()) parse stringReader("b")) ::
     Source(a -> (_.charAt(2)) parse stringReader("a")) ::
-    Source(fail("1") | succ("2") parse stringReader("3")) :: 
-    Source(((1 << 20)(a) parse stringReader(List.fill(1 << 20)("a").mkString)).isInstanceOf[ParseResult[_]]) :: Nil
+    Source(fail("1") | succ("2") parse stringReader("3")) :: Nil
+    
+    println((1 << 20)(a).fixed -> (_.length) parse stringReader(List.fill(1 << 20)("a").mkString))
 
 }
