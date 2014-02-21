@@ -25,8 +25,9 @@ object Main extends Parsers with ReaderApi {
   }
 
   def main(args: Array[String]): Unit = {
-    println("a" parse "a")
+    /*println("a" parse "a")
     println("a" parse "")
+    println("a" >> (_ => "b") parse "a")
     println("a" ^ "b" parse "ab")
     println("a" ^ "b" parse "ac")
     println("a" ^ "b" parse "bb")
@@ -34,8 +35,8 @@ object Main extends Parsers with ReaderApi {
     println("a".! parse "a")
     println("a".* parse "aa")
     println("a".* parse "")
-    println(("a" | ("b" ^ ("c" | "d")) | "be") parse "be")
-    println("a"{1 << 20} -> (_.length) parse List.fill(1 << 20)("a").mkString)
+    println(("a" | ("b" ^ ("c" | "d")) | "be") parse "be")*/
+    println("a"{1 << 19} -> (_.length) parse List.fill(1 << 19)("a").mkString)
   }
 
 }

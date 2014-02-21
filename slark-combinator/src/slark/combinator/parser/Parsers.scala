@@ -12,7 +12,7 @@ trait Parsers {
 
   case class Succ[+S](result: S, next: Input) extends ParseResult[S]
 
-  sealed trait Parser[+S] { self =>
+  sealed abstract class Parser[+S] { self =>
     type Result = ParseResult[S]
 
     def parse(input: Input): Result
@@ -55,55 +55,55 @@ trait Parsers {
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
 
-  trait Trampoline[+S] {
-    @tailrec
-    final def resume: Trampoline[S] =
-      this match {
-        case FlatMap(t, fn) => t match {
-          case Strict(r) => fn(r).resume
-          case Lazy(input, lazyParse) => FlatMap(lazyParse(input), fn)
-          case FlatMap(t_, fn_) => (t_ flatmap { result => fn_(result) flatmap fn }).resume
-        }
-        case t => t
-      }
-    @tailrec
-    final def run: ParseResult[S] = resume match {
-      case Strict(r) => r
-      case t => t.run
-    }
-    final def flatmap[T](fn: ParseResult[S] => Trampoline[T]): Trampoline[T] = this match {
-      case FlatMap(t, fn_) => FlatMap(t, (result: ParseResult[Any]) => fn_(result) flatmap fn)
-      case t => FlatMap(t, fn)
-    }
+  sealed abstract class Trampoline[+S] {
   }
-  case class Strict[+S](result: ParseResult[S]) extends Trampoline[S]
-  case class Lazy[+S](input: Input, lazyParse: Input => Trampoline[S]) extends Trampoline[S]
-  case class FlatMap[S, +T](sub: Trampoline[S], fn: ParseResult[S] => Trampoline[T]) extends Trampoline[T]
+  final class Strict[+S](val result: ParseResult[S]) extends Trampoline[S]
+  def strict[S](result: ParseResult[S]) = new Strict(result)
 
-  final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => Strict(fn(input)))
+  final class NonStrict[+S](input: Input, next: Input => Trampoline[S]) extends Trampoline[S] {
+    def toStrict: Trampoline[S] = next(input)
+  }
+  def nonStrict[S](input: Input, next: Input => Trampoline[S]): Trampoline[S] = new NonStrict(input, next)
+
+  final class Combined[S, +T](val origin: Trampoline[S], val fmap: ParseResult[S] => Trampoline[T]) extends Trampoline[T]
+  def combine[S, T](origin: Trampoline[S])(fmap: ParseResult[S] => Trampoline[T]): Trampoline[T] = new Combined(origin, fmap)
+
+  final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => strict(fn(input)))
 
   case class StateParser[S](lazyParse: Input => Trampoline[S]) extends Parser[S] {
-    override def parse(input: Input) = lazyParse(input).run
+    override def parse(input: Input) = {
+      @tailrec
+      def run[S](t: Trampoline[S]): ParseResult[S] = t match {
+        case s: Strict[S] => s.result
+        case n: NonStrict[S] => run(n.toStrict)
+        case c: Combined[_, S] => run(c.origin match {
+          case s: Strict[_] => c.fmap(s.result)
+          case n: NonStrict[_] => combine(n.toStrict)(c.fmap)
+          case cc: Combined[_, _] => combine(cc.origin) { result => combine(cc.fmap(result))(c.fmap) }
+        })
+      }
+      run(lazyParse(input))
+    }
     override def >>[T](fn: S => Parser[T]): Parser[T] =
       StateParser[T] { input =>
-        lazyParse(input) flatmap {
+        combine(lazyParse(input)) {
           _ match {
             case Succ(r, n) => fn(r) match {
-              case StateParser(lazyParse) => Lazy(n, lazyParse)
-              case p => Strict(p parse n)
+              case StateParser(lazyParse) => nonStrict(n, lazyParse)
+              case p => strict(p parse n)
             }
-            case f: Fail => Strict(f)
+            case f: Fail => strict(f)
           }
         }
       }
     override def |[T >: S](that: Parser[T]): Parser[T] =
       StateParser[T] { input =>
-        lazyParse(input) flatmap {
+        combine(lazyParse(input)) {
           _ match {
-            case s: Succ[S] => Strict(s)
+            case s: Succ[S] => strict(s)
             case f: Fail => that match {
-              case StateParser(lazyParse) => Lazy(input, lazyParse)
-              case p => Strict(p parse input)
+              case StateParser(lazyParse) => nonStrict(input, lazyParse)
+              case p => strict(p parse input)
             }
           }
         }
