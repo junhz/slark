@@ -2,7 +2,7 @@ package slark.combinator.parser
 
 import scala.annotation.tailrec
 
-trait Parsers {
+trait Parsers { parsers =>
   type Input
 
   sealed trait ParseResult[+S] {
@@ -24,7 +24,7 @@ trait Parsers {
     def |[T >: S](that: Parser[T]): Parser[T]
 
     /** map */
-    final def ->[T](fn: S => T): Parser[T] = self >> { x => succ(fn(x)) }
+    final def ->[T](fn: S => T): Parser[T] = self >> Parsers.->(parsers)(fn)
 
     /** seq */
     final def ^[T](that: Parser[T]): Parser[(S, T)] = self >> { x => that -> { y => (x, y) } }
@@ -55,58 +55,39 @@ trait Parsers {
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
 
-  sealed abstract class Trampoline[+S] {
-  }
-  final class Strict[+S](val result: ParseResult[S]) extends Trampoline[S]
-  def strict[S](result: ParseResult[S]) = new Strict(result)
+  final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => fn(input))
 
-  final class NonStrict[+S](input: Input, next: Input => Trampoline[S]) extends Trampoline[S] {
-    def toStrict: Trampoline[S] = next(input)
-  }
-  def nonStrict[S](input: Input, next: Input => Trampoline[S]): Trampoline[S] = new NonStrict(input, next)
-
-  final class Combined[S, +T](val origin: Trampoline[S], val fmap: ParseResult[S] => Trampoline[T]) extends Trampoline[T]
-  def combine[S, T](origin: Trampoline[S])(fmap: ParseResult[S] => Trampoline[T]): Trampoline[T] = new Combined(origin, fmap)
-
-  final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => strict(fn(input)))
-
-  case class StateParser[S](lazyParse: Input => Trampoline[S]) extends Parser[S] {
+  case class StateParser[S](lazyParse: Input => AnyRef) extends Parser[S] {
     override def parse(input: Input) = {
+        var i = 0
       @tailrec
-      def run[S](t: Trampoline[S]): ParseResult[S] = t match {
-        case s: Strict[S] => s.result
-        case n: NonStrict[S] => run(n.toStrict)
-        case c: Combined[_, S] => run(c.origin match {
-          case s: Strict[_] => c.fmap(s.result)
-          case n: NonStrict[_] => combine(n.toStrict)(c.fmap)
-          case cc: Combined[_, _] => combine(cc.origin) { result => combine(cc.fmap(result))(c.fmap) }
-        })
-      }
-      run(lazyParse(input))
-    }
-    override def >>[T](fn: S => Parser[T]): Parser[T] =
-      StateParser[T] { input =>
-        combine(lazyParse(input)) {
-          _ match {
-            case Succ(r, n) => fn(r) match {
-              case StateParser(lazyParse) => nonStrict(n, lazyParse)
-              case p => strict(p parse n)
-            }
-            case f: Fail => strict(f)
-          }
+      def run(a: AnyRef): AnyRef = {
+          i = i + 1
+          println(i)
+        a match {
+          case r: ParseResult[AnyRef] => r
+          case f: Function0[AnyRef] => run(f())
+          case (origin, fmap: Function1[ParseResult[AnyRef], AnyRef]) => run(origin match {
+            case r: ParseResult[AnyRef] => fmap(r)
+            case f: Function0[AnyRef] => (f(), fmap)
+            case (o, f: Function1[ParseResult[AnyRef], AnyRef]) => (o, (result: ParseResult[AnyRef]) => (f(result), fmap))
+          })
         }
       }
+      run(lazyParse(input)).asInstanceOf[ParseResult[S]]
+    }
+    override def >>[T](fn: S => Parser[T]): Parser[T] = {
+      StateParser[T](Parsers.>>(parsers)(lazyParse, fn))
+    }
     override def |[T >: S](that: Parser[T]): Parser[T] =
       StateParser[T] { input =>
-        combine(lazyParse(input)) {
-          _ match {
-            case s: Succ[S] => strict(s)
-            case f: Fail => that match {
-              case StateParser(lazyParse) => nonStrict(input, lazyParse)
-              case p => strict(p parse input)
-            }
+        (lazyParse(input), (result: ParseResult[S]) => result match {
+          case s: Succ[S] => s
+          case f: Fail => that match {
+            case StateParser(lazyParse) => () => lazyParse(input)
+            case p => p parse input
           }
-        }
+        })
       }
   }
 
@@ -123,7 +104,20 @@ trait Parsers {
     override def parse(input: Input) = Succ(sym, input)
     override def >>[T](fn: S => Parser[T]) = fn(sym)
     override def |[T >: S](that: Parser[T]): Parser[T] = this
+    override def toString = s"succ($sym)"
   }
 
   def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
+}
+
+object Parsers {
+  def ->[S, T](parsers: Parsers)(fn: S => T): S => parsers.Parser[T] = x => parsers.succ(fn(x))
+  def >>[S, T](parsers: Parsers)(lazyParse: parsers.Input => AnyRef, fn: S => parsers.Parser[T]): parsers.Input => AnyRef =
+    input => () => (lazyParse(input), (result: parsers.ParseResult[S]) => result match {
+      case parsers.Succ(r, n) => fn(r) match {
+        case parsers.StateParser(lazyParse) => () => lazyParse(n)
+        case p => p parse n
+      }
+      case f: parsers.Fail => f
+    })
 }
