@@ -12,7 +12,7 @@ trait Parsers { parsers =>
 
   case class Succ[+S](result: S, next: Input) extends ParseResult[S]
 
-  sealed abstract class Parser[+S] { self =>
+  sealed abstract class Parser[+S] {
     type Result = ParseResult[S]
 
     def parse(input: Input): Result
@@ -24,46 +24,67 @@ trait Parsers { parsers =>
     def |[T >: S](that: Parser[T]): Parser[T]
 
     /** map */
-    final def ->[T](fn: S => T): Parser[T] = self >> Parsers.->(parsers)(fn)
+    final def ->[T](fn: S => T): Parser[T] = Parser -> (this, fn)
 
     /** seq */
-    final def ^[T](that: Parser[T]): Parser[(S, T)] = self >> { x => that -> { y => (x, y) } }
+    final def ^[T](that: Parser[T]): Parser[(S, T)] = Parser ^ (this, that)
 
     /** guard */
-    final def :^[T](that: Parser[T]): Parser[T] = self >> { _ => that }
+    final def :^[T](that: Parser[T]): Parser[T] = Parser :^ (this, that)
 
     /** guard */
-    final def ^:[T](that: Parser[T]): Parser[T] = that >> { x => self -> { _ => x } }
+    final def ^:[T](that: Parser[T]): Parser[T] = Parser.^:(this, that)
 
     /** not */
-    final def ! : Parser[Unit] = ((self >> { _ => succ(fail("missing an expected failure")) }) | succ(succ())) >> { p => p }
+    final def ! : Parser[Unit] = Parser ! this
 
     /** rep */
-    final def * : Parser[List[S]] = (self >> { x => self.* -> { xs => x :: xs } }) | succ(Nil)
+    final def * : Parser[List[S]] = Parser * this
 
     /** rep */
-    final def apply(time: Int): Parser[List[S]] =
-      if (time > 0) self >> { x => self { time - 1 } -> { xs => x :: xs } }
-      else succ(Nil)
+    final def apply(time: Int): Parser[List[S]] = Parser(this, time)
 
     /** option */
-    final def ? : Parser[Option[S]] = (self >> { x => succ(Some(x)) }) | succ(None)
+    final def ? : Parser[Option[S]] = Parser ? this
 
     /** option rep */
     /*final def ?(time: Int): Parser[List[S]] =
       if (time > 0) (self >> { x => self.?{ time - 1 } -> { xs => x :: xs } }) | succ(Nil)
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
+  object Parser {
+    def ->[S, T](self: Parser[S], fn: S => T): Parser[T] = self >> { x => succ(fn(x)) }
+
+    /** seq */
+    def ^[S, T](self: Parser[S], that: Parser[T]): Parser[(S, T)] = self >> { x => that -> { y => (x, y) } }
+
+    /** guard */
+    def :^[S, T](self: Parser[S], that: Parser[T]): Parser[T] = self >> { _ => that }
+
+    /** guard */
+    def ^:[S, T](self: Parser[S], that: Parser[T]): Parser[T] = that >> { x => self -> { _ => x } }
+
+    /** not */
+    def ![S](self: Parser[S]): Parser[Unit] = ((self >> { _ => succ(fail("missing an expected failure")) }) | succ(succ())) >> { p => p }
+
+    /** rep */
+    def *[S](self: Parser[S]): Parser[List[S]] = (self >> { x => self.* -> { xs => x :: xs } }) | succ(Nil)
+
+    /** rep */
+    def apply[S](self: Parser[S], time: Int): Parser[List[S]] =
+      if (time > 0) self >> { x => self { time - 1 } -> { xs => x :: xs } }
+      else succ(Nil)
+
+    /** option */
+    final def ?[S](self: Parser[S]): Parser[Option[S]] = (self >> { x => succ(Some(x)) }) | succ(None)
+  }
 
   final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => fn(input))
 
   case class StateParser[S](lazyParse: Input => AnyRef) extends Parser[S] {
     override def parse(input: Input) = {
-        var i = 0
       @tailrec
-      def run(a: AnyRef): AnyRef = {
-          i = i + 1
-          println(i)
+      def run(a: AnyRef): AnyRef =
         a match {
           case r: ParseResult[AnyRef] => r
           case f: Function0[AnyRef] => run(f())
@@ -73,12 +94,11 @@ trait Parsers { parsers =>
             case (o, f: Function1[ParseResult[AnyRef], AnyRef]) => (o, (result: ParseResult[AnyRef]) => (f(result), fmap))
           })
         }
-      }
+
       run(lazyParse(input)).asInstanceOf[ParseResult[S]]
     }
-    override def >>[T](fn: S => Parser[T]): Parser[T] = {
-      StateParser[T](Parsers.>>(parsers)(lazyParse, fn))
-    }
+    override def >>[T](fn: S => Parser[T]): Parser[T] = StateParser >> (this, fn)
+
     override def |[T >: S](that: Parser[T]): Parser[T] =
       StateParser[T] { input =>
         (lazyParse(input), (result: ParseResult[S]) => result match {
@@ -89,6 +109,20 @@ trait Parsers { parsers =>
           }
         })
       }
+  }
+  object StateParser {
+    def >>[S, T](self: StateParser[S], fn: S => Parser[T]): Parser[T] =
+      StateParser[T](Trampoline >> (self.lazyParse, _ => (result: ParseResult[S]) => result match {
+        case Succ(r, n) => fn(r) match {
+          case StateParser(lazyParse) => () => lazyParse(n)
+          case p => p parse n
+        }
+        case f: Fail => f
+      }))
+  }
+  object Trampoline {
+    def >>[S, T](self: S => AnyRef, fn: S => (T => AnyRef)): S => AnyRef =
+      s => (self(s), fn(s))
   }
 
   /** zero unit */
@@ -108,16 +142,4 @@ trait Parsers { parsers =>
   }
 
   def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
-}
-
-object Parsers {
-  def ->[S, T](parsers: Parsers)(fn: S => T): S => parsers.Parser[T] = x => parsers.succ(fn(x))
-  def >>[S, T](parsers: Parsers)(lazyParse: parsers.Input => AnyRef, fn: S => parsers.Parser[T]): parsers.Input => AnyRef =
-    input => () => (lazyParse(input), (result: parsers.ParseResult[S]) => result match {
-      case parsers.Succ(r, n) => fn(r) match {
-        case parsers.StateParser(lazyParse) => () => lazyParse(n)
-        case p => p parse n
-      }
-      case f: parsers.Fail => f
-    })
 }

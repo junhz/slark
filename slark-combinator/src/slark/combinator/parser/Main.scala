@@ -39,7 +39,7 @@ object Main extends Parsers with ReaderApi {
   }
 
   def main(args: Array[String]): Unit = {
-    /*println("a" parse "a")
+    println("a" parse "a")
     println("a" parse "")
     println("a" >> (_ => "b") parse "a")
     println("a" ^ "b" parse "ab")
@@ -49,8 +49,8 @@ object Main extends Parsers with ReaderApi {
     println("a".! parse "a")
     println("a".* parse "aa")
     println("a".* parse "")
-    println(("a" | ("b" ^ ("c" | "d")) | "be") parse "be")*/
-    println("a"{1 << 20 } -> (_.length) parse Stream.continually('a'))
+    println(("a" | ("b" ^ ("c" | "d")) | "be") parse "be")
+    println(("a" -> { x => println(1); x }){ 1 << 22 } -> (_.length) parse Stream.continually('a'))
   }
 
 }
