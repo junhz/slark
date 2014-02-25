@@ -111,14 +111,17 @@ trait Parsers { parsers =>
       }
   }
   object StateParser {
-    def >>[S, T](self: StateParser[S], fn: S => Parser[T]): Parser[T] =
-      StateParser[T](Trampoline >> (self.lazyParse, _ => (result: ParseResult[S]) => result match {
+    def >>[S, T](self: StateParser[S], fn: S => Parser[T]): Parser[T] = {
+      val fmap = (result: ParseResult[S]) => result match {
         case Succ(r, n) => fn(r) match {
           case StateParser(lazyParse) => () => lazyParse(n)
           case p => p parse n
         }
         case f: Fail => f
-      }))
+      }
+
+      StateParser[T](Trampoline >> (self.lazyParse, _ => fmap))
+    }
   }
   object Trampoline {
     def >>[S, T](self: S => AnyRef, fn: S => (T => AnyRef)): S => AnyRef =
