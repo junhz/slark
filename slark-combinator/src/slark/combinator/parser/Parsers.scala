@@ -99,16 +99,7 @@ trait Parsers { parsers =>
     }
     override def >>[T](fn: S => Parser[T]): Parser[T] = StateParser >> (this, fn)
 
-    override def |[T >: S](that: Parser[T]): Parser[T] =
-      StateParser[T] { input =>
-        (lazyParse(input), (result: ParseResult[S]) => result match {
-          case s: Succ[S] => s
-          case f: Fail => that match {
-            case StateParser(lazyParse) => () => lazyParse(input)
-            case p => p parse input
-          }
-        })
-      }
+    override def |[T >: S](that: Parser[T]): Parser[T] = StateParser | (this, that)
   }
   object StateParser {
     def >>[S, T](self: StateParser[S], fn: S => Parser[T]): Parser[T] = {
@@ -121,6 +112,20 @@ trait Parsers { parsers =>
       }
 
       StateParser[T](Trampoline >> (self.lazyParse, _ => fmap))
+    }
+
+    def |[S, T >: S](self: StateParser[S], that: Parser[T]): Parser[T] = {
+      val fn = that match {
+        case StateParser(lazyParse) => (input: Input) => () => lazyParse(input)
+        case p => (input: Input) => p parse input
+      }
+      
+      val fmap = (input: Input) => (result: ParseResult[S]) => result match {
+        case s: Succ[S] => s
+        case _ => fn(input)
+      }
+
+      StateParser[T](Trampoline >> (self.lazyParse, fmap))
     }
   }
   object Trampoline {
