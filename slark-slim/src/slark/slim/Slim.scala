@@ -42,21 +42,16 @@ object SlimMacros {
             case EmptyTree => rec(rest.tail, results)
             case _: Import => rec(rest.tail, results)
             case _: Literal => rec(rest.tail, results)
+            case _: Ident => rec(rest.tail, results)
             case _: This => rec(rest.tail, results)
-            case t @ ModuleDef(_, _, impl) => rec(rest.tail, results)
-            case t @ ClassDef(_, _, _, impl) => rec(rest.tail, results)
-            case t @ DefDef(_, _, _, _, _, rhs) => rec(rest.tail, results)
-            case t @ ValDef(_, _, _, rhs) => rec(rest.tail, results)
-            case t @ New(tpt) => rec(rest.tail, results)
-            case t @ Block(stats, expr) => rec(stats ::: expr :: rest.tail, results)
-            case t @ Apply(fun, args) => rec(fun :: args ::: rest.tail, results) /*{
-              c.warning(t.pos, showRaw(t))
-              fun match {
-                case Select(This(qual), name) => rec(args ::: rest.tail, UnstableDep(qual) :: results)
-                case _ => rec(fun :: args ::: rest.tail, results)
-              }
-            }*/
-            case t @ Select(qualifier, name) => {
+            case ModuleDef(_, _, impl) => rec(rest.tail, results)
+            case ClassDef(_, _, _, impl) => rec(rest.tail, results)
+            case DefDef(_, _, _, _, _, rhs) => rec(rest.tail, results)
+            case ValDef(_, _, _, rhs) => rec(rest.tail, results)
+            case New(tpt) => rec(rest.tail, results)
+            case Block(stats, expr) => rec(stats ::: expr :: rest.tail, results)
+            case Apply(fun, args) => rec(fun :: args ::: rest.tail, results)
+            case Select(qualifier, name) => {
               qualifier match {
                 case q @ This(qual) => {
                   if (q.tpe.member(name).asTerm.isStable) rec(rest.tail, StableDep(qual, name) :: results)
@@ -132,15 +127,31 @@ object SlimMacros {
         val typeArgs = tpe match {
           case TypeRef(_, _, args) => args
         }
+        //c.warning(c.enclosingPosition, showRaw(t))
         c.warning(c.enclosingPosition, findDeps(impl).mkString(", "))
         c.warning(c.enclosingPosition, outers(find(c.enclosingUnit.body, c.enclosingClass)).mkString(", "))
+        c.warning(c.enclosingPosition, AppliedTypeTree(Select(Select(Ident(newTermName("scala")), newTermName("runtime")), newTypeName("AbstractFunction0")), typeArgs.map(x => Ident(x.typeSymbol.name))).toString)
         c.Expr(c.parse(
           s"""final class Slim(i: String) extends scala.runtime.AbstractFunction${args.length}[${typeArgs.mkString(",")}] {
   override def apply(${args.map(_ match { case ValDef(_, name, tpe, _) => s"$name: $tpe" }).mkString(",")}) = i
 }
 new Slim(i)"""))
+        t
+        c Expr Block(
+          ClassDef(
+            Modifiers(Flag.FINAL),
+            newTypeName("Slim"),
+            Nil,
+            Template(
+              AppliedTypeTree(Select(Select(Ident(newTermName("scala")), newTermName("runtime")), newTypeName("AbstractFunction0")), typeArgs.map(x => Ident(x.typeSymbol.name))) :: Nil,
+              emptyValDef,
+              DefDef(Modifiers(Flag.OVERRIDE), newTermName("apply"), List(), List(), TypeTree(), Literal(Constant(""))) ::
+                DefDef(Modifiers(), nme.CONSTRUCTOR, Nil, Nil, TypeTree(), Block(List(Apply(Select(Super(This(newTypeName("Slim")), tpnme.EMPTY), nme.CONSTRUCTOR), List())), Literal(Constant(())))) ::
+                Nil)) ::
+            Nil,
+          Apply(Select(New(Ident(newTypeName("Slim"))), nme.CONSTRUCTOR), Nil))
       }
-      case _ => error("only Function literal is allowed now. "+showRaw(t))
+      case _ => error("only Function literal is allowed now. " + showRaw(t))
     }
   }
 
