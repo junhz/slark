@@ -85,6 +85,7 @@ object LogMacros {
             case t @ Block(stats, expr) => rec(t :: path, (expr :: stats) :: bodies.head.tail :: bodies.tail)
             case t @ Select(qualifier, _) => rec(t :: path, (qualifier :: Nil) :: bodies.head.tail :: bodies.tail)
             case t @ Template(_, _, body) => rec(t :: path, body :: bodies.head.tail :: bodies.tail)
+            case t @ Function(_, impl) => rec(t :: path, (impl :: Nil) :: bodies.head.tail :: bodies.tail)
             case tree => {
               c.warning(tree.pos, s"${tree.getClass().getName()} not matched: ${tree.toString}")
               rec(tree :: path, tree.children :: bodies.head.tail :: bodies.tail)

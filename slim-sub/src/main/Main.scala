@@ -18,11 +18,17 @@ object Main {
       trait A {
         trait B {
           def f = slark.slim.Slim {
-            () => i
+            (_: String) => i + j + k + ii + jj + kk
           }
+          
+          val ii = ""
+          def jj = ""
+          var kk = ""
         }
 
         val i = ""
+        def j = ""
+        var k = ""
       }
     }
 

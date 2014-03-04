@@ -100,12 +100,17 @@ trait Parsers { parsers =>
     override def >>[T](fn: S => Parser[T]): Parser[T] = StateParser >> (this, fn)
 
     override def |[T >: S](that: Parser[T]): Parser[T] = StateParser | (this, that)
+    
+    def l(input: Input): Function0[AnyRef] =new StateParser.L(lazyParse, input)
   }
   object StateParser {
+    final class L[T](lazyParser: Input => T, input: Input) extends Function0[T] {
+      override def apply = lazyParser(input)
+    }
     def >>[S, T](self: StateParser[S], fn: S => Parser[T]): Parser[T] = {
       val fmap = (result: ParseResult[S]) => result match {
         case Succ(r, n) => fn(r) match {
-          case StateParser(lazyParse) => () => lazyParse(n)
+          case s: StateParser[_] => s.l(n)
           case p => p parse n
         }
         case f: Fail => f
@@ -116,7 +121,7 @@ trait Parsers { parsers =>
 
     def |[S, T >: S](self: StateParser[S], that: Parser[T]): Parser[T] = {
       val fn = that match {
-        case StateParser(lazyParse) => (input: Input) => () => lazyParse(input)
+        case s: StateParser[_] => (input: Input) =>s.l(input)
         case p => (input: Input) => p parse input
       }
       
