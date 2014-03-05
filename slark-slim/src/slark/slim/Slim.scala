@@ -16,14 +16,10 @@ object SlimMacros {
     import c.universe._
 
     trait OuterDep
-    /** value */
     case class StableDep(qual: TypeName, name: Name) extends OuterDep {
       val e = c.universe.TypeRef
     }
-    /** method */
     case class UnstableDep(name: TypeName) extends OuterDep
-
-    val tpe = weakTypeOf[T]
 
     def error(msg: String): c.Expr[T] = {
       c.error(c.enclosingPosition, msg)
@@ -71,87 +67,43 @@ object SlimMacros {
       rec(root :: Nil, Nil)
     }
 
-    def find(root: Tree, target: Tree): List[Tree] = {
-      import c.universe._
+    def outers(path: List[Tree]): List[Name] = {
       @tailrec
-      def rec(path: List[Tree], bodies: List[List[Tree]]): List[Tree] = {
-        if (bodies.isEmpty) List()
-        else if (bodies.head.isEmpty) rec(path.tail, bodies.tail)
-        else if (bodies.head.head == target) target :: path
-        else {
-          bodies.head.head match {
-            case EmptyTree => rec(path, bodies.head.tail :: bodies.tail)
-            case _: Import => rec(path, bodies.head.tail :: bodies.tail)
-            case _: Super => rec(path, bodies.head.tail :: bodies.tail)
-            case _: Literal => rec(path, bodies.head.tail :: bodies.tail)
-            case _: Ident => rec(path, bodies.head.tail :: bodies.tail)
-            case _: TypeBoundsTree => rec(path, bodies.head.tail :: bodies.tail)
-            case _: TypeDef => rec(path, bodies.head.tail :: bodies.tail)
-            case _: This => rec(path, bodies.head.tail :: bodies.tail)
-            case t @ ModuleDef(_, _, impl) => rec(t :: path, impl.body :: bodies.head.tail :: bodies.tail)
-            case t @ ClassDef(_, _, _, impl) => rec(t :: path, impl.body :: bodies.head.tail :: bodies.tail)
-            case t @ PackageDef(_, stats) => rec(t :: path, stats :: bodies.head.tail :: bodies.tail)
-            case t @ DefDef(_, _, _, _, _, rhs) => rec(t :: path, (rhs :: Nil) :: bodies.head.tail :: bodies.tail)
-            case t @ ValDef(_, _, _, rhs) => rec(t :: path, (rhs :: Nil) :: bodies.head.tail :: bodies.tail)
-            case t @ New(tpt) => rec(t :: path, (tpt :: Nil) :: bodies.head.tail :: bodies.tail)
-            case t @ Apply(fun, args) => rec(t :: path, (fun :: args) :: bodies.head.tail :: bodies.tail)
-            case t @ Block(stats, expr) => rec(t :: path, (expr :: stats) :: bodies.head.tail :: bodies.tail)
-            case t @ Select(qualifier, _) => rec(t :: path, (qualifier :: Nil) :: bodies.head.tail :: bodies.tail)
-            case t @ Template(_, _, body) => rec(t :: path, body :: bodies.head.tail :: bodies.tail)
-            case t @ Function(_, impl) => rec(t :: path, (impl :: Nil) :: bodies.head.tail :: bodies.tail)
-            case tree => {
-              c.warning(tree.pos, s"${tree.getClass().getName()} not matched: ${tree.toString}")
-              rec(tree :: path, tree.children :: bodies.head.tail :: bodies.tail)
-            }
-          }
-        }
-      }
-
-      rec(Nil, (root :: Nil) :: Nil)
-    }
-
-    def outers(path: List[Tree]): List[TypeName] = {
-      @tailrec
-      def rec(path: List[Tree], names: List[TypeName]): List[TypeName] = {
+      def rec(path: List[Tree], names: List[Name], stable: Boolean): List[Name] = {
         if (path.isEmpty) names
         else path.head match {
-          case ClassDef(_, className, _, _) => rec(path.tail, className :: names)
-          case _ => rec(path.tail, names)
+          case ClassDef(_, className, _, _) => rec(path.tail, className :: names, false)
+          case ModuleDef(_, moduleName, _) => if(stable) rec(path.tail, Nil, true) else rec(path.tail, moduleName :: names, false)
+          case _: PackageDef => rec(path.tail, Nil, true)
+          case _ => rec(path.tail, names, false)
         }
       }
-      rec(path, Nil)
+      rec(path, Nil, true)
     }
 
     t.tree match {
       case Function(args, impl) => {
-        val typeArgs = tpe match {
-          case TypeRef(_, _, args) => args
-        }
-        //c.warning(c.enclosingPosition, showRaw(t))
+        val ts = args map { case ValDef(_, _, tpe, _) => tpe }
+        val r = TypeTree(impl.tpe)
         c.warning(c.enclosingPosition, findDeps(impl).mkString(", "))
-        c.warning(c.enclosingPosition, outers(find(c.enclosingUnit.body, c.enclosingClass)).mkString(", "))
-        c.warning(c.enclosingPosition, AppliedTypeTree(Select(Select(Ident(newTermName("scala")), newTermName("runtime")), newTypeName("AbstractFunction0")), typeArgs.map(x => Ident(x.typeSymbol.name))).toString)
-        c.Expr(c.parse(
-          s"""final class Slim(i: String) extends scala.runtime.AbstractFunction${args.length}[${typeArgs.mkString(",")}] {
-  override def apply(${args.map(_ match { case ValDef(_, name, tpe, _) => s"$name: $tpe" }).mkString(",")}) = i
-}
-new Slim(i)"""))
-        t
+        c.warning(c.enclosingPosition, outers(Macros.searchForDef(c)(c.enclosingUnit.body, c.enclosingClass)).mkString(", "))
+        
+        val functionType = AppliedTypeTree(Select(Select(Ident(newTermName("scala")), newTermName("runtime")), newTypeName(s"AbstractFunction${ts.length}")), ts ::: r :: Nil)
+        val classDef = ClassDef(
+          Modifiers(Flag.FINAL),
+          newTypeName("Slim"),
+          Nil,
+          Template(
+            functionType :: Nil,
+            emptyValDef,
+            DefDef(Modifiers(Flag.OVERRIDE), newTermName("apply"), List(), args :: Nil, TypeTree(), c.resetAllAttrs(impl)) ::
+              DefDef(Modifiers(), nme.CONSTRUCTOR, Nil, Nil, TypeTree(), Block(List(Apply(Select(Super(This(newTypeName("Slim")), tpnme.EMPTY), nme.CONSTRUCTOR), List())), Literal(Constant(())))) ::
+              Nil))
         c Expr Block(
-          ClassDef(
-            Modifiers(Flag.FINAL),
-            newTypeName("Slim"),
-            Nil,
-            Template(
-              AppliedTypeTree(Select(Select(Ident(newTermName("scala")), newTermName("runtime")), newTypeName("AbstractFunction0")), typeArgs.map(x => Ident(x.typeSymbol.name))) :: Nil,
-              emptyValDef,
-              DefDef(Modifiers(Flag.OVERRIDE), newTermName("apply"), List(), List(), TypeTree(), Literal(Constant(""))) ::
-                DefDef(Modifiers(), nme.CONSTRUCTOR, Nil, Nil, TypeTree(), Block(List(Apply(Select(Super(This(newTypeName("Slim")), tpnme.EMPTY), nme.CONSTRUCTOR), List())), Literal(Constant(())))) ::
-                Nil)) ::
-            Nil,
+          classDef :: Nil,
           Apply(Select(New(Ident(newTypeName("Slim"))), nme.CONSTRUCTOR), Nil))
       }
-      case _ => error("only Function literal is allowed now. " + showRaw(t))
+      case _ => error("only Function literal is allowed now. "+showRaw(t))
     }
   }
 
