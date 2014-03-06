@@ -4,24 +4,22 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     val s = slark.Source {
-      final class Slim extends scala.runtime.AbstractFunction1[String, String] {
-        override def apply(x: String) = x
-      }
-      new Slim()
+      def anno(x: String) = x + " "
+      anno _
     }
     println(s.srcTree)
   }
 
-  trait A {
+  trait B {
     object B {
       def f = {
-        val iii = ""
-        def jjj = ""
-        var kkk = ""
-        object HHH
-
+        
+        val slim$B$this = slark.slim.Slim.outer[B]
+        val slim$B$B$this = slark.slim.Slim.outer[B.type]
+        
         slark.slim.Slim {
-          (x: String, y: Int) => x + i + j + k + ii + jj + kk + iii + jjj + kkk + H + HH + HHH + x.charAt(y)
+          //(x: String, y: Int) => x + slim$B$this.i + slim$B$this.j + slim$B$this.k + slim$B$B$this.ii + slim$B$B$this.jj + slim$B$B$this.kk + slim$B$this.H + slim$B$B$this.HH + x.charAt(y)
+          (x: String, y: Int) => x + i + j + k + ii + jj + kk + H + HH + x.charAt(y)
         }
       }
 
