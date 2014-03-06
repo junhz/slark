@@ -10,11 +10,11 @@ object Main {
     println(s.srcTree)
   }
 
-  trait B {
+  trait A {
     object B {
       def f = {
         
-        val slim$B$this = slark.slim.Slim.outer[B]
+        val slim$B$this = slark.slim.Slim.outer[A]
         val slim$B$B$this = slark.slim.Slim.outer[B.type]
         
         slark.slim.Slim {

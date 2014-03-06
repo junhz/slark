@@ -70,14 +70,15 @@ object SlimMacros {
         }
 
         val vals = createVal(0, deps, Nil)
-
+c.warning(c.enclosingPosition, deps.map(t => This(t.typeSymbol)).toString)
+c.warning(c.enclosingPosition, vals.map(v => Ident(v.name)).toString)
         def substitute(tree: Tree, thiss: List[Type], vals: List[ValDef]): Tree = {
           if (thiss.isEmpty) tree
-          else substitute(tree.substituteThis(NoSymbol, Ident(vals.head.name)), thiss.tail, vals.tail)
+          else substitute(tree.substituteThis(thiss.head.typeSymbol, Ident(vals.head.name)), thiss.tail, vals.tail)
         }
-//substitute(impl, deps, vals)
+substitute(impl, deps, vals)
         c Expr Block(vals, Function(args, impl))
-        //t
+        // 
       }
       case _ => error("only Function literal is allowed now. "+showRaw(t))
     }
