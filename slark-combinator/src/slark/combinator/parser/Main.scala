@@ -50,7 +50,7 @@ object Main extends Parsers with ReaderApi {
     println("a".* parse "aa")
     println("a".* parse "")
     println(("a" | ("b" ^ ("c" | "d")) | "be") parse "be")
-    println(("a" -> { x => println(1); x }){ 1 << 21 } -> (_.length) parse Stream.continually('a'))
+    println(("a"/* -> { x => println(1); x }*/){ 1 << 20 } -> (_.length) parse Stream.continually('a'))
   }
 
 }

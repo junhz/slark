@@ -22,11 +22,12 @@ object SlimMacros {
         else {
           rest.head match {
             case _: Ident => rec(rest.tail, results)
+            case _: Literal => rec(rest.tail, results)
             case Apply(fun, args) => rec(fun :: args ::: rest.tail, results)
             case TypeApply(fun, _) => rec(fun :: rest.tail, results)
             case Select(qualifier, name) => qualifier match {
               case q @ This(qual) => {
-                c.warning(q.pos, s"dep on ${q.symbol}")
+                c.echo(q.pos, s"dep on ${q.symbol}")
                 rec(rest.tail, q.symbol :: results)
               }
               case _ => rec(qualifier :: rest.tail, results)

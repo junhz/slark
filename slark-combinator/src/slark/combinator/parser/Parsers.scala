@@ -28,25 +28,27 @@ trait Parsers { parsers =>
     final def ->[T](fn: S => T): Parser[T] = self >> Slim { x => succ(fn(x)) }
 
     /** seq */
-    final def ^[T](that: Parser[T]): Parser[(S, T)] = Parser ^ (this, that)
+    final def ^[T](that: Parser[T]): Parser[(S, T)] = self >> { x => that -> { y => (x, y) } }
 
     /** guard */
-    final def :^[T](that: Parser[T]): Parser[T] = Parser :^ (this, that)
+    final def :^[T](that: Parser[T]): Parser[T] = self >> { _ => that }
 
     /** guard */
-    final def ^:[T](that: Parser[T]): Parser[T] = Parser.^:(this, that)
+    final def ^:[T](that: Parser[T]): Parser[T] = that >> { x => self -> { _ => x } }
 
     /** not */
     final def ! : Parser[Unit] = Parser ! this
 
     /** rep */
-    final def * : Parser[List[S]] = Parser * this
+    final def * : Parser[List[S]] = (self >> { x => self.* -> { xs => x :: xs } }) | succ(Nil)
 
     /** rep */
-    final def apply(time: Int): Parser[List[S]] = Parser(this, time)
+    final def apply(time: Int): Parser[List[S]] =
+      if (time > 0) self >> { x => self { time - 1 } -> { xs => x :: xs } }
+      else succ(Nil)
 
     /** option */
-    final def ? : Parser[Option[S]] = Parser ? this
+    final def ? : Parser[Option[S]] = (self -> { x => Some(x) }) | succ(None)
 
     /** option rep */
     /*final def ?(time: Int): Parser[List[S]] =
@@ -54,30 +56,8 @@ trait Parsers { parsers =>
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
   object Parser {
-    //def ->[S, T](self: Parser[S], fn: S => T): Parser[T] = self >> { x => succ(fn(x)) }
-
-    /** seq */
-    def ^[S, T](self: Parser[S], that: Parser[T]): Parser[(S, T)] = self >> { x => that -> { y => (x, y) } }
-
-    /** guard */
-    def :^[S, T](self: Parser[S], that: Parser[T]): Parser[T] = self >> { _ => that }
-
-    /** guard */
-    def ^:[S, T](self: Parser[S], that: Parser[T]): Parser[T] = that >> { x => self -> { _ => x } }
-
-    /** not */
+    // http://docs.scala-lang.org/overviews/reflection/thread-safety.html
     def ![S](self: Parser[S]): Parser[Unit] = ((self >> { _ => succ(fail("missing an expected failure")) }) | succ(succ())) >> { p => p }
-
-    /** rep */
-    def *[S](self: Parser[S]): Parser[List[S]] = (self >> { x => self.* -> { xs => x :: xs } }) | succ(Nil)
-
-    /** rep */
-    def apply[S](self: Parser[S], time: Int): Parser[List[S]] =
-      if (time > 0) self >> { x => self { time - 1 } -> { xs => x :: xs } }
-      else succ(Nil)
-
-    /** option */
-    final def ?[S](self: Parser[S]): Parser[Option[S]] = (self >> { x => succ(Some(x)) }) | succ(None)
   }
 
   final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => fn(input))
@@ -98,45 +78,39 @@ trait Parsers { parsers =>
 
       run(lazyParse(input)).asInstanceOf[ParseResult[S]]
     }
-    override def >>[T](fn: S => Parser[T]): Parser[T] = StateParser >> (this, fn)
-
-    override def |[T >: S](that: Parser[T]): Parser[T] = StateParser | (this, that)
-    
-    def l(input: Input): Function0[AnyRef] =new StateParser.L(lazyParse, input)
-  }
-  object StateParser {
-    final class L[T](lazyParser: Input => T, input: Input) extends Function0[T] {
-      override def apply = lazyParser(input)
-    }
-    def >>[S, T](self: StateParser[S], fn: S => Parser[T]): Parser[T] = {
-      val fmap = (result: ParseResult[S]) => result match {
+    override def >>[T](fn: S => Parser[T]): Parser[T] = {
+      val flapMap = (result: ParseResult[S]) => result match {
         case Succ(r, n) => fn(r) match {
-          case s: StateParser[_] => s.l(n)
+          case StateParser(lazyParser) => { val l = lazyParser; val nn = n; () => l(nn) }
           case p => p parse n
         }
         case f: Fail => f
       }
 
-      StateParser[T](Trampoline >> (self.lazyParse, _ => fmap))
+      val l = lazyParse
+      StateParser[T] { input => (l(input), flapMap) }
     }
 
-    def |[S, T >: S](self: StateParser[S], that: Parser[T]): Parser[T] = {
+    override def |[T >: S](that: Parser[T]): Parser[T] = {
       val fn = that match {
-        case s: StateParser[_] => (input: Input) =>s.l(input)
+        case StateParser(lazyParser) => {
+          val ll = lazyParser
+          (input: Input) => { val l = ll; () => l(input) }
+        }
         case p => (input: Input) => p parse input
       }
-      
-      val fmap = (input: Input) => (result: ParseResult[S]) => result match {
-        case s: Succ[S] => s
-        case _ => fn(input)
-      }
 
-      StateParser[T](Trampoline >> (self.lazyParse, fmap))
+      val l = lazyParse
+      StateParser[T] { input =>
+        {
+          val f = fn
+          (l(input), (result: ParseResult[S]) => result match {
+            case s: Succ[S] => s
+            case _ => f(input)
+          })
+        }
+      }
     }
-  }
-  object Trampoline {
-    def >>[S, T](self: S => AnyRef, fn: S => (T => AnyRef)): S => AnyRef =
-      s => (self(s), fn(s))
   }
 
   /** zero unit */
