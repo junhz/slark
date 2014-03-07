@@ -1,4 +1,5 @@
-package slark.combinator.parser
+package slark
+package combinator.parser
 
 import scala.annotation.tailrec
 
@@ -12,7 +13,7 @@ trait Parsers { parsers =>
 
   case class Succ[+S](result: S, next: Input) extends ParseResult[S]
 
-  sealed abstract class Parser[+S] {
+  sealed abstract class Parser[+S] { self =>
     type Result = ParseResult[S]
 
     def parse(input: Input): Result
@@ -24,7 +25,7 @@ trait Parsers { parsers =>
     def |[T >: S](that: Parser[T]): Parser[T]
 
     /** map */
-    final def ->[T](fn: S => T): Parser[T] = Parser -> (this, fn)
+    final def ->[T](fn: S => T): Parser[T] = self >> Slim { x => succ(fn(x)) }
 
     /** seq */
     final def ^[T](that: Parser[T]): Parser[(S, T)] = Parser ^ (this, that)
@@ -53,7 +54,7 @@ trait Parsers { parsers =>
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
   object Parser {
-    def ->[S, T](self: Parser[S], fn: S => T): Parser[T] = self >> { x => succ(fn(x)) }
+    //def ->[S, T](self: Parser[S], fn: S => T): Parser[T] = self >> { x => succ(fn(x)) }
 
     /** seq */
     def ^[S, T](self: Parser[S], that: Parser[T]): Parser[(S, T)] = self >> { x => that -> { y => (x, y) } }
