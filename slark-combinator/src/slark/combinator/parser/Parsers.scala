@@ -4,7 +4,7 @@ package combinator.parser
 import scala.annotation.tailrec
 
 trait Parsers { parsers =>
-  type Input
+  type Input <: AnyRef
 
   sealed trait ParseResult[+S] {
   }
@@ -25,7 +25,7 @@ trait Parsers { parsers =>
     def |[T >: S](that: Parser[T]): Parser[T]
 
     /** map */
-    final def ->[T](fn: S => T): Parser[T] = self >> Slim { x => succ(fn(x)) }
+    final def ->[T](fn: S => T): Parser[T] = self >> Cache(Parsers.this) { x => succ(fn(x)) }
 
     /** seq */
     final def ^[T](that: Parser[T]): Parser[(S, T)] = self >> { x => that -> { y => (x, y) } }
@@ -37,7 +37,7 @@ trait Parsers { parsers =>
     final def ^:[T](that: Parser[T]): Parser[T] = that >> { x => self -> { _ => x } }
 
     /** not */
-    final def ! : Parser[Unit] = Parser ! this
+    final def ! : Parser[Unit] = ((self >> Cache(Parsers.this) { x: S => succ(fail("missing an expected failure")) }) | succ(succ())) >> { p => p }
 
     /** rep */
     final def * : Parser[List[S]] = (self >> { x => self.* -> { xs => x :: xs } }) | succ(Nil)
@@ -54,10 +54,6 @@ trait Parsers { parsers =>
     /*final def ?(time: Int): Parser[List[S]] =
       if (time > 0) (self >> { x => self.?{ time - 1 } -> { xs => x :: xs } }) | succ(Nil)
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
-  }
-  object Parser {
-    // http://docs.scala-lang.org/overviews/reflection/thread-safety.html
-    def ![S](self: Parser[S]): Parser[Unit] = ((self >> { _ => succ(fail("missing an expected failure")) }) | succ(succ())) >> { p => p }
   }
 
   final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => fn(input))
@@ -78,35 +74,34 @@ trait Parsers { parsers =>
 
       run(lazyParse(input)).asInstanceOf[ParseResult[S]]
     }
+
     override def >>[T](fn: S => Parser[T]): Parser[T] = {
       val flapMap = (result: ParseResult[S]) => result match {
         case Succ(r, n) => fn(r) match {
-          case StateParser(lazyParser) => { val l = lazyParser; val nn = n; () => l(nn) }
+          case StateParser(lazyParser) => Cache(lazyParser, n) { () => lazyParser(n) }
           case p => p parse n
         }
         case f: Fail => f
       }
 
-      val l = lazyParse
-      StateParser[T] { input => (l(input), flapMap) }
+      val lazyParse = this.lazyParse
+      StateParser[T] { input => (lazyParse(input), flapMap) }
     }
 
     override def |[T >: S](that: Parser[T]): Parser[T] = {
       val fn = that match {
-        case StateParser(lazyParser) => {
-          val ll = lazyParser
-          (input: Input) => { val l = ll; () => l(input) }
+        case StateParser(lazyParser) => Cache(lazyParser) {
+          (input: Input) => Cache(lazyParser) { () => lazyParser(input) }
         }
-        case p => (input: Input) => p parse input
+        case p => (input) => p parse input
       }
 
-      val l = lazyParse
+      val lazyParse = this.lazyParse
       StateParser[T] { input =>
-        {
-          val f = fn
-          (l(input), (result: ParseResult[S]) => result match {
+        Cache(fn) {
+          (lazyParse(input), (result: ParseResult[S]) => result match {
             case s: Succ[S] => s
-            case _ => f(input)
+            case _ => fn(input)
           })
         }
       }
