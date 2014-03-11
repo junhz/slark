@@ -56,9 +56,11 @@ trait Parsers { parsers =>
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
 
-  final def parser[S](fn: Input => ParseResult[S]): Parser[S] = StateParser(input => fn(input))
+  final def parser[S](fun: Input => ParseResult[S]): Parser[S] = new Parser[S] {
+    override def parse(input: Input) = fun(input)
+  }
 
-  case class StateParser[S](lazyParse: Input => AnyRef) extends Parser[S] {
+  case class CombinedParser[S](pre: Parser[Any], fun: (Input, ParseResult[Any]) => AnyRef) extends Parser[S] {
     override def parse(input: Input) = {
       @tailrec
       def run(a: AnyRef): AnyRef =
@@ -72,39 +74,34 @@ trait Parsers { parsers =>
           })
         }
 
-      run(lazyParse(input)).asInstanceOf[ParseResult[S]]
+      run(fun(input, pre.parse(input))).asInstanceOf[ParseResult[S]]
     }
 
     override def >>[T](fn: S => Parser[T]): Parser[T] = {
-      val flapMap = (result: ParseResult[S]) => result match {
-        case Succ(r, n) => fn(r) match {
-          case StateParser(lazyParser) => Cache(lazyParser, n) { () => lazyParser(n) }
+      val flapMap = (input: Input, result: ParseResult[Any]) => result match {
+        case Succ(r, n) => fn(r.asInstanceOf[S]) match {
+          case CombinedParser(pre, fun) => () => fun(n, pre parse n)
           case p => p parse n
         }
         case f: Fail => f
       }
 
-      val lazyParse = this.lazyParse
-      StateParser[T] { input => (lazyParse(input), flapMap) }
+      CombinedParser[T](pre, flapMap)
     }
 
     override def |[T >: S](that: Parser[T]): Parser[T] = {
-      val fn = that match {
-        case StateParser(lazyParser) => Cache(lazyParser) {
-          (input: Input) => Cache(lazyParser) { () => lazyParser(input) }
+      val flatMap = that match {
+        case CombinedParser(pre, fun) => (input: Input, result: ParseResult[Any]) => result match {
+          case s: Succ[S] => s
+          case _ => () => fun(input, pre parse input)
         }
-        case p => (input) => p parse input
+        case p => (input: Input, result: ParseResult[Any]) => result match {
+          case s: Succ[S] => s
+          case _ => p parse input
+        }
       }
 
-      val lazyParse = this.lazyParse
-      StateParser[T] { input =>
-        Cache(fn) {
-          (lazyParse(input), (result: ParseResult[S]) => result match {
-            case s: Succ[S] => s
-            case _ => fn(input)
-          })
-        }
-      }
+      CombinedParser[T] (pre, flatMap)
     }
   }
 
