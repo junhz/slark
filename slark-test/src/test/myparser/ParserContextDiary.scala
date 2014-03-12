@@ -34,7 +34,7 @@ object ParserContextDiary extends Diary {
     Source(a -> (_.length()) parse "b") ::
     Source(a -> (_.charAt(2)) parse "a") ::
     Source(fail("1") | succ("2") parse "3") :: Nil
-    
-    println((1 << 21)(a).fixed -> (_.length) parse new IteratorReader('a'))
+
+  println((1 << 21)(a).fixed -> (_.length) parse new IteratorReader('a'))
   println((1 << 21)(a.!).fixed -> (_.length) parse "")
 }

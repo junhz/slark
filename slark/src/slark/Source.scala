@@ -12,7 +12,7 @@ object Source {
   def apply[T](source: T): Source[T] = macro withSource[T]
 
   def withSource[T: c.WeakTypeTag](c: Context)(source: c.Expr[T]): c.Expr[Source[T]] = {
-    c.universe.reify(new Source(c.literal(c.universe.showRaw(source.tree)).splice, source.splice))
+    c.universe.reify(new Source(c.literal(c.universe.show(source.tree)).splice, source.splice))
   }
 
 }
