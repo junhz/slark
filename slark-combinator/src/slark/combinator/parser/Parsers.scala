@@ -2,6 +2,7 @@ package slark
 package combinator.parser
 
 import scala.annotation.tailrec
+import Trampolines._
 
 trait Parsers { parsers =>
   type Input
@@ -55,8 +56,6 @@ trait Parsers { parsers =>
       if (time > 0) (self >> { x => self.?{ time - 1 } -> { xs => x :: xs } }) | succ(Nil)
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
-
-  import Parsers._
 
   final def parser[S](fun: Input => ParseResult[S]): Parser[S] = CombinedParser { input => Done(fun(input)) }
 
@@ -114,27 +113,4 @@ trait Parsers { parsers =>
   }
 
   def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
-}
-object Parsers {
-  trait Trampoline[+T] {
-    @tailrec
-    final def run: T = {
-      this match {
-        case Done(r) => r
-        case Next1(fun, in) => fun(in).run
-        case FlatMap(pre, fun) => (pre match {
-          case Done(r) => {
-            fun(r)
-          }
-          case Next1(f, i) => FlatMap(f(i), fun)
-          case FlatMap(p, f) => Cache(f, fun)(FlatMap(p, (result: Any) => FlatMap(f(result), fun)))
-        }).run
-      }
-    }
-  }
-  case class Done[T](result: T) extends Trampoline[T]
-  case class Next1[I, T](fun: I => Trampoline[T], in: I) extends Trampoline[T]
-  case class FlatMap[T, P](pre: Trampoline[P], fun: P => Trampoline[T]) extends Trampoline[T] {
-    override def toString = s"FlatMap($pre, ${fun.getClass()})"
-  }
 }
