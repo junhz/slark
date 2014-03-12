@@ -22,14 +22,12 @@ object Main extends Parsers with ReaderApi {
 
   implicit val singletonStringReaderBuilder: String => Input = new StringReader(_, 0)
   
-  class IterableReader(it: Iterable[Char]) extends CharReader {
-    override def atEnd = it.isEmpty
-    override def head = if (atEnd) ??? else it.head
-    override lazy val tail = if (atEnd) ??? else new IterableReader(it.tail)
-    override def toString = it.toString
+  class IteratorReader(c: Char) extends CharReader {
+    override def atEnd = false
+    override def head = c
+    override lazy val tail = this
+    override def toString = c.toString
   }
-  
-  implicit val singletonIterableReaderBuilder: Iterable[Char] => Input = new IterableReader(_)
 
   implicit val singletonStringParserBuilder = (str: String) => parser { input =>
     input.startWith(str) match {
@@ -50,7 +48,8 @@ object Main extends Parsers with ReaderApi {
     println("a".* parse "aa")
     println("a".* parse "")
     println(("a" | ("b" ^ ("c" | "d")) | "be") parse "be")
-    println(("a"/* -> { x => println(1); x }*/){ 1 << 20 } -> (_.length) parse Stream.continually('a'))
+    println("a" { 1 << 21 } -> (_.length) parse new IteratorReader('a'))
+    println("a".! { 1 << 21 } -> (_.length) parse "")
   }
 
 }

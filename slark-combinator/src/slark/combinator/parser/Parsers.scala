@@ -4,12 +4,12 @@ package combinator.parser
 import scala.annotation.tailrec
 
 trait Parsers { parsers =>
-  type Input <: AnyRef
+  type Input
 
   sealed trait ParseResult[+S] {
   }
 
-  case class Fail(msg: String) extends ParseResult[Nothing]
+  case class Fail(msg: Any) extends ParseResult[Nothing]
 
   case class Succ[+S](result: S, next: Input) extends ParseResult[S]
 
@@ -56,57 +56,49 @@ trait Parsers { parsers =>
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
 
-  final def parser[S](fun: Input => ParseResult[S]): Parser[S] = new Parser[S] {
-    override def parse(input: Input) = fun(input)
-  }
+  import Parsers._
 
-  case class CombinedParser[S](pre: Parser[Any], fun: (Input, ParseResult[Any]) => AnyRef) extends Parser[S] {
-    override def parse(input: Input) = {
-      @tailrec
-      def run(a: AnyRef): AnyRef =
-        a match {
-          case r: ParseResult[AnyRef] => r
-          case f: Function0[AnyRef] => run(f())
-          case (origin, fmap: Function1[ParseResult[AnyRef], AnyRef]) => run(origin match {
-            case r: ParseResult[AnyRef] => fmap(r)
-            case f: Function0[AnyRef] => (f(), fmap)
-            case (o, f: Function1[ParseResult[AnyRef], AnyRef]) => (o, (result: ParseResult[AnyRef]) => (f(result), fmap))
-          })
-        }
+  final def parser[S](fun: Input => ParseResult[S]): Parser[S] = CombinedParser { input => Done(fun(input)) }
 
-      run(fun(input, pre.parse(input))).asInstanceOf[ParseResult[S]]
-    }
+  case class CombinedParser[S](fun: Input => Trampoline[ParseResult[S]]) extends Parser[S] {
+    override def parse(input: Input) = fun(input).run
 
     override def >>[T](fn: S => Parser[T]): Parser[T] = {
-      val flapMap = (input: Input, result: ParseResult[Any]) => result match {
-        case Succ(r, n) => fn(r.asInstanceOf[S]) match {
-          case CombinedParser(pre, fun) => () => fun(n, pre parse n)
-          case p => p parse n
+      val flapMap = (result: ParseResult[S]) => result match {
+        case Succ(r, n) => fn(r) match {
+          case CombinedParser(fun) => Next1(fun, n)
+          case p => Done(p parse n)
         }
-        case f: Fail => f
+        case f: Fail => Done(f)
       }
 
-      CombinedParser[T](pre, flapMap)
+      Cache(fun)(CombinedParser { input => FlatMap(fun(input), flapMap) })
     }
 
-    override def |[T >: S](that: Parser[T]): Parser[T] = {
-      val flatMap = that match {
-        case CombinedParser(pre, fun) => (input: Input, result: ParseResult[Any]) => result match {
-          case s: Succ[S] => s
-          case _ => () => fun(input, pre parse input)
-        }
-        case p => (input: Input, result: ParseResult[Any]) => result match {
-          case s: Succ[S] => s
-          case _ => p parse input
-        }
+    override def |[T >: S](that: Parser[T]): Parser[T] = Cache(fun) {
+      that match {
+        case CombinedParser(f) => Cache(f)(CombinedParser { input =>
+          Cache(f) {
+            FlatMap(fun(input), (result: ParseResult[S]) => result match {
+              case s: Succ[S] => Done(s)
+              case _ => Next1(f, input)
+            })
+          }
+        })
+        case p => Cache(p)(CombinedParser { input =>
+          Cache(p) {
+            FlatMap(fun(input), (result: ParseResult[S]) => result match {
+              case s: Succ[S] => Done(s)
+              case _ => Done(p parse input)
+            })
+          }
+        })
       }
-
-      CombinedParser[T] (pre, flatMap)
     }
   }
 
   /** zero unit */
-  final def fail(msg: String): Parser[Nothing] = new Parser[Nothing] {
+  final def fail(msg: Any): Parser[Nothing] = new Parser[Nothing] {
     override def parse(input: Input) = Fail(msg)
     override def >>[T](fn: Nothing => Parser[T]) = this
     override def |[T >: Nothing](that: Parser[T]): Parser[T] = that
@@ -122,4 +114,27 @@ trait Parsers { parsers =>
   }
 
   def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
+}
+object Parsers {
+  trait Trampoline[+T] {
+    @tailrec
+    final def run: T = {
+      this match {
+        case Done(r) => r
+        case Next1(fun, in) => fun(in).run
+        case FlatMap(pre, fun) => (pre match {
+          case Done(r) => {
+            fun(r)
+          }
+          case Next1(f, i) => FlatMap(f(i), fun)
+          case FlatMap(p, f) => Cache(f, fun)(FlatMap(p, (result: Any) => FlatMap(f(result), fun)))
+        }).run
+      }
+    }
+  }
+  case class Done[T](result: T) extends Trampoline[T]
+  case class Next1[I, T](fun: I => Trampoline[T], in: I) extends Trampoline[T]
+  case class FlatMap[T, P](pre: Trampoline[P], fun: P => Trampoline[T]) extends Trampoline[T] {
+    override def toString = s"FlatMap($pre, ${fun.getClass()})"
+  }
 }

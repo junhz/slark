@@ -28,7 +28,7 @@ package object myparser {
       override lazy val tail = if (atEnd) ??? else new IterableReader(it.tail)
       override def toString = it.toString
     }
-    
+
     implicit val singletonIterableReaderBuilder: Iterable[Char] => Input = new IterableReader(_)
 
     class SParser(str: String) extends Parser[String] {
@@ -43,5 +43,12 @@ package object myparser {
     }
 
     implicit val sParserBuilder = new SParser(_)
+
+    class IteratorReader(c: Char) extends CharReader {
+      override def atEnd = false
+      override def head = c
+      override lazy val tail = this
+      override def toString = c.toString
+    }
   }
 }
