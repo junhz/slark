@@ -1,10 +1,10 @@
 package slark
 package uri
 
-import parser._
+import combinator.parser._
 import FuncLib._
 
-trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader] with Literals with IPaddress with Path =>
+trait Scheme { self: Symbols[Parsers with ReaderApi with CharReader] with Literals with IPaddress with Path =>
 
   def schemeName: String
   def defaultPort: Int
@@ -120,7 +120,7 @@ trait Scheme { self: Symbols[Parsers with CombinatorApi with CombinatorAst with 
 }
 
 object Scheme {
-  abstract class AbstractScheme[+P <: Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader](
+  abstract class AbstractScheme[+P <: Parsers with ReaderApi with CharReader](
     val schemeName: String,
     val defaultPort: Int,
     val parsers: P) extends Symbols[P] with Literals with IPaddress with Path with Scheme

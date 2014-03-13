@@ -1,7 +1,7 @@
 package slark
 package uri
 
-import parser._
+import combinator.parser._
 
 trait CharReader { self: Parsers with ReaderApi =>
 
@@ -22,7 +22,7 @@ trait CharReader { self: Parsers with ReaderApi =>
 
   implicit val stringCharReader: String => CharReader = new StringCharReader(_, 0)
 
-  final class StringParser(str: String) extends Parser[String] {
+  final class StringParser(str: String) extends AbstractParser[String] {
     lazy val pattern = stringCharReader(str)
 
     override def parse(input: Input) = {
@@ -40,7 +40,7 @@ trait CharReader { self: Parsers with ReaderApi =>
      *
      * The other generic syntax components are assumed to be case-sensitive unless specifically defined otherwise by the scheme
      */
-    def ignoreCase: Parser[String] = new Parser[String] {
+    def ignoreCase: Parser[String] = new AbstractParser[String] {
       override def parse(input: Input) = {
         @tailrec
         def rec(lhs: CharReader, rhs: CharReader): Option[Input] = {
@@ -66,7 +66,7 @@ trait CharReader { self: Parsers with ReaderApi =>
 
   implicit val stringParser: String => StringParser = new StringParser(_)
 
-  class CharParser(c: Char) extends Parser[Char] {
+  class CharParser(c: Char) extends AbstractParser[Char] {
     require(c >= 0 && c <= 127)
 
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {

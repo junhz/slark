@@ -47,6 +47,11 @@ trait Parsers { parsers =>
     final def apply(time: Int): Parser[List[S]] =
       if (time > 0) self >> { x => self { time - 1 } -> { xs => x :: xs } }
       else succ(Nil)
+      
+    final def apply(min: Int, max: Int): Parser[List[S]] = 
+      if(min > 0) self >> { x => self(min - 1, max - 1) -> { xs => x :: xs } } | fail("not enough")
+      else if(max > 0) self >> { x => self(0, max - 1) -> { xs => x :: xs } } | succ(Nil)
+      else succ(Nil)
 
     /** option */
     final def ? : Parser[Option[S]] = (self -> { x => Some(x) }) | succ(None)
@@ -57,9 +62,23 @@ trait Parsers { parsers =>
       else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
 
-  final def parser[S](fun: Input => ParseResult[S]): Parser[S] = CombinedParser { input => Done(fun(input)) }
+  /** zero unit */
+  final def fail(msg: Any): Parser[Nothing] = new Parser[Nothing] {
+    override def parse(input: Input) = Fail(msg)
+    override def >>[T](fn: Nothing => Parser[T]) = this
+    override def |[T >: Nothing](that: Parser[T]): Parser[T] = that
+    override def toString = s"fail($msg)"
+  }
 
-  case class CombinedParser[S](fun: Input => Trampoline[ParseResult[S]]) extends Parser[S] {
+  /** unit */
+  final def succ[S](sym: S): Parser[S] = new Parser[S] {
+    override def parse(input: Input) = Succ(sym, input)
+    override def >>[T](fn: S => Parser[T]) = fn(sym)
+    override def |[T >: S](that: Parser[T]): Parser[T] = this
+    override def toString = s"succ($sym)"
+  }
+
+  private[this] case class CombinedParser[S](fun: Input => Trampoline[ParseResult[S]]) extends Parser[S] {
     override def parse(input: Input) = fun(input).run
 
     override def >>[T](fn: S => Parser[T]): Parser[T] = {
@@ -96,21 +115,16 @@ trait Parsers { parsers =>
     }
   }
 
-  /** zero unit */
-  final def fail(msg: Any): Parser[Nothing] = new Parser[Nothing] {
-    override def parse(input: Input) = Fail(msg)
-    override def >>[T](fn: Nothing => Parser[T]) = this
-    override def |[T >: Nothing](that: Parser[T]): Parser[T] = that
-    override def toString = s"fail($msg)"
+  abstract class AbstractParser[S] extends Parser[S] {
+    private[this] final lazy val self: Parser[S] = CombinedParser { input => Done(this parse input) }
+    final override def >>[T](fn: S => Parser[T]): Parser[T] = self >> fn
+    final override def |[T >: S](that: Parser[T]): Parser[T] = self | that
   }
 
-  /** unit */
-  final def succ[S](sym: S): Parser[S] = new Parser[S] {
-    override def parse(input: Input) = Succ(sym, input)
-    override def >>[T](fn: S => Parser[T]) = fn(sym)
-    override def |[T >: S](that: Parser[T]): Parser[T] = this
-    override def toString = s"succ($sym)"
-  }
+  final def parser[S](fun: Input => ParseResult[S]): Parser[S] = CombinedParser { input => Done(fun(input)) }
 
   def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
+  
+  val `>` = Int.MaxValue
+  val `<` = 0
 }

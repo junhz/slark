@@ -1,17 +1,17 @@
 package slark
 package http
 
-import parser._
+import combinator.parser._
 
-trait Message { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with OctetReader] with Literals with UriApi =>
+trait Message { self: Symbols[Parsers with ReaderApi with OctetReader] with Literals with UriApi =>
 
   import parsers._
 
-  val http_version = "HTTP/" :^ 1(digit).+ ^ "." :^ 1(digit).+
+  val http_version = "HTTP/" :^ digit(1, `>`) ^ "." :^ digit(1, `>`)
 
   val http_uri: Parser[uriSymbols.UriReference] = uriSymbols.uri_reference
 
-  val header_field = token ^ (':' ^ ows) :^ (ht | sp | %(0x21, 0x7E)).* ^: ows
+  val header_field = token ^ (':' :^ ows) :^ (ht | sp | %(0x21, 0x7E)).* ^: ows
 
   val method = token
 
@@ -23,7 +23,7 @@ trait Message { self: Symbols[Parsers with CombinatorApi with CombinatorAst with
 
   val request_target = {
 
-    val origin_form: Parser[RequestTarget] = (uriSymbols.path_absolute ^ ("?" :^ uriSymbols.query).?) -> {
+    val origin_form: Parser[RequestTarget] = (p(uriSymbols.path_absolute) ^ ("?" :^ uriSymbols.query).?) -> {
       case (path, query) => Origin(path, query.getOrElse(""))
     }
     val absolute_form: Parser[RequestTarget] = p(uriSymbols.absolute_uri) -> {
@@ -38,7 +38,7 @@ trait Message { self: Symbols[Parsers with CombinatorApi with CombinatorAst with
 
   val request_line = method ^ sp :^ request_target ^ sp :^ http_version ^: crlf
 
-  val status_code = 3(digit)
+  val status_code = digit{3}
 
   val reason_phrase = (ht | sp | %(0x21, 0x7E)).*
 
@@ -50,6 +50,6 @@ trait Message { self: Symbols[Parsers with CombinatorApi with CombinatorAst with
 }
 
 object Message {
-  abstract class AbstractMessage[+P <: Parsers with CombinatorApi with CombinatorAst with ReaderApi with OctetReader](
+  abstract class AbstractMessage[+P <: Parsers with ReaderApi with OctetReader](
     val parsers: P) extends Symbols[P] with Literals with UriApi with Message
 }

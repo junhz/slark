@@ -1,11 +1,11 @@
 package test
 
-import slark.parser._
+import slark.combinator.parser._
 import slark.http._
 
 package object myhttp {
 
-  object MyHttp extends Message.AbstractMessage(new CombinatorParsers with ReaderApi with OctetReader) with DateTime { self =>
+  object MyHttp extends Message.AbstractMessage(new Parsers with ReaderApi with OctetReader) with DateTime { self =>
 
     import parsers._
 

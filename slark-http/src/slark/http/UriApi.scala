@@ -1,13 +1,12 @@
 package slark
 package http
 
-import parser._
-import uri._
-import uri.{ Literals => UriLiterals }
+import combinator.parser._
+import uri.{ Literals => UriLiterals, _ }
 
 trait UriApi { self: Symbols[Parsers] =>
 
-  val uriSymbols = new Scheme.AbstractScheme("http", 80, new CombinatorParsers with ReaderApi with CharReader) {
+  val uriSymbols = new Scheme.AbstractScheme("http", 80, new Parsers with ReaderApi with CharReader) {
     override def formatPath(path: List[String]) = path
   }
 
@@ -32,7 +31,7 @@ trait UriApi { self: Symbols[Parsers] =>
     override def tail = if (atEnd) ??? else tl
   }
 
-  final class TransParser[S](uriParser: uriSymbols.parsers.Parser[S]) extends self.parsers.Parser[S] {
+  final class TransParser[S](uriParser: uriSymbols.parsers.Parser[S]) extends self.parsers.AbstractParser[S] {
     override def parse(input: self.parsers.Input) = {
       uriParser.parse(new TransedCharReader(input)) match {
         case uriSymbols.parsers.Succ(r, n) => n match {

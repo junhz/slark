@@ -1,9 +1,9 @@
 package slark
 package uri
 
-import parser._
+import combinator.parser._
 
-trait Path { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader] with Literals =>
+trait Path { self: Symbols[Parsers with ReaderApi with CharReader] with Literals =>
 
   import parsers._
 
@@ -29,9 +29,9 @@ trait Path { self: Symbols[Parsers with CombinatorApi with CombinatorAst with Re
 
   val segment = pchar.* -> (_.mkString)
 
-  val segment_nz = 1(pchar).+ -> (_.mkString)
+  val segment_nz = (pchar)(1, `>`) -> (_.mkString)
 
-  val segment_nz_nc = 1(":".! :^ pchar).+ -> (_.mkString)
+  val segment_nz_nc = (":".! :^ pchar)(1, `>`) -> (_.mkString)
 
   val path_empty = succ(List[String]())
 

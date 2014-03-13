@@ -1,10 +1,10 @@
 package test
 
-import slark.parser._
+import slark.combinator.parser._
 
 package object myparser {
 
-  object parsers extends Parsers with ReaderApi with CombinatorApi with CombinatorAst {
+  object parsers extends Parsers with ReaderApi {
     type From = Char
 
     type Input = CharReader
@@ -31,7 +31,7 @@ package object myparser {
 
     implicit val singletonIterableReaderBuilder: Iterable[Char] => Input = new IterableReader(_)
 
-    class SParser(str: String) extends Parser[String] {
+    class SParser(str: String) extends AbstractParser[String] {
       override def parse(input: Input) = {
         input.startWith(str) match {
           case None => Fail(s"can't match $str")

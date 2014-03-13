@@ -1,10 +1,10 @@
 package slark
 package uri
 
-import parser._
+import combinator.parser._
 import FuncLib._;
 
-trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader] with Literals =>
+trait IPaddress { self: Symbols[Parsers with ReaderApi with CharReader] with Literals =>
 
   import parsers._
 
@@ -21,7 +21,7 @@ trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst wi
   /**
    * return Int from 0x0000 - 0xffff
    */
-  val h16 = (hexdig ^ 3(hexdig).-) -> { case (head, tail) => head :: tail } -> { case Natural0.Hex(i) => i }
+  val h16 = hexdig(1, 4) -> { case Natural0.Hex(i) => i }
 
   /**
    * 32-bit
@@ -52,15 +52,15 @@ trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst wi
   val ipv6address = {
     val make = IPv6address.apply(_, _, _, _, _, _, _, _)
     val parser = (
-      (6(h16 ^: ":") ^ ls32) -> (take6[Int] and open2[Int, Int] `then` make) |
-      ("::" :^ 5(h16 ^: ":") ^ ls32) -> (take5[Int] `with` 0 and open2[Int, Int] `then` make) |
-      (h16.? ^ "::" :^ 4(h16 ^: ":") ^ ls32) -> (as[Int].default(0) `with` 0 and take4[Int] and open2[Int, Int] `then` make) |
-      ((h16 ^ 1(":" :^ h16).-).? ^ "::" :^ 3(h16 ^: ":") ^ ls32) -> ((as[Int] and takeOption1(0)).default(0, 0) `with` 0 and take3[Int] and open2[Int, Int] `then` make) |
-      ((h16 ^ 2(":" :^ h16).-).? ^ "::" :^ 2(h16 ^: ":") ^ ls32) -> ((as[Int] and takeOption2(0)).default(0, 0, 0) `with` 0 and take2[Int] and open2[Int, Int] `then` make) |
-      ((h16 ^ 3(":" :^ h16).-).? ^ "::" :^ h16 ^ ":" :^ ls32) -> ((as[Int] and takeOption3(0)).default(0, 0, 0, 0) `with` 0 and as[Int] and open2[Int, Int] `then` make) |
-      ((h16 ^ 4(":" :^ h16).-).? ^ "::" :^ ls32) -> ((as[Int] and takeOption4(0)).default(0, 0, 0, 0, 0) `with` 0 and open2[Int, Int] `then` make) |
-      ((h16 ^ 5(":" :^ h16).-).? ^ "::" :^ h16) -> ((as[Int] and takeOption5(0)).default(0, 0, 0, 0, 0, 0) `with` 0 and as[Int] `then` make) |
-      ((h16 ^ 6(":" :^ h16).-).? ^: "::") -> ((as[Int] and takeOption6(0)).default(0, 0, 0, 0, 0, 0, 0) `with` 0 `then` make))
+      ((h16 ^: ":"){6} ^ ls32) -> (take6[Int] and open2[Int, Int] `then` make) |
+      ("::" :^ (h16 ^: ":"){5} ^ ls32) -> (take5[Int] `with` 0 and open2[Int, Int] `then` make) |
+      (h16.? ^ "::" :^ (h16 ^: ":"){4} ^ ls32) -> (as[Int].default(0) `with` 0 and take4[Int] and open2[Int, Int] `then` make) |
+      ((h16 ^ (":" :^ h16)(`<`, 1)).? ^ "::" :^ (h16 ^: ":"){3} ^ ls32) -> ((as[Int] and takeOption1(0)).default(0, 0) `with` 0 and take3[Int] and open2[Int, Int] `then` make) |
+      ((h16 ^ (":" :^ h16)(`<`, 2)).? ^ "::" :^ (h16 ^: ":"){2} ^ ls32) -> ((as[Int] and takeOption2(0)).default(0, 0, 0) `with` 0 and take2[Int] and open2[Int, Int] `then` make) |
+      ((h16 ^ (":" :^ h16)(`<`, 3)).? ^ "::" :^ h16 ^ ":" :^ ls32) -> ((as[Int] and takeOption3(0)).default(0, 0, 0, 0) `with` 0 and as[Int] and open2[Int, Int] `then` make) |
+      ((h16 ^ (":" :^ h16)(`<`, 4)).? ^ "::" :^ ls32) -> ((as[Int] and takeOption4(0)).default(0, 0, 0, 0, 0) `with` 0 and open2[Int, Int] `then` make) |
+      ((h16 ^ (":" :^ h16)(`<`, 5)).? ^ "::" :^ h16) -> ((as[Int] and takeOption5(0)).default(0, 0, 0, 0, 0, 0) `with` 0 and as[Int] `then` make) |
+      ((h16 ^ (":" :^ h16)(`<`, 6)).? ^: "::") -> ((as[Int] and takeOption6(0)).default(0, 0, 0, 0, 0, 0, 0) `with` 0 `then` make))
     parser
   }
 
@@ -68,5 +68,5 @@ trait IPaddress { self: Symbols[Parsers with CombinatorApi with CombinatorAst wi
     override def toString = s"v$version.$address"
   }
 
-  val ipvFuture = ("v".ignoreCase :^ 1(hexdig).+ ^ "." :^ 1(unreserved | sub_delims | ':').+) -> { case (version, address) => new IPvFuture(version.mkString.toLowerCase(), address.mkString.toLowerCase()) }
+  val ipvFuture = ("v".ignoreCase :^ hexdig(1, `>`) ^ "." :^ (unreserved | sub_delims | ':')(1, `>`)) -> { case (version, address) => new IPvFuture(version.mkString.toLowerCase(), address.mkString.toLowerCase()) }
 }

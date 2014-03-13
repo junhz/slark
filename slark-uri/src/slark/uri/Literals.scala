@@ -1,9 +1,9 @@
 package slark
 package uri
 
-import parser._
+import combinator.parser._
 
-trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with CharReader] =>
+trait Literals { self: Symbols[Parsers with ReaderApi with CharReader] =>
 
   import parsers._
 
@@ -25,7 +25,7 @@ trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
 
   val pchar = unreserved | pct_encoded | sub_delims | ':' | '@' | fail("pchar wanted")
 
-  def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
+  def %(start: Byte, end: Byte): Parser[Char] = new AbstractParser[Char] {
     require(start >= 0 && end > start)
 
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {

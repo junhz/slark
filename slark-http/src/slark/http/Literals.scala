@@ -1,12 +1,12 @@
 package slark
 package http
 
-import parser._
+import combinator.parser._
 
-trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with OctetReader] =>
+trait Literals { self: Symbols[Parsers with ReaderApi with OctetReader] =>
   import parsers._
 
-  val octet = new Parser[Byte] {
+  val octet = new AbstractParser[Byte] {
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else Succ(input.head, input.tail)
   }
 
@@ -34,7 +34,7 @@ trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
 
   val ht = acsii(9)
 
-  def letter(startChar: Char, endChar: Char): Parser[Byte] = new Parser[Byte] {
+  def letter(startChar: Char, endChar: Char): Parser[Byte] = new AbstractParser[Byte] {
     require(startChar >= 0 && endChar > startChar && endChar <= 127)
 
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {
@@ -44,7 +44,7 @@ trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
     }
   }
 
-  def acsii(startByte: Byte, endByte: Byte): Parser[Byte] = new Parser[Byte] {
+  def acsii(startByte: Byte, endByte: Byte): Parser[Byte] = new AbstractParser[Byte] {
     require(startByte >= 0 && endByte > startByte && endByte <= 127)
 
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {
@@ -54,7 +54,7 @@ trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
     }
   }
 
-  def acsii(byte: Byte): Parser[Byte] = new Parser[Byte] {
+  def acsii(byte: Byte): Parser[Byte] = new AbstractParser[Byte] {
     require(byte >= 0 && byte <= 127)
 
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {
@@ -74,7 +74,7 @@ trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
 
   val separator = sp | ht | '(' | ')' | '<' | '>' | '@' | ',' | ';' | ':' | '\\' | '"' | '/' | '[' | ']' | '?' | '=' | '{' | '}'
 
-  val token = 1((ctl | separator).! :^ char).+
+  val token = ((ctl | separator).! :^ char)(1, `>`)
 
   // \a = a \\ = \ \" = " \( = ( ") = )
   val quoted_pair = "\\" :^ char
@@ -96,7 +96,7 @@ trait Literals { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
 
   val parameter = attribute ^ "=" :^ value
 
-  def %(start: Byte, end: Byte): Parser[Byte] = new Parser[Byte] {
+  def %(start: Byte, end: Byte): Parser[Byte] = new AbstractParser[Byte] {
     require(start >= 0 && end > start)
 
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {

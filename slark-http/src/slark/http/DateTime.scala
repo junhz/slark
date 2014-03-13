@@ -1,9 +1,9 @@
 package slark
 package http
 
-import parser._
+import combinator.parser._
 
-trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst with ReaderApi with OctetReader] with Literals =>
+trait DateTime { self: Symbols[Parsers with ReaderApi with OctetReader] with Literals =>
 
   import parsers._
 
@@ -19,13 +19,13 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
   val wkday = ("Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun")
   val weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"
   val month = "Jan" | "Feb" | "Mar" | "Apr" | "May" | "Jun" | "Jul" | "Aug" | "Sep" | "Oct" | "Nov" | "Dec"
-  val time = (2(digit) ^ ":" :^ 2(digit) ^ ":" :^ 2(digit)) -> {
+  val time = (digit{2} ^ ":" :^ digit{2} ^ ":" :^ digit{2}) -> {
     case ((Natural0(_HH), Natural0(mm)), Natural0(ss)) => (_HH, mm, ss)
   }
 
-  val date1 = 2(digit) ^ sp :^ month ^ sp :^ 4(digit)
-  val date2 = 2(digit) ^ "-" :^ month ^ "-" :^ 2(digit)
-  val date3 = month ^ sp :^ (2(digit) | (sp :^ 1(digit)))
+  val date1 = digit{2} ^ sp :^ month ^ sp :^ digit{4}
+  val date2 = digit{2} ^ "-" :^ month ^ "-" :^ digit{2}
+  val date3 = month ^ sp :^ (digit{2} | (sp :^ digit{1}))
   val rfc1123_date = (wkday ^ ", " :^ date1 ^ sp :^ time ^: " GMT") -> {
     case ((_, ((Natural0(dd), _MMM), Natural0(yyyy))), (_HH, mm, ss)) => Rfc1123Date(yyyy, _MMM, dd, _HH, mm, ss)
   }
@@ -34,7 +34,7 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
       Rfc1123Date(y2k(yy, cntYYYY), _MMM, dd, _HH, mm, ss)
     }
   }
-  val asctime_date = (wkday ^ sp :^ date3 ^ sp :^ time ^ sp :^ 4(digit)) -> {
+  val asctime_date = (wkday ^ sp :^ date3 ^ sp :^ time ^ sp :^ digit{4}) -> {
     case (((_, (_MMM, Natural0(dd))), (_HH, mm, ss)), Natural0(yyyy)) => Rfc1123Date(yyyy, _MMM, dd, _HH, mm, ss)
   }
 
@@ -44,6 +44,6 @@ trait DateTime { self: Symbols[Parsers with CombinatorApi with CombinatorAst wit
   }
 
   val http_date = rfc1123_date | rfc850_date | asctime_date | fail("not a valid http-date")
-  val delta_seconds = 1(digit).+
+  val delta_seconds = digit(1, `>`)
 
 }

@@ -1,7 +1,7 @@
 package slark
 package http
 
-import parser._
+import combinator.parser._
 
 trait OctetReader { self: Parsers with ReaderApi =>
 
@@ -27,7 +27,7 @@ trait OctetReader { self: Parsers with ReaderApi =>
 
   implicit val stringOctetReader: String => OctetReader = new StringOctetReader(_, 0)
 
-  final class StringParser(str: String) extends Parser[String] {
+  final class StringParser(str: String) extends AbstractParser[String] {
     lazy val pattern = stringOctetReader(str)
 
     override def parse(input: Input) = {
@@ -37,7 +37,7 @@ trait OctetReader { self: Parsers with ReaderApi =>
       }
     }
 
-    def ignoreCase: Parser[String] = new Parser[String] {
+    def ignoreCase: Parser[String] = new AbstractParser[String] {
       override def parse(input: Input) = {
         @tailrec
         def rec(lhs: OctetReader, rhs: OctetReader): Option[Input] = {
@@ -63,7 +63,7 @@ trait OctetReader { self: Parsers with ReaderApi =>
 
   implicit val stringParser: String => StringParser = new StringParser(_)
 
-  final class letterParser(char: Char) extends Parser[Byte] {
+  final class letterParser(char: Char) extends AbstractParser[Byte] {
     require(char >= 0 && char <= 127)
 
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {
