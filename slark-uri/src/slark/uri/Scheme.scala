@@ -50,7 +50,7 @@ trait Scheme { self: Symbols[Parsers with ReaderApi with CharReader] with Litera
 
   val userinfo = (unreserved | pct_encoded | sub_delims | ':').* -> (_.mkString)
 
-  val port = digit.* -> (_.mkString)
+  val port = digit.* -> { case Natural0(i) => i }
 
   trait Authority {
 
@@ -67,9 +67,9 @@ trait Scheme { self: Symbols[Parsers with ReaderApi with CharReader] with Litera
 
   val authority = ((userinfo ^: "@").? ^ host ^ (":" :^ port).?) -> {
     case ((None, host), None) => Authority.annoymous(host, defaultPort)
-    case ((None, host), Some(Natural0(port))) => Authority.annoymous(host, port)
+    case ((None, host), Some(port)) => Authority.annoymous(host, port)
     case ((Some(userinfo), host), None) => Authority.as(userinfo, host, defaultPort)
-    case ((Some(userinfo), host), Some(Natural0(port))) => Authority.as(userinfo, host, port)
+    case ((Some(userinfo), host), Some(port)) => Authority.as(userinfo, host, port)
   }
 
   trait UriReference

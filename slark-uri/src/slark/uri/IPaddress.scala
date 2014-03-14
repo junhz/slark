@@ -11,12 +11,15 @@ trait IPaddress { self: Symbols[Parsers with ReaderApi with CharReader] with Lit
   /**
    * return Int from 0 - 255(0xfe)
    */
-  val dec_octet = (
-    (p('2') ^ '5' ^ (p('0') | '1' | '2' | '3' | '4' | '5')) |
-    (p('2') ^ (p('0') | '1' | '2' | '3' | '4') ^ digit) |
-    (p('1') ^ digit ^ digit) |
-    (succ('0') ^ (p('1') | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9') ^ digit) |
-    succ('0') ^ succ('0') ^ digit) -> (as[Char] and as[Char] and as[Char]).varargs -> { case Natural0(i) => i }
+  val dec_octet = {
+    val `0` = p('0')
+    val `1` = p('1')
+    (dec"25${`0` | '1' | '2' | '3' | '4' | '5'}" |
+      dec"2${`0` | '1' | '2' | '3' | '4'}$digit" |
+      dec"1$digit$digit" |
+      dec"${`1` | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'}$digit" |
+      dec"$digit")
+  }
 
   /**
    * return Int from 0x0000 - 0xffff
@@ -38,25 +41,19 @@ trait IPaddress { self: Symbols[Parsers with ReaderApi with CharReader] with Lit
     (h16 ^ ":" :^ h16) |
       ipv4address -> { case IPv4address(byte1, byte2, byte3, byte4) => (byte1 << 8 | byte2, byte3 << 8 | byte4) }
 
-  implicit class NumericContext(context: StringContext) {
-    def hex(nums: Int*): String = {
-      context.s(nums.map(Integer.toHexString(_)): _*)
-    }
-  }
-
   // dByte here refer to 16-bit
   case class IPv6address(dByte1: Int, dByte2: Int, dByte3: Int, dByte4: Int, dByte5: Int, dByte6: Int, dByte7: Int, dByte8: Int) {
-    override def toString = hex"$dByte1:$dByte2:$dByte3:$dByte4:$dByte5:$dByte6:$dByte7:$dByte8".toLowerCase()
+    override def toString = f"$dByte1%04x:$dByte2%04x:$dByte3%04x:$dByte4%04x:$dByte5%04x:$dByte6%04x:$dByte7%04x:$dByte8%04x"
   }
 
   val ipv6address = {
     val make = IPv6address.apply(_, _, _, _, _, _, _, _)
     val parser = (
-      ((h16 ^: ":"){6} ^ ls32) -> (take6[Int] and open2[Int, Int] `then` make) |
-      ("::" :^ (h16 ^: ":"){5} ^ ls32) -> (take5[Int] `with` 0 and open2[Int, Int] `then` make) |
-      (h16.? ^ "::" :^ (h16 ^: ":"){4} ^ ls32) -> (as[Int].default(0) `with` 0 and take4[Int] and open2[Int, Int] `then` make) |
-      ((h16 ^ (":" :^ h16)(`<`, 1)).? ^ "::" :^ (h16 ^: ":"){3} ^ ls32) -> ((as[Int] and takeOption1(0)).default(0, 0) `with` 0 and take3[Int] and open2[Int, Int] `then` make) |
-      ((h16 ^ (":" :^ h16)(`<`, 2)).? ^ "::" :^ (h16 ^: ":"){2} ^ ls32) -> ((as[Int] and takeOption2(0)).default(0, 0, 0) `with` 0 and take2[Int] and open2[Int, Int] `then` make) |
+      ((h16 ^: ":") { 6 } ^ ls32) -> (take6[Int] and open2[Int, Int] `then` make) |
+      ("::" :^ (h16 ^: ":") { 5 } ^ ls32) -> (take5[Int] `with` 0 and open2[Int, Int] `then` make) |
+      (h16.? ^ "::" :^ (h16 ^: ":") { 4 } ^ ls32) -> (as[Int].default(0) `with` 0 and take4[Int] and open2[Int, Int] `then` make) |
+      ((h16 ^ (":" :^ h16)(`<`, 1)).? ^ "::" :^ (h16 ^: ":") { 3 } ^ ls32) -> ((as[Int] and takeOption1(0)).default(0, 0) `with` 0 and take3[Int] and open2[Int, Int] `then` make) |
+      ((h16 ^ (":" :^ h16)(`<`, 2)).? ^ "::" :^ (h16 ^: ":") { 2 } ^ ls32) -> ((as[Int] and takeOption2(0)).default(0, 0, 0) `with` 0 and take2[Int] and open2[Int, Int] `then` make) |
       ((h16 ^ (":" :^ h16)(`<`, 3)).? ^ "::" :^ h16 ^ ":" :^ ls32) -> ((as[Int] and takeOption3(0)).default(0, 0, 0, 0) `with` 0 and as[Int] and open2[Int, Int] `then` make) |
       ((h16 ^ (":" :^ h16)(`<`, 4)).? ^ "::" :^ ls32) -> ((as[Int] and takeOption4(0)).default(0, 0, 0, 0, 0) `with` 0 and open2[Int, Int] `then` make) |
       ((h16 ^ (":" :^ h16)(`<`, 5)).? ^ "::" :^ h16) -> ((as[Int] and takeOption5(0)).default(0, 0, 0, 0, 0, 0) `with` 0 and as[Int] `then` make) |

@@ -55,11 +55,6 @@ trait Parsers { parsers =>
 
     /** option */
     final def ? : Parser[Option[S]] = (self -> { x => Some(x) }) | succ(None)
-
-    /** option rep */
-    /*final def ?(time: Int): Parser[List[S]] =
-      if (time > 0) (self >> { x => self.?{ time - 1 } -> { xs => x :: xs } }) | succ(Nil)
-      else throw new IllegalArgumentException("repeat time should  be greater then 0")*/
   }
 
   /** zero unit */
@@ -127,4 +122,5 @@ trait Parsers { parsers =>
   
   val `>` = Int.MaxValue
   val `<` = 0
+  val eof = Fail("reach the end of input")
 }

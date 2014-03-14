@@ -69,7 +69,7 @@ trait CharReader { self: Parsers with ReaderApi =>
   class CharParser(c: Char) extends AbstractParser[Char] {
     require(c >= 0 && c <= 127)
 
-    override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {
+    override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt == c) Succ(c, input.tail)
       else Fail(s"$c expected but $cnt found")
@@ -79,5 +79,31 @@ trait CharReader { self: Parsers with ReaderApi =>
   }
 
   implicit val charParser: Char => Parser[Char] = new CharParser(_)
+
+  def %(start: Byte, end: Byte): Parser[Char] = new AbstractParser[Char] {
+    require(start >= 0 && end > start)
+
+    override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {
+      val cnt = input.head
+      if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
+      else Fail(f"$toString wanted but %%$cnt%02x found")
+    }
+
+    override def toString = f"%%($start%02x, $end%02x)"
+  }
+
+  implicit class NumericParserContext(context: StringContext) {
+    def hex(digits: Parser[Char]*): Parser[Int] = {
+      NumericParserContext.make(context.parts, digits) -> { cs => context.s(cs:_*) match { case Natural0.Hex(i) => i } }
+    }
+    def dec(digits: Parser[Char]*): Parser[Int] = {
+      NumericParserContext.make(context.parts, digits) -> { cs => context.s(cs:_*) match { case Natural0(i) => i } }
+    }
+  }
+  object NumericParserContext {
+    def make(parts: Seq[String], args: Seq[Parser[Char]]): Parser[List[Char]] =
+      if (args.isEmpty) parts.head -> { _ => Nil }
+      else (parts.head :^ args.head) >> { c => make(parts.tail, args.tail) -> { cs => c :: cs } }
+  }
 
 }
