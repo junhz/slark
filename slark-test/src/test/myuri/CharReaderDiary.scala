@@ -1,7 +1,7 @@
 package test
 package myuri
 
-import MyScheme.parsers._
+import symbols.parsers._
 
 object CharReaderDiary extends Diary {
 

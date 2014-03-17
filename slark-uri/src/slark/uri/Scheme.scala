@@ -6,15 +6,19 @@ import FuncLib._
 
 trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddress with Path =>
 
-  def schemeName: String
-  def defaultPort: Int
-  def formatPath(path: List[String]): List[String]
+  protected[this] def _name: String
+
+  protected[this] def _port: Int
+
+  protected[this] def formatPath(path: List[String]): List[String]
+
   import parsers._
 
   val scheme: Parser[String] = {
-    (alpha ^ (alpha | digit | '+' | '-' | '.').*) parse schemeName match {
-      case Succ(_, n) if (n.atEnd) => schemeName.toLowerCase.ignoreCase
-      case _ => throw new IllegalArgumentException(s"invalid scheme name ${schemeName}")
+    val name = _name
+    (alpha ^ (alpha | digit | '+' | '-' | '.').*) parse name match {
+      case Succ(_, n) if (n.atEnd) => name.toLowerCase.ignoreCase
+      case _ => throw new IllegalArgumentException(s"invalid scheme name ${name}")
     }
   }
 
@@ -65,11 +69,14 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
     }
   }
 
-  val authority = ((userinfo ^: "@").? ^ host ^ (":" :^ port).?) -> {
-    case ((None, host), None) => Authority.annoymous(host, defaultPort)
-    case ((None, host), Some(port)) => Authority.annoymous(host, port)
-    case ((Some(userinfo), host), None) => Authority.as(userinfo, host, defaultPort)
-    case ((Some(userinfo), host), Some(port)) => Authority.as(userinfo, host, port)
+  val authority = {
+    val p = _port
+    ((userinfo ^: "@").? ^ host ^ (":" :^ port).?) -> {
+      case ((None, host), None) => Authority.annoymous(host, p)
+      case ((None, host), Some(port)) => Authority.annoymous(host, port)
+      case ((Some(userinfo), host), None) => Authority.as(userinfo, host, p)
+      case ((Some(userinfo), host), Some(port)) => Authority.as(userinfo, host, port)
+    }
   }
 
   trait UriReference
@@ -85,10 +92,10 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
   trait Part
   object Part {
     def network(authority: Authority, path: List[String]): Part = new Part {
-      override def toString = s"//$authority${path.map("/"+_).mkString}"
+      override def toString = s"//$authority${path.map("/" + _).mkString}"
     }
     def absolute(path: List[String]): Part = new Part {
-      override def toString = path.map("/"+_).mkString
+      override def toString = path.map("/" + _).mkString
     }
     def relative(path: List[String]): Part = new Part {
       override def toString = path.mkString("/")
@@ -117,11 +124,4 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
   val absolute_uri = (scheme ^ ":" :^ hier_part ^ ("?" :^ query).?)
 
   val uri_reference = uri | relative_ref
-}
-
-object Scheme {
-  abstract class AbstractScheme[+P <: Parsers with CharReaders](
-    val schemeName: String,
-    val defaultPort: Int,
-    val parsers: P) extends Symbols[P] with Literals with IPaddress with Path with Scheme
 }

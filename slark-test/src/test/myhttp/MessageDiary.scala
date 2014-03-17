@@ -1,7 +1,7 @@
 package test
 package myhttp
 
-import MyHttp._
+import symbols._
 import parsers._
 
 object MessageDiary extends Diary {

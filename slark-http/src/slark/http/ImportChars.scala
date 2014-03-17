@@ -5,7 +5,9 @@ import combinator.parser._
 
 trait ImportChars[P <: Parsers with Readers[Char]] { self: Parsers with Readers[Byte] =>
 
-  val charParsers: P
+  protected[this] def _charParsers: P
+  
+  final val charParsers: P = _charParsers
 
   final class TransedCharReader(val input: Input) extends charParsers.Reader {
     private[this] var hd: charParsers.From = _

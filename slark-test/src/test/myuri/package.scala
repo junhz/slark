@@ -5,8 +5,11 @@ import slark.uri._
 
 package object myuri {
 
-  object MyScheme extends Scheme.AbstractScheme("my", 10086, new Parsers with CharReaders) {
-    override def formatPath(path: List[String]): List[String] = path
+  val symbols = new UriSymbols[Parsers with CharReaders] {
+    protected[this] override def _parsers = new Parsers with CharReaders
+    protected[this] override def _name = "my"
+    protected[this] override def _port = 10086
+    protected[this] override def formatPath(path: List[String]): List[String] = path
   }
   
 }
