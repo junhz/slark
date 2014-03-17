@@ -3,7 +3,7 @@ package http
 
 import combinator.parser._
 
-trait DateTime { self: Symbols[Parsers with ReaderApi with OctetReader] with Literals =>
+trait DateTime { self: Symbols[Parsers with OctetReaders] with Literals =>
 
   import parsers._
 

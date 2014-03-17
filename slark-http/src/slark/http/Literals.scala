@@ -3,7 +3,7 @@ package http
 
 import combinator.parser._
 
-trait Literals { self: Symbols[Parsers with ReaderApi with OctetReader] =>
+trait Literals { self: Symbols[Parsers with OctetReaders] =>
   import parsers._
 
   val octet = new AbstractParser[Byte] {

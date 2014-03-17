@@ -3,13 +3,15 @@ package http
 
 import combinator.parser._
 
-trait Message { self: Symbols[Parsers with ReaderApi with OctetReader] with Literals with UriApi =>
+trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers with uri.CharReaders]] with Literals =>
 
   import parsers._
+  
+  val uriSymbols: Symbols[charParsers.type] with uri.Literals with uri.IPaddress with uri.Path with uri.Scheme
 
   val http_version = "HTTP/" :^ digit(1, `>`) ^ "." :^ digit(1, `>`)
 
-  val http_uri: Parser[uriSymbols.UriReference] = uriSymbols.uri_reference
+  lazy val http_uri: Parser[uriSymbols.UriReference] = uriSymbols.uri_reference
 
   val header_field = token ^ (':' :^ ows) :^ (ht | sp | %(0x21, 0x7E)).* ^: ows
 
@@ -21,7 +23,7 @@ trait Message { self: Symbols[Parsers with ReaderApi with OctetReader] with Lite
   case class Authorize(auth: uriSymbols.Authority) extends RequestTarget
   case object Asterisk extends RequestTarget
 
-  val request_target = {
+  lazy val request_target = {
 
     val origin_form: Parser[RequestTarget] = (p(uriSymbols.path_absolute) ^ ("?" :^ uriSymbols.query).?) -> {
       case (path, query) => Origin(path, query.getOrElse(""))
@@ -36,7 +38,7 @@ trait Message { self: Symbols[Parsers with ReaderApi with OctetReader] with Lite
     origin_form | absolute_form | authority_form | asterisk_form
   }
 
-  val request_line = method ^ sp :^ request_target ^ sp :^ http_version ^: crlf
+  lazy val request_line = method ^ sp :^ request_target ^ sp :^ http_version ^: crlf
 
   val status_code = digit{3}
 
@@ -44,12 +46,12 @@ trait Message { self: Symbols[Parsers with ReaderApi with OctetReader] with Lite
 
   val status_line = http_version ^ sp :^ status_code ^ sp :^ reason_phrase ^: crlf
 
-  val request = (request_line ^ (header_field ^: crlf).*) ^: crlf
+  lazy val request = (request_line ^ (header_field ^: crlf).*) ^: crlf
 
-  val response = (status_line ^ (header_field ^: crlf).*) ^: crlf
+  lazy val response = (status_line ^ (header_field ^: crlf).*) ^: crlf
 }
 
 object Message {
-  abstract class AbstractMessage[+P <: Parsers with ReaderApi with OctetReader](
-    val parsers: P) extends Symbols[P] with Literals with UriApi with Message
+  abstract class AbstractMessage[+P <: Parsers with OctetReaders with ImportChars[Parsers with uri.CharReaders]](
+    val parsers: P) extends Symbols[P] with Literals with Message
 }

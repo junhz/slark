@@ -4,7 +4,7 @@ package uri
 import combinator.parser._
 import FuncLib._
 
-trait Scheme { self: Symbols[Parsers with ReaderApi with CharReader] with Literals with IPaddress with Path =>
+trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddress with Path =>
 
   def schemeName: String
   def defaultPort: Int
@@ -120,7 +120,7 @@ trait Scheme { self: Symbols[Parsers with ReaderApi with CharReader] with Litera
 }
 
 object Scheme {
-  abstract class AbstractScheme[+P <: Parsers with ReaderApi with CharReader](
+  abstract class AbstractScheme[+P <: Parsers with CharReaders](
     val schemeName: String,
     val defaultPort: Int,
     val parsers: P) extends Symbols[P] with Literals with IPaddress with Path with Scheme

@@ -3,17 +3,9 @@ package http
 
 import combinator.parser._
 
-trait OctetReader { self: Parsers with ReaderApi =>
+trait OctetReaders extends Readers[Byte] { self: Parsers =>
 
-  private[this]type Builder[A, B] = A => Parser[B]
-
-  type From = Byte
-
-  type Input = OctetReader
-
-  trait OctetReader extends Reader with ReaderOpt[OctetReader]
-
-  final class StringOctetReader(str: String, index: Int) extends OctetReader {
+  final class StringOctetReader(str: String, index: Int) extends Reader {
     override def head = if (atEnd) ??? else {
       val cnt = str.charAt(index)
       if (cnt > 127) throw new IllegalArgumentException(s"unexpected char $cnt, octet 0 - 127 allowed.")
@@ -25,7 +17,7 @@ trait OctetReader { self: Parsers with ReaderApi =>
     override def toString = "\"" +str.substring(index) + "\""
   }
 
-  implicit val stringOctetReader: String => OctetReader = new StringOctetReader(_, 0)
+  implicit val stringOctetReader: String => Reader = new StringOctetReader(_, 0)
 
   final class StringParser(str: String) extends AbstractParser[String] {
     lazy val pattern = stringOctetReader(str)
@@ -40,7 +32,7 @@ trait OctetReader { self: Parsers with ReaderApi =>
     def ignoreCase: Parser[String] = new AbstractParser[String] {
       override def parse(input: Input) = {
         @tailrec
-        def rec(lhs: OctetReader, rhs: OctetReader): Option[Input] = {
+        def rec(lhs: Reader, rhs: Reader): Option[Input] = {
           if (lhs.atEnd) Some(rhs)
           else if (rhs.atEnd) None
           else {
@@ -75,11 +67,11 @@ trait OctetReader { self: Parsers with ReaderApi =>
 
   implicit val letterParser: Char => Parser[Byte] = new letterParser(_)
 
-  final class ByteListOctetReader(bytes: List[Byte]) extends OctetReader {
+  final class ByteListOctetReader(bytes: List[Byte]) extends Reader {
     override def head = if (atEnd) ??? else bytes.head
     override lazy val tail = if (atEnd) ??? else new ByteListOctetReader(bytes.tail)
     override def atEnd = bytes.isEmpty
   }
 
-  implicit val byteListOctetReader: List[Byte] => OctetReader = new ByteListOctetReader(_)
+  implicit val byteListOctetReader: List[Byte] => Reader = new ByteListOctetReader(_)
 }

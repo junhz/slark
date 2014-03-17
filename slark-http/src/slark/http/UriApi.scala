@@ -6,13 +6,13 @@ import uri.{ Literals => UriLiterals, _ }
 
 trait UriApi { self: Symbols[Parsers] =>
 
-  val uriSymbols = new Scheme.AbstractScheme("http", 80, new Parsers with ReaderApi with CharReader) {
+  val uriSymbols = new Scheme.AbstractScheme("http", 80, new Parsers with CharReaders) {
     override def formatPath(path: List[String]) = path
   }
 
   def trans1(input: self.parsers.Input): Option[(uriSymbols.parsers.From, self.parsers.Input)]
 
-  final class TransedCharReader(val input: self.parsers.Input) extends uriSymbols.parsers.CharReader {
+  final class TransedCharReader(val input: self.parsers.Input) extends uriSymbols.parsers.Reader {
     private[this] var hd: uriSymbols.parsers.From = _
     private[this] var tl: TransedCharReader = _
 

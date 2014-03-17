@@ -2,28 +2,20 @@ package slark.combinator.parser
 
 import scala.annotation.tailrec
 
-trait ReaderApi {
+trait Readers[F] { self: Parsers =>
 
-  type From
+  type From = F
 
-  type Input <: Reader with ReaderOpt[Input]
+  type Input = Reader
 
   trait Reader {
     def head: From
     def tail: Reader
     def atEnd: Boolean
-  }
-  
-  def isSame(f1: From, f2: From): Boolean = f1.equals(f2)
 
-  trait ReaderOpt[R <: Reader] { self: R =>
-    type Self = R with ReaderOpt[R]
-
-    override def tail: Self
-
-    def startWith(that: Self): Option[Self] = {
+    def startWith(that: Reader): Option[Reader] = {
       @tailrec
-      def rec(lhs: Self, rhs: Self): Option[Self] = {
+      def rec(lhs: Reader, rhs: Reader, isSame: (From, From) => Boolean = self.isSame): Option[Reader] = {
         if (rhs.atEnd) Some(lhs)
         else if (lhs.atEnd) None
         else {
@@ -36,4 +28,6 @@ trait ReaderApi {
       rec(this, that)
     }
   }
+
+  val isSame: (From, From) => Boolean = (f1, f2) => f1.equals(f2)
 }

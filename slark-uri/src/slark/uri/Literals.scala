@@ -3,7 +3,7 @@ package uri
 
 import combinator.parser._
 
-trait Literals { self: Symbols[Parsers with ReaderApi with CharReader] =>
+trait Literals { self: Symbols[Parsers with CharReaders] =>
 
   import parsers._
 

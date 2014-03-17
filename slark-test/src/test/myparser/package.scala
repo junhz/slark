@@ -4,16 +4,9 @@ import slark.combinator.parser._
 
 package object myparser {
 
-  object parsers extends Parsers with ReaderApi {
-    type From = Char
+  object parsers extends Parsers with Readers[Char] {
 
-    type Input = CharReader
-
-    override def isSame(f1: From, f2: From): Boolean = f1.equals(f2)
-
-    trait CharReader extends Reader with ReaderOpt[CharReader] {}
-
-    class StringReader(str: String, index: Int) extends CharReader {
+    class StringReader(str: String, index: Int) extends Reader {
       override def atEnd = index >= str.length()
       override def head = if (atEnd) ??? else str.charAt(index)
       override lazy val tail = if (atEnd) ??? else new StringReader(str, index + 1)
@@ -22,7 +15,7 @@ package object myparser {
 
     implicit val singletonStringReaderBuilder: String => Input = new StringReader(_, 0)
 
-    class IterableReader(it: Iterable[Char]) extends CharReader {
+    class IterableReader(it: Iterable[Char]) extends Reader {
       override def atEnd = it.isEmpty
       override def head = if (atEnd) ??? else it.head
       override lazy val tail = if (atEnd) ??? else new IterableReader(it.tail)
@@ -44,7 +37,7 @@ package object myparser {
 
     implicit val sParserBuilder = new SParser(_)
 
-    class IteratorReader(c: Char) extends CharReader {
+    class IteratorReader(c: Char) extends Reader {
       override def atEnd = false
       override def head = c
       override lazy val tail = this

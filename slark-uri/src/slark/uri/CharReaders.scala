@@ -3,24 +3,16 @@ package uri
 
 import combinator.parser._
 
-trait CharReader { self: Parsers with ReaderApi =>
+trait CharReaders extends Readers[Char] { self: Parsers =>
 
-  private[this]type Builder[A, B] = A => Parser[B]
-
-  type From = Char
-
-  type Input = CharReader
-
-  trait CharReader extends Reader with ReaderOpt[CharReader] {}
-
-  final class StringCharReader(str: String, index: Int) extends CharReader {
+  final class StringCharReader(str: String, index: Int) extends Reader {
     override def head = if (atEnd) ??? else str.charAt(index)
     override lazy val tail = if (atEnd) ??? else new StringCharReader(str, index + 1)
     override def atEnd = index >= str.length()
     override def toString = "\""+str.substring(index)+"\""
   }
 
-  implicit val stringCharReader: String => CharReader = new StringCharReader(_, 0)
+  implicit val stringCharReader: String => StringCharReader = new StringCharReader(_, 0)
 
   final class StringParser(str: String) extends AbstractParser[String] {
     lazy val pattern = stringCharReader(str)
@@ -43,7 +35,7 @@ trait CharReader { self: Parsers with ReaderApi =>
     def ignoreCase: Parser[String] = new AbstractParser[String] {
       override def parse(input: Input) = {
         @tailrec
-        def rec(lhs: CharReader, rhs: CharReader): Option[Input] = {
+        def rec(lhs: StringCharReader, rhs: Input): Option[Input] = {
           if (lhs.atEnd) Some(rhs)
           else if (rhs.atEnd) None
           else {

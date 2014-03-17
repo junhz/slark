@@ -4,7 +4,7 @@ package uri
 import combinator.parser._
 import FuncLib._;
 
-trait IPaddress { self: Symbols[Parsers with ReaderApi with CharReader] with Literals =>
+trait IPaddress { self: Symbols[Parsers with CharReaders] with Literals =>
 
   import parsers._
 

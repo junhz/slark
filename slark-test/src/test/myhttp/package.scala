@@ -5,19 +5,13 @@ import slark.http._
 
 package object myhttp {
 
-  object MyHttp extends Message.AbstractMessage(new Parsers with ReaderApi with OctetReader) with DateTime { self =>
-
-    import parsers._
-
-    override def trans1(input: Input) = {
-      if (input.atEnd) None
-      else {
-        val cnt = input.head
-        if (cnt < 0) None
-        else Some(cnt.toChar, input.tail)
-      }
+  object MyHttp extends Message.AbstractMessage(
+    new Parsers with OctetReaders with ImportChars[Parsers with slark.uri.CharReaders] {
+      override val charParsers = new Parsers with slark.uri.CharReaders
+    }) with DateTime {
+    override val uriSymbols = new slark.uri.Scheme.AbstractScheme[parsers.charParsers.type]("http", 80, parsers.charParsers) {
+      override def formatPath(path: List[String]) = path
     }
-    
   }
 
 }
