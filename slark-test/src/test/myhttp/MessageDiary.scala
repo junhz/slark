@@ -7,7 +7,7 @@ import parsers._
 object MessageDiary extends Diary {
 
   val content = 
-    Source(http_uri parse "http://www.google.com/search?q=rfc+uri&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a") :: 
+    Source(uri_reference parse "http://www.google.com/search?q=rfc+uri&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:en-US:official&client=firefox-a") :: 
     Source(request parse """GET http://www.google.com/ HTTP/1.1
 Accept: image/gif, image/jpeg, image/pjpeg, image/pjpeg, application/x-shockwave-flash, application/xaml+xml, application/vnd.ms-xpsdocument, application/x-ms-xbap, application/x-ms-application, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/msword, */*
 Accept-Language: en-us

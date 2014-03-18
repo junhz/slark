@@ -59,4 +59,6 @@ trait Literals { self: Symbols[Parsers with OctetReaders] =>
   val value = token | quoted_string
 
   val parameter = attribute ^ "=" :^ value
+  
+  def send(code: Int, reason: String): Parser[Nothing] = fail((code, reason))
 }
