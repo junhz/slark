@@ -13,8 +13,8 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
     }
     override lazy val tail = if (atEnd) ??? else new StringOctetReader(str, index + 1)
     override def atEnd = index >= str.length()
-    
-    override def toString = "\"" +str.substring(index) + "\""
+
+    override def toString = "\""+str.substring(index)+"\""
   }
 
   implicit val stringOctetReader: String => Reader = new StringOctetReader(_, 0)
@@ -58,7 +58,7 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
   final class letterParser(char: Char) extends AbstractParser[Byte] {
     require(char >= 0 && char <= 127)
 
-    override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {
+    override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt - char == 0) Succ(cnt, input.tail)
       else Fail(s"$char wanted but ${cnt.toChar} found")
@@ -74,4 +74,50 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
   }
 
   implicit val byteListOctetReader: List[Byte] => Reader = new ByteListOctetReader(_)
+
+  def letter(startChar: Char, endChar: Char): Parser[Byte] = new AbstractParser[Byte] {
+    require(startChar >= 0 && endChar > startChar && endChar <= 127)
+
+    override def parse(input: Input) = if (input.atEnd) eof else {
+      val cnt = input.head
+      if (cnt >= startChar && cnt <= endChar) Succ(cnt, input.tail)
+      else Fail(s"out of range of ($startChar, $endChar)")
+    }
+  }
+
+  def acsii(startByte: Byte, endByte: Byte): Parser[Byte] = new AbstractParser[Byte] {
+    require(startByte >= 0 && endByte > startByte && endByte <= 127)
+
+    override def parse(input: Input) = if (input.atEnd) eof else {
+      val cnt = input.head
+      if (cnt >= startByte && cnt <= endByte) Succ(cnt, input.tail)
+      else Fail(s"acsii character out of range (octet $startByte - $endByte)")
+    }
+  }
+
+  def acsii(byte: Byte): Parser[Byte] = new AbstractParser[Byte] {
+    require(byte >= 0 && byte <= 127)
+
+    override def parse(input: Input) = if (input.atEnd) eof else {
+      val cnt = input.head
+      if (cnt == byte) Succ(cnt, input.tail)
+      else Fail(s"acsii character (octet $byte ) wanted but $cnt found)")
+    }
+  }
+
+  def %(start: Byte, end: Byte): Parser[Byte] = new AbstractParser[Byte] {
+    require(start >= 0 && end > start)
+
+    override def parse(input: Input) = if (input.atEnd) eof else {
+      val cnt = input.head
+      if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
+      else Fail(f"$toString wanted but %%x$cnt%02X found")
+    }
+
+    override val toString = f"%%x$start%02X-$end%02X"
+  }
+
+  val octet = new AbstractParser[Byte] {
+    override def parse(input: Input) = if (input.atEnd) eof else Succ(input.head, input.tail)
+  }
 }
