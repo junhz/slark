@@ -68,7 +68,9 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
 
   val status_code = digit{3}
 
-  val reason_phrase = (ht | sp | vchar).*
+  val reason_phrase = (ht | sp | vchar | obs_text).* -> standarizeReasonPhrase
+  
+  def standarizeReasonPhrase(reasonPhrase: List[Byte]): String = reasonPhrase.foldLeft(new StringBuilder)((sb, b) => { sb.append(b.toChar); sb }).toString
 
   val status_line = http_version ^ sp :^ status_code ^ sp :^ reason_phrase ^: crlf
   

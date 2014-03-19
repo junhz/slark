@@ -105,12 +105,12 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
     }
   }
 
-  def %(start: Byte, end: Byte): Parser[Byte] = new AbstractParser[Byte] {
-    require(start >= 0 && end > start)
+  def %(start: Int, end: Int): Parser[Byte] = new AbstractParser[Byte] {
+    require((start & (1 << 31)) == 0 && end > start && ((end & 0xffffff00) == 0))
 
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
-      if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
+      if (cnt >= start && (cnt & 0xff) <= end) Succ(cnt, input.tail)
       else Fail(f"$toString wanted but %%x$cnt%02X found")
     }
 
