@@ -51,15 +51,15 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
 
   val request_target = {
 
-    val origin_form: Parser[RequestTarget] = (absolute_path ^ ("?" :^ query).?) -> {
+    val origin_form = (absolute_path ^ ("?" :^ query).?) -> {
       case (path, query) => Origin(path, query.getOrElse(""))
     }
-    val absolute_form: Parser[RequestTarget] = absolute_uri -> {
+    val absolute_form = absolute_uri -> {
       case ((_, path), query) => Absolute(path, query.getOrElse(""))
     }
-    val authority_form: Parser[RequestTarget] = authority -> (Authorize(_))
+    val authority_form = authority -> (Authorize(_))
 
-    val asterisk_form: Parser[RequestTarget] = p("*") -> (_ => Asterisk)
+    val asterisk_form = "*" -> (_ => Asterisk)
 
     origin_form | absolute_form | authority_form | asterisk_form
   }
@@ -68,7 +68,7 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
 
   val status_code = digit{3}
 
-  val reason_phrase = (ht | sp | %(0x21, 0x7E)).*
+  val reason_phrase = (ht | sp | vchar).*
 
   val status_line = http_version ^ sp :^ status_code ^ sp :^ reason_phrase ^: crlf
   

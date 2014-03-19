@@ -32,6 +32,8 @@ trait Literals { self: Symbols[Parsers with OctetReaders] =>
 
   val crlf = cr ^ lf
 
+  val vchar = %(0x21, 0x7E)
+  
   val ows = (sp | ht).?
 
   val rws = (sp | ht)
