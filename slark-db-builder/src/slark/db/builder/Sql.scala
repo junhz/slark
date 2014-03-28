@@ -46,7 +46,7 @@ trait ConnState { self =>
       self.release
     }
   }
-  
+
 }
 
 object ConnState {
@@ -77,9 +77,9 @@ trait Sql[+T] { self =>
       case f: Fail => f
     }
   }
-  
+
   final def filter(fun: T => Boolean): Sql[T] = withFilter(fun)
-  
+
   final def withFilter(fun: T => Boolean): Sql[T] = new Sql[T] {
     override def run(state: ConnState) = self.run(state) match {
       case s @ Succ(t, state) if fun(t) => s
@@ -87,12 +87,60 @@ trait Sql[+T] { self =>
       case f => f
     }
   }
-  
+
+}
+
+case class NULL(flag: Int)
+
+final class Columns(private[this] val rs: ResultSet) {
+  final def foreach[U](f: Any => U): Unit = {
+    val meta = rs.getMetaData()
+    val columNum = meta.getColumnCount()
+    while (rs.next()) {
+      val buffer = new ListBuffer[Any]
+      def rec(index: Int): Unit = {
+        if (index <= columNum) {
+          val a = meta.getColumnType(index) match {
+            case java.sql.Types.DATE => new java.util.Date(rs.getDate(index).getTime())
+            case java.sql.Types.INTEGER => rs.getInt(index)
+            case java.sql.Types.VARCHAR => rs.getString(index)
+            case java.sql.Types.NUMERIC => rs.getBigDecimal(index)
+          }
+          if (rs.wasNull()) buffer.append(NULL(meta.getColumnType(index)))
+          else buffer.append(a)
+
+          rec(index + 1)
+        }
+      }
+      rec(1)
+      f(buffer.toList match { 
+        case Nil => throw new IllegalArgumentException("no element")
+        case x1 :: xs => xs match {
+          case Nil => x1
+          case x2 :: xs => xs match {
+            case Nil => (x1, x2)
+            case x3 :: xs => xs match {
+              case Nil => (x1, x2, x3)
+              case _ => ???
+            }
+          }
+        }
+      })
+    }
+  }
+}
+
+object Columns {
+  def unapplySeq(cs: Columns): Option[Seq[Any]] = {
+    val buffer = new ListBuffer[Any]
+    for(c <- cs) {
+      buffer.append(c)
+    }
+    Some(buffer.toList)
+  }
 }
 
 object Builder {
-
-  case class NULL(flag: Int)
 
   implicit class SqlContext(context: StringContext) {
     /** don't care about return value */
@@ -109,39 +157,14 @@ object Builder {
       }
     }
     /** return table */
-    def query(params: Any*): Sql[Traversable[List[Any]]] = new Sql[Traversable[List[Any]]] {
+    def query(params: Any*): Sql[Columns] = new Sql[Columns] {
       override def run(state: ConnState) = {
         val stat = state.conn.prepareStatement(context.parts.mkString("?"))
         println(context.parts.mkString("?"))
         prepare(stat, params)
         try {
           val rs = stat.executeQuery()
-          Succ(new Traversable[List[Any]] {
-            override def foreach[U](f: List[Any] => U): Unit = {
-
-              val meta = rs.getMetaData()
-              val columNum = meta.getColumnCount()
-              while (rs.next()) {
-                val buffer = new ListBuffer[Any]
-                def rec(index: Int): Unit = {
-                  if (index <= columNum) {
-                    val a = meta.getColumnType(index) match {
-                      case java.sql.Types.DATE => new java.util.Date(rs.getDate(index).getTime())
-                      case java.sql.Types.INTEGER => rs.getInt(index)
-                      case java.sql.Types.VARCHAR => rs.getString(index)
-                      case java.sql.Types.NUMERIC => rs.getBigDecimal(index)
-                    }
-                    if (rs.wasNull()) buffer.append(NULL(meta.getColumnType(index)))
-                    else buffer.append(a)
-
-                    rec(index + 1)
-                  }
-                }
-                rec(1)
-                f(buffer.toList)
-              }
-            }
-          }, state :+ stat :+ rs)
+          Succ(new Columns(rs), state :+ stat :+ rs)
         } catch {
           case e: SQLException => { stat.close(); Fail(e) }
         }

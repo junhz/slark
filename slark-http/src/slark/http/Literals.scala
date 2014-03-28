@@ -36,9 +36,9 @@ trait Literals { self: Symbols[Parsers with OctetReaders] =>
   
   val obs_text = %(0x80, 0xFF)
   
-  val ows = (sp | ht).?
+  val ows = (sp | ht).*
 
-  val rws = (sp | ht)
+  val rws = (sp | ht)(1, `>`)
 
   val separator = sp | ht | '(' | ')' | '<' | '>' | '@' | ',' | ';' | ':' | '\\' | '"' | '/' | '[' | ']' | '?' | '=' | '{' | '}'
 
