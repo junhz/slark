@@ -1,0 +1,1562 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0070)http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html -->
+<html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:b="http://www.google.com/2005/gml/b" xmlns:data="http://www.google.com/2005/gml/data" xmlns:expr="http://www.google.com/2005/gml/expr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="./One Div Zero  Monads are Elephants Part 4_files/SyntaxHighlighter.css" rel="stylesheet" type="text/css">
+<script src="./One Div Zero  Monads are Elephants Part 4_files/cb=gapi.loaded_3" async=""></script><script src="./One Div Zero  Monads are Elephants Part 4_files/cb=gapi.loaded_2" async=""></script><script src="./One Div Zero  Monads are Elephants Part 4_files/cb=gapi.loaded_1" async=""></script><script src="./One Div Zero  Monads are Elephants Part 4_files/cb=gapi.loaded_0" async=""></script><script language="javascript" src="./One Div Zero  Monads are Elephants Part 4_files/shCore.js"></script>
+<script language="javascript" src="./One Div Zero  Monads are Elephants Part 4_files/shBrushJava.js"></script>
+<script language="javascript" src="./One Div Zero  Monads are Elephants Part 4_files/shBrushScala.js"></script>
+<script language="javascript">
+window.onload = function () {
+    dp.SyntaxHighlighter.BloggerMode();
+    dp.SyntaxHighlighter.ClipboardSwf = 'http://syntaxhighlighter.googlecode.com/svn-history/r92/trunk/Scripts/clipboard.swf';
+    dp.SyntaxHighlighter.HighlightAll('code');
+}
+</script>
+
+<script type="text/javascript">(function() { var b=window,f="chrome",g="jstiming",k="tick";(function(){function d(a){this.t={};this.tick=function(a,d,c){var e=void 0!=c?c:(new Date).getTime();this.t[a]=[e,d];if(void 0==c)try{b.console.timeStamp("CSI/"+a)}catch(h){}};this[k]("start",null,a)}var a;b.performance&&(a=b.performance.timing);var n=a?new d(a.responseStart):new d;b.jstiming={Timer:d,load:n};if(a){var c=a.navigationStart,h=a.responseStart;0<c&&h>=c&&(b[g].srt=h-c)}if(a){var e=b[g].load;0<c&&h>=c&&(e[k]("_wtsrt",void 0,c),e[k]("wtsrt_","_wtsrt",h),e[k]("tbsd_","wtsrt_"))}try{a=null,
+b[f]&&b[f].csi&&(a=Math.floor(b[f].csi().pageT),e&&0<c&&(e[k]("_tbnd",void 0,b[f].csi().startE),e[k]("tbnd_","_tbnd",c))),null==a&&b.gtbExternal&&(a=b.gtbExternal.pageT()),null==a&&b.external&&(a=b.external.pageT,e&&0<c&&(e[k]("_tbnd",void 0,b.external.startE),e[k]("tbnd_","_tbnd",c))),a&&(b[g].pt=a)}catch(p){}})();b.tickAboveFold=function(d){var a=0;if(d.offsetParent){do a+=d.offsetTop;while(d=d.offsetParent)}d=a;750>=d&&b[g].load[k]("aft")};var l=!1;function m(){l||(l=!0,b[g].load[k]("firstScrollTime"))}b.addEventListener?b.addEventListener("scroll",m,!1):b.attachEvent("onscroll",m);
+ })();</script>
+<meta content="blogger" name="generator">
+<link href="http://james-iry.blogspot.com/favicon.ico" rel="icon" type="image/x-icon">
+<link href="./One Div Zero  Monads are Elephants Part 4_files/One Div Zero  Monads are Elephants Part 4.htm" rel="canonical">
+<link rel="alternate" type="application/atom+xml" title="One Div Zero - Atom" href="http://james-iry.blogspot.com/feeds/posts/default">
+<link rel="alternate" type="application/rss+xml" title="One Div Zero - RSS" href="http://james-iry.blogspot.com/feeds/posts/default?alt=rss">
+<link rel="service.post" type="application/atom+xml" title="One Div Zero - Atom" href="http://www.blogger.com/feeds/178174920347765771/posts/default">
+
+<link rel="alternate" type="application/atom+xml" title="One Div Zero - Atom" href="http://james-iry.blogspot.com/feeds/5675298408512871978/comments/default">
+<!--[if IE]> <script> (function() { var html5 = ("abbr,article,aside,audio,canvas,datalist,details," + "figure,footer,header,hgroup,mark,menu,meter,nav,output," + "progress,section,time,video").split(','); for (var i = 0; i < html5.length; i++) { document.createElement(html5[i]); } try { document.execCommand('BackgroundImageCache', false, true); } catch(e) {} })(); </script> <![endif]-->
+<title>One Div Zero: Monads are Elephants Part 4</title>
+<link type="text/css" rel="stylesheet" href="./One Div Zero  Monads are Elephants Part 4_files/3028179046-widget_css_bundle.css">
+<link type="text/css" rel="stylesheet" href="./One Div Zero  Monads are Elephants Part 4_files/authorization.css">
+<style id="page-skin-1" type="text/css"><!--
+/*
+-----------------------------------------------
+Blogger Template Style
+Name:     Minima
+Date:     26 Feb 2004
+Updated by: Blogger Team
+----------------------------------------------- */
+/* Variable definitions
+====================
+<Variable name="bgcolor" description="Page Background Color"
+type="color" default="#fff">
+<Variable name="textcolor" description="Text Color"
+type="color" default="#333">
+<Variable name="linkcolor" description="Link Color"
+type="color" default="#58a">
+<Variable name="pagetitlecolor" description="Blog Title Color"
+type="color" default="#666">
+<Variable name="descriptioncolor" description="Blog Description Color"
+type="color" default="#999">
+<Variable name="titlecolor" description="Post Title Color"
+type="color" default="#c60">
+<Variable name="bordercolor" description="Border Color"
+type="color" default="#ccc">
+<Variable name="sidebarcolor" description="Sidebar Title Color"
+type="color" default="#999">
+<Variable name="sidebartextcolor" description="Sidebar Text Color"
+type="color" default="#666">
+<Variable name="visitedlinkcolor" description="Visited Link Color"
+type="color" default="#999">
+<Variable name="bodyfont" description="Text Font"
+type="font" default="normal normal 100% Georgia, Serif">
+<Variable name="headerfont" description="Sidebar Title Font"
+type="font"
+default="normal normal 78% 'Trebuchet MS',Trebuchet,Arial,Verdana,Sans-serif">
+<Variable name="pagetitlefont" description="Blog Title Font"
+type="font"
+default="normal normal 200% Georgia, Serif">
+<Variable name="descriptionfont" description="Blog Description Font"
+type="font"
+default="normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif">
+<Variable name="postfooterfont" description="Post Footer Font"
+type="font"
+default="normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif">
+<Variable name="startSide" description="Side where text starts in blog language"
+type="automatic" default="left">
+<Variable name="endSide" description="Side where text ends in blog language"
+type="automatic" default="right">
+*/
+/* Use this with templates/template-twocol.html */
+body {
+background:#ffffff;
+margin:0;
+color:#333333;
+font:x-small Georgia Serif;
+font-size/* */:/**/small;
+font-size: /**/small;
+text-align: center;
+}
+a:link {
+color:#5588aa;
+text-decoration:none;
+}
+a:visited {
+color:#999999;
+text-decoration:none;
+}
+a:hover {
+color:#cc6600;
+text-decoration:underline;
+}
+a img {
+border-width:0;
+}
+/* Header
+-----------------------------------------------
+*/
+#header-wrapper {
+width:660px;
+margin:0 auto 10px;
+border:1px solid #cccccc;
+}
+#header-inner {
+background-position: center;
+margin-left: auto;
+margin-right: auto;
+}
+#header {
+margin: 5px;
+border: 1px solid #cccccc;
+text-align: center;
+color:#666666;
+}
+#header h1 {
+margin:5px 5px 0;
+padding:15px 20px .25em;
+line-height:1.2em;
+text-transform:uppercase;
+letter-spacing:.2em;
+font: normal normal 200% Georgia, Serif;
+}
+#header a {
+color:#666666;
+text-decoration:none;
+}
+#header a:hover {
+color:#666666;
+}
+#header .description {
+margin:0 5px 5px;
+padding:0 20px 15px;
+max-width:700px;
+text-transform:uppercase;
+letter-spacing:.2em;
+line-height: 1.4em;
+font: normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif;
+color: #999999;
+}
+#header img {
+margin-left: auto;
+margin-right: auto;
+}
+/* Outer-Wrapper
+----------------------------------------------- */
+#outer-wrapper {
+width: 660px;
+margin:0 auto;
+padding:10px;
+text-align:left;
+font: normal normal 100% Georgia, Serif;
+}
+#main-wrapper {
+width: 410px;
+float: left;
+word-wrap: break-word; /* fix for long text breaking sidebar float in IE */
+overflow: hidden;     /* fix for long non-text content breaking IE sidebar float */
+}
+#sidebar-wrapper {
+width: 220px;
+float: right;
+word-wrap: break-word; /* fix for long text breaking sidebar float in IE */
+overflow: hidden;      /* fix for long non-text content breaking IE sidebar float */
+}
+/* Headings
+----------------------------------------------- */
+h2 {
+margin:1.5em 0 .75em;
+font:normal normal 78% 'Trebuchet MS',Trebuchet,Arial,Verdana,Sans-serif;
+line-height: 1.4em;
+text-transform:uppercase;
+letter-spacing:.2em;
+color:#999999;
+}
+/* Posts
+-----------------------------------------------
+*/
+h2.date-header {
+margin:1.5em 0 .5em;
+}
+.post {
+margin:.5em 0 1.5em;
+border-bottom:1px dotted #cccccc;
+padding-bottom:1.5em;
+}
+.post h3 {
+margin:.25em 0 0;
+padding:0 0 4px;
+font-size:140%;
+font-weight:normal;
+line-height:1.4em;
+color:#cc6600;
+}
+.post h3 a, .post h3 a:visited, .post h3 strong {
+display:block;
+text-decoration:none;
+color:#cc6600;
+font-weight:normal;
+}
+.post h3 strong, .post h3 a:hover {
+color:#333333;
+}
+.post-body {
+margin:0 0 .75em;
+line-height:1.6em;
+}
+.post-body blockquote {
+line-height:1.3em;
+}
+.post-footer {
+margin: .75em 0;
+color:#999999;
+text-transform:uppercase;
+letter-spacing:.1em;
+font: normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif;
+line-height: 1.4em;
+}
+.comment-link {
+margin-left:.6em;
+}
+.post img, table.tr-caption-container {
+padding:4px;
+border:1px solid #cccccc;
+}
+.tr-caption-container img {
+border: none;
+padding: 0;
+}
+.post blockquote {
+margin:1em 20px;
+}
+.post blockquote p {
+margin:.75em 0;
+}
+/* Comments
+----------------------------------------------- */
+#comments h4 {
+margin:1em 0;
+font-weight: bold;
+line-height: 1.4em;
+text-transform:uppercase;
+letter-spacing:.2em;
+color: #999999;
+}
+#comments-block {
+margin:1em 0 1.5em;
+line-height:1.6em;
+}
+#comments-block .comment-author {
+margin:.5em 0;
+}
+#comments-block .comment-body {
+margin:.25em 0 0;
+}
+#comments-block .comment-footer {
+margin:-.25em 0 2em;
+line-height: 1.4em;
+text-transform:uppercase;
+letter-spacing:.1em;
+}
+#comments-block .comment-body p {
+margin:0 0 .75em;
+}
+.deleted-comment {
+font-style:italic;
+color:gray;
+}
+#blog-pager-newer-link {
+float: left;
+}
+#blog-pager-older-link {
+float: right;
+}
+#blog-pager {
+text-align: center;
+}
+.feed-links {
+clear: both;
+line-height: 2.5em;
+}
+/* Sidebar Content
+----------------------------------------------- */
+.sidebar {
+color: #666666;
+line-height: 1.5em;
+}
+.sidebar ul {
+list-style:none;
+margin:0 0 0;
+padding:0 0 0;
+}
+.sidebar li {
+margin:0;
+padding-top:0;
+padding-right:0;
+padding-bottom:.25em;
+padding-left:15px;
+text-indent:-15px;
+line-height:1.5em;
+}
+.sidebar .widget, .main .widget {
+border-bottom:1px dotted #cccccc;
+margin:0 0 1.5em;
+padding:0 0 1.5em;
+}
+.main .Blog {
+border-bottom-width: 0;
+}
+/* Profile
+----------------------------------------------- */
+.profile-img {
+float: left;
+margin-top: 0;
+margin-right: 5px;
+margin-bottom: 5px;
+margin-left: 0;
+padding: 4px;
+border: 1px solid #cccccc;
+}
+.profile-data {
+margin:0;
+text-transform:uppercase;
+letter-spacing:.1em;
+font: normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif;
+color: #999999;
+font-weight: bold;
+line-height: 1.6em;
+}
+.profile-datablock {
+margin:.5em 0 .5em;
+}
+.profile-textblock {
+margin: 0.5em 0;
+line-height: 1.6em;
+}
+.profile-link {
+font: normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif;
+text-transform: uppercase;
+letter-spacing: .1em;
+}
+/* Footer
+----------------------------------------------- */
+#footer {
+width:660px;
+clear:both;
+margin:0 auto;
+padding-top:15px;
+line-height: 1.6em;
+text-transform:uppercase;
+letter-spacing:.1em;
+text-align: center;
+}
+
+--></style>
+<script type="text/javascript">var a="indexOf",b="&m=1",e="(^|&)m=",f="?",g="?m=1";function h(){var c=window.location.href,d=c.split(f);switch(d.length){case 1:return c+g;case 2:return 0<=d[1].search(e)?null:c+b;default:return null}}var k=navigator.userAgent;if(-1!=k[a]("Mobile")&&-1!=k[a]("WebKit")&&-1==k[a]("iPad")||-1!=k[a]("Opera Mini")||-1!=k[a]("IEMobile")){var l=h();l&&window.location.replace(l)};
+</script><script type="text/javascript">
+if (window.jstiming) window.jstiming.load.tick('headEnd');
+</script><script type="text/javascript" src="./One Div Zero  Monads are Elephants Part 4_files/google_top_exp.js"></script><script type="text/javascript" async="" src="./One Div Zero  Monads are Elephants Part 4_files/blogger_item.js"></script><script type="text/javascript" async="" src="./One Div Zero  Monads are Elephants Part 4_files/blogger_index.js"></script><style>.gc-bubbleDefault{background-color:transparent !important;text-align:left;padding:0 !important;margin:0 !important;border:0 !important;table-layout:auto !important}.gc-reset{background-color:transparent !important;border:0 !important;padding:0 !important;margin:0 !important;text-align:left}.pls-bubbleTop{border-bottom:1px solid #ccc !important}.pls-topTail,.pls-vertShimLeft,.pls-contentLeft{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/border_3.gif) !important}.pls-topTail{background-repeat:repeat-x !important;background-position:bottom !important}.pls-vertShim{background-color:#fff !important;text-align:right}.tbl-grey .pls-vertShim{background-color:#f5f5f5 !important}.pls-vertShimLeft{background-repeat:repeat-y !important;background-position:right !important;height:4px}.pls-vertShimRight{height:4px}.pls-confirm-container .pls-vertShim{background-color:#fff3c2 !important}.pls-contentWrap{background-color:#fff !important;position:relative !important;vertical-align:top}.pls-contentLeft{background-repeat:repeat-y;background-position:right;vertical-align:top}.pls-dropRight{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/bubbleDropR_3.png) !important;background-repeat:repeat-y !important;vertical-align:top}.pls-vert,.pls-tailleft,.pls-dropTR .pls-dropBR,.pls-dropBL,.pls-vert img{vertical-align:top}.pls-dropBottom{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/bubbleDropB_3.png) !important;background-repeat:repeat-x !important;width:100%;vertical-align:top}.pls-topLeft{background:inherit !important;text-align:right;vertical-align:bottom}.pls-topRight{background:inherit !important;text-align:left;vertical-align:bottom}.pls-bottomLeft{background:inherit !important;text-align:right}.pls-bottomRight{background:inherit !important;text-align:left;vertical-align:top}.pls-tailtop,.pls-tailright,.pls-tailbottom,.pls-tailleft{display:none;position:relative}.pls-tailbottom,.pls-tailtop,.pls-tailright,.pls-tailleft,.pls-dropTR,.pls-dropBR,.pls-dropBL{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/bubbleSprite_3.png) !important;background-repeat:no-repeat}.tbl-grey .pls-tailbottom,.tbl-grey .pls-tailtop,.tbl-grey .pls-tailright,.tbl-grey .pls-tailleft,.tbl-grey .pls-dropTR,.tbl-grey .pls-dropBR,.tbl-grey .pls-dropBL{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/bubbleSprite-grey.png) !important}.pls-tailbottom{background-position:-23px 0}.pls-confirm-container .pls-tailbottom{background-position:-23px -10px}.pls-tailtop{background-position:-19px -20px}.pls-tailright{background-position:0 0}.pls-tailleft{background-position:-10px 0}.pls-tailtop{vertical-align:top}.gc-bubbleDefault td{line-height:0;font-size:0}.pls-topLeft img,.pls-topRight img,.pls-tailbottom{vertical-align:bottom}.pls-bottomLeft img,.bubbleDropTR,.pls-dropBottomL img,.pls-dropBottom img,.pls-dropBottomR img,.pls-bottomLeft{vertical-align:top}.pls-dropTR{background-position:0 -22px}.pls-dropBR{background-position:0 -27px}.pls-dropBL{background-position:0 -16px}.pls-spacertop,.pls-spacerright,.pls-spacerbottom,.pls-spacerleft{position:static !important}.pls-spinner{bottom:0;position:absolute;left:0;margin:auto;right:0;top:0}</style><script async="" src="./One Div Zero  Monads are Elephants Part 4_files/embed.js"></script><script async="" src="./One Div Zero  Monads are Elephants Part 4_files/count.js"></script><script async="" src="./One Div Zero  Monads are Elephants Part 4_files/count-data.js"></script><script src="./One Div Zero  Monads are Elephants Part 4_files/alfie.f51946af45e0b561c60f768335c9eb79.js" async="" charset="UTF-8"></script><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style></head>
+<body>
+<div class="navbar section" id="navbar"><div class="widget Navbar" id="Navbar1"><script type="text/javascript">
+    function setAttributeOnload(object, attribute, val) {
+      if(window.addEventListener) {
+        window.addEventListener('load',
+          function(){ object[attribute] = val; }, false);
+      } else {
+        window.attachEvent('onload', function(){ object[attribute] = val; });
+      }
+    }
+  </script>
+<div id="navbar-iframe-container"><iframe frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" style="" tabindex="0" vspace="0" width="100%" id="navbar-iframe" name="navbar-iframe" src="./One Div Zero  Monads are Elephants Part 4_files/navbar.htm"></iframe></div>
+<script type="text/javascript" src="./One Div Zero  Monads are Elephants Part 4_files/plusone.js" gapi_processed="true"></script>
+<script type="text/javascript">
+        gapi.load("gapi.iframes:gapi.iframes.style.bubble", function() {
+          if (gapi.iframes && gapi.iframes.getContext) {
+            gapi.iframes.getContext().openChild({
+                url: 'https://www.blogger.com/navbar.g?targetBlogID\075178174920347765771\46blogName\75One+Div+Zero\46publishMode\75PUBLISH_MODE_BLOGSPOT\46navbarType\75BLUE\46layoutType\75LAYOUTS\46searchRoot\75http://james-iry.blogspot.com/search\46blogLocale\75en_US\46v\0752\46homepageUrl\75http://james-iry.blogspot.com/\46targetPostID\0755675298408512871978\46blogPostOrPageUrl\75http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html\46vt\75-4211510736298126200',
+                where: document.getElementById("navbar-iframe-container"),
+                id: "navbar-iframe"
+            });
+          }
+        });
+      </script><script type="text/javascript">
+(function() {
+var script = document.createElement('script');
+script.type = 'text/javascript';
+script.src = '//pagead2.googlesyndication.com/pagead/js/google_top_exp.js';
+var head = document.getElementsByTagName('head')[0];
+if (head) {
+head.appendChild(script);
+}})();
+</script>
+</div></div>
+<div id="outer-wrapper"><div id="wrap2">
+<!-- skip links for text browsers -->
+<span id="skiplinks" style="display:none;">
+<a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#main">skip to main </a> |
+      <a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#sidebar">skip to sidebar</a>
+</span>
+<div id="header-wrapper">
+<div class="header section" id="header"><div class="widget Header" id="Header1">
+<div id="header-inner">
+<div class="titlewrapper">
+<h1 class="title">
+<a href="http://james-iry.blogspot.com/">One Div Zero</a>
+</h1>
+</div>
+<div class="descriptionwrapper">
+<p class="description"><span>An exploration of software development.</span></p>
+</div>
+</div>
+</div></div>
+</div>
+<div id="content-wrapper">
+<div id="crosscol-wrapper" style="text-align:center">
+<div class="crosscol section" id="crosscol"></div>
+</div>
+<div id="main-wrapper">
+<div class="main section" id="main"><div class="widget Blog" id="Blog1">
+<div class="blog-posts hfeed">
+<!-- google_ad_section_start(name=default) -->
+
+          <div class="date-outer">
+        
+<h2 class="date-header"><span>Tuesday, November 6, 2007</span></h2>
+
+          <div class="date-posts">
+        
+<div class="post-outer">
+<div class="post hentry">
+<a name="5675298408512871978"></a>
+<h3 class="post-title entry-title">
+<a href="./One Div Zero  Monads are Elephants Part 4_files/One Div Zero  Monads are Elephants Part 4.htm">Monads are Elephants Part 4</a>
+</h3>
+<div class="post-header">
+<div class="post-header-line-1"></div>
+</div>
+<div class="post-body entry-content">
+<p>Until you experience an adult elephant first hand you won't really understand just how big they can be.   If monads are elephants then so far in this series of articles I've only presented baby elephants like List and Option.  But now it's time to see a full grown adult pachyderm.  As a bonus, this one will even do a bit of circus magic.</p><h3>Functional Programming and IO</h3><p>In functional programming there's a concept called referential transparency.     Referential transparency means you can call a particular function anywhere and any time and the same arguments will always give the same results.  As you might imagine, a referentially transparent function is easier to use and debug than one that isn't.</p><p>There's one area where referential transparency would seem impossible to achieve: IO.  Several calls to the same readLine console function may result in any number of different strings depending on things like what the user ate for breakfast.  Sending a network packet may end in successful delivery or it might not.</p><p>But we can't get rid of IO just to accomplish referential transparency.  A program without IO is just a complicated way to make your CPU hot.</p> <p>You might guess that monads provide a solution for referentially transparent IO given the topic of this series but I'm going to work my way up from some simple principles.  I'll solve the problem for reading and writing strings on the console but the same solution can be extended to arbitrary kinds of IO like file and network.</p><p>Of course, you may not think that referentially transparent IO is terribly important in Scala.  I'm not here to preach the one true way of purely functional referential transparency.  I'm here to talk about monads and it just so happens that the IO monad is very illustrative of how several monads work.</p><h3>The World In a Cup</h3><p>Reading a string from the console wasn't referentially transparent because readLine depends on the state of the user and "user" isn't one of its parameters.  A file reading function would depend on the state of the file system.  A function that reads a web page would depend on the state of the target web server, the Internet, and the local network.  Equivalent output functions have similar dependencies.</p><p>All this could be summed up by creating a class called WorldState and making it both a parameter and a result for all IO functions.  Unfortunately, the world is a big place.  My first attempt to write a WorldState resulted in a compiler crash as it ran out of memory.  So instead I'll try for something a bit smaller than modeling the whole universe.  That's where a bit of circus magic comes in.</p><p>The slight-of-hand I'll use is to model only a few aspects of the world and just pretend WorldState knows about the rest of the world.  Here are some aspects that would be useful</p><ol><li>The state of the world changes between IO functions.</li><li>The world's state is what it is.  You can't just create new ones whenever you want (val coolWorldState = new WorldState(){def jamesIsBillionaire = true}).</li><li>The world is in exactly one state at any moment in time.</li></ol><p>Property 3 is a bit tricky so let's deal with properties 1 and 2 first.</p><p>Here's a rough sketch for property 1</p>
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTConsole.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">object</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v1&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;getString(state</span><span class="keyword">:</span><span>&nbsp;WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;(state.nextState,&nbsp;Console.readLine)&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;putString(state</span><span class="keyword">:</span><span>&nbsp;WorldState,&nbsp;s</span><span class="keyword">:</span><span>&nbsp;String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;(state.nextState,&nbsp;Console.print(s)&nbsp;)&nbsp;&nbsp;</span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTConsole.scala
+object RTConsole_v1 {
+  def getString(state: WorldState) = 
+    (state.nextState, Console.readLine)
+  def putString(state: WorldState, s: String) = 
+    (state.nextState, Console.print(s) )
+}
+</pre><p>getString and putString use functions defined in scala.Console as raw primitive functions.   They take a world state and return a tuple consisting of a new world state and the result of the primitive IO.</p><p>Here's how I'll implement property 2</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTIO.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">trait</span><span>&nbsp;WorldState{</span><span class="keyword">def</span><span>&nbsp;nextState</span><span class="keyword">:</span><span>WorldState}&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span><span class="keyword">abstract</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v1&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;WorldStateImpl(id</span><span class="keyword">:</span><span>BigInt)&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;WorldState&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;nextState&nbsp;</span><span class="keyword">=</span><span>&nbsp;</span><span class="keyword">new</span><span>&nbsp;WorldStateImpl(id&nbsp;+&nbsp;</span><span class="number">1</span><span>)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">final</span><span>&nbsp;</span><span class="keyword">def</span><span>&nbsp;main(args</span><span class="keyword">:</span><span>Array[String])</span><span class="keyword">:</span><span>Unit&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;iomain(args,&nbsp;<span class="keyword">new</span><span>&nbsp;WorldStateImpl(</span><span class="number">0</span><span>))&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args<span class="keyword">:</span><span>Array[String],&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;startState<span class="keyword">:</span><span>WorldState)</span><span class="keyword">:</span><span>(WorldState,&nbsp;</span><span class="keyword">_</span><span>)&nbsp;&nbsp;</span></span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTIO.scala
+sealed trait WorldState{def nextState:WorldState}
+
+abstract class IOApplication_v1 {
+  private class WorldStateImpl(id:BigInt) 
+      extends WorldState {
+    def nextState = new WorldStateImpl(id + 1)
+  }
+  final def main(args:Array[String]):Unit = {
+    iomain(args, new WorldStateImpl(0))
+  }
+  def iomain(
+      args:Array[String], 
+      startState:WorldState):(WorldState, _)
+}
+</pre><p>WorldState is a sealed trait; it can only be extended within the same file.  IOApplication defines the only implementation privately so nobody else can instantiate it. IOApplication also defines a main function that can't be overridden and calls a function named iomain that must be implemented in a subclass.   All of this is plumbing that is meant to be hidden from programmers that use the IO library.</p><p>Here's what hello world looks like given all this</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//&nbsp;file&nbsp;HelloWorld.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">class</span><span>&nbsp;HelloWorld</span><span class="keyword">_</span><span>v1&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v1&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">import</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v1.</span><span class="keyword">_</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args<span class="keyword">:</span><span>Array[String],&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;startState<span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;putString(startState,&nbsp;<span class="string">"Hello&nbsp;world"</span><span>)&nbsp;&nbsp;</span></span></li><li class=""><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">// file HelloWorld.scala
+class HelloWorld_v1 extends IOApplication_v1 {
+  import RTConsole_v1._
+  def iomain(
+        args:Array[String], 
+        startState:WorldState) = 
+    putString(startState, "Hello world")
+}
+</pre><h3>That Darn Property 3</h3><p>The 3rd property said that the world can only be in one state at any given moment in time.  I haven't solved that one yet and here's why it's a problem</p>
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">class</span><span>&nbsp;Evil</span><span class="keyword">_</span><span>v1&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v1&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">import</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v1.</span><span class="keyword">_</span><span>&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args<span class="keyword">:</span><span>Array[String],&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;startState<span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;(stateA,&nbsp;a)&nbsp;</span><span class="keyword">=</span><span>&nbsp;getString(startState)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;(stateB,&nbsp;b)&nbsp;</span><span class="keyword">=</span><span>&nbsp;getString(startState)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;assert(a&nbsp;<span class="keyword">==</span><span>&nbsp;b)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;(startState,&nbsp;b)&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">class Evil_v1 extends IOApplication_v1 {
+  import RTConsole_v1._
+  def iomain(
+      args:Array[String], 
+      startState:WorldState) = {
+    val (stateA, a) = getString(startState)
+    val (stateB, b) = getString(startState)
+    assert(a == b)
+    (startState, b)
+  }
+}
+</pre><p>Here I've called getString twice with the same inputs.  If the code was referentially transparent then the result, a and b, should be the same but of course they won't be unless the user types the same thing twice.  The problem is that "startState" is visible at the same time as the other world states stateA and stateB.</p><h3>Inside Out</h3><p>As a first step towards a solution, I'm going to turn everything inside out.  Instead of iomain being a function from WorldState to WorldState, iomain will return such a function and the main driver will execute it.  Here's the code</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTConsole.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">object</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v2&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;getString&nbsp;</span><span class="keyword">=</span><span>&nbsp;{state</span><span class="keyword">:</span><span>WorldState&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;(state.nextState,&nbsp;Console.readLine)}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;putString(s</span><span class="keyword">:</span><span>&nbsp;String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;{state</span><span class="keyword">:</span><span>&nbsp;WorldState&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;(state.nextState,&nbsp;Console.print(s))}&nbsp;&nbsp;</span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTConsole.scala
+object RTConsole_v2 {
+  def getString = {state:WorldState =&gt; 
+    (state.nextState, Console.readLine)}
+  def putString(s: String) = {state: WorldState =&gt; 
+    (state.nextState, Console.print(s))}
+}
+</pre><p>getString and putString no longer get or put a  string - instead they each return a new function that's "waiting" to be executed once a WorldState is provided.</p>
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTIO.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">trait</span><span>&nbsp;WorldState{</span><span class="keyword">def</span><span>&nbsp;nextState</span><span class="keyword">:</span><span>WorldState}&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span><span class="keyword">abstract</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v2&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;WorldStateImpl(id</span><span class="keyword">:</span><span>BigInt)&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;WorldState&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;nextState&nbsp;</span><span class="keyword">=</span><span>&nbsp;</span><span class="keyword">new</span><span>&nbsp;WorldStateImpl(id&nbsp;+&nbsp;</span><span class="number">1</span><span>)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">final</span><span>&nbsp;</span><span class="keyword">def</span><span>&nbsp;main(args</span><span class="keyword">:</span><span>Array[String])</span><span class="keyword">:</span><span>Unit&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;ioAction&nbsp;</span><span class="keyword">=</span><span>&nbsp;iomain(args)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;ioAction(<span class="keyword">new</span><span>&nbsp;WorldStateImpl(</span><span class="number">0</span><span>));&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(args</span><span class="keyword">:</span><span>Array[String])</span><span class="keyword">:</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;WorldState&nbsp;<span class="keyword">=</span><span>&gt;&nbsp;(WorldState,&nbsp;</span><span class="keyword">_</span><span>)&nbsp;&nbsp;</span></span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTIO.scala
+sealed trait WorldState{def nextState:WorldState}
+
+abstract class IOApplication_v2 {
+  private class WorldStateImpl(id:BigInt) 
+      extends WorldState {
+    def nextState = new WorldStateImpl(id + 1)
+  }
+  final def main(args:Array[String]):Unit = {
+    val ioAction = iomain(args)
+    ioAction(new WorldStateImpl(0));
+  }
+  def iomain(args:Array[String]):
+    WorldState =&gt; (WorldState, _)
+}
+</pre><p>IOApplication's main driver calls iomain to get the function it will execute, then executes that function with an initial WorldState.  HelloWorld doesn't change too much except it no longer takes a WorldState.</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;HelloWorld.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">class</span><span>&nbsp;HelloWorld</span><span class="keyword">_</span><span>v2&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v2&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">import</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v2.</span><span class="keyword">_</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(args</span><span class="keyword">:</span><span>Array[String])&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;putString(<span class="string">"Hello&nbsp;world"</span><span>)&nbsp;&nbsp;</span></span></li><li class=""><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">//file HelloWorld.scala
+class HelloWorld_v2 extends IOApplication_v2 {
+  import RTConsole_v2._
+  def iomain(args:Array[String]) = 
+    putString("Hello world")
+}
+</pre><p>At first glance we seem to have solved our problem because WorldState is nowhere to be found in HelloWorld.  But it turns out it's just been buried a bit.</p><h3>Oh That Darn Property 3</h3>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">class</span><span>&nbsp;Evil</span><span class="keyword">_</span><span>v2&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v2&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">import</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v2.</span><span class="keyword">_</span><span>&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(args</span><span class="keyword">:</span><span>Array[String])&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;{startState<span class="keyword">:</span><span>WorldState&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;(statea,&nbsp;a)&nbsp;</span><span class="keyword">=</span><span>&nbsp;getString(startState)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;(stateb,&nbsp;b)&nbsp;</span><span class="keyword">=</span><span>&nbsp;getString(startState)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assert(a&nbsp;<span class="keyword">==</span><span>&nbsp;b)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(startState,&nbsp;b)&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">class Evil_v2 extends IOApplication_v2 {
+  import RTConsole_v2._
+  def iomain(args:Array[String]) = {        
+    {startState:WorldState =&gt;
+      val (statea, a) = getString(startState)
+      val (stateb, b) = getString(startState)
+      assert(a == b)
+      (startState, b)
+    }
+  }
+}
+
+</pre><p>Evil creates exactly the kind of function that iomain is supposed to return but once again things are broken.  As long as the programmer can create arbitrary IO functions he or she can see through the WorldState trick.</p><h3>Property 3 Squashed For Good</h3><p>All we need to do is prevent the programmer from creating arbitrary functions with the right signature.  Um...we need to do what now?</p><p>Okay, as we saw with WorldState it's easy to prevent programmers from creating subclasses.  So let's turn our function signature into a trait.</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">trait</span><span>&nbsp;IOAction[+A]&nbsp;</span><span class="keyword">extends</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;Function1[WorldState,&nbsp;(WorldState,&nbsp;A)]&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span><span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;SimpleAction[+A](&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;expression<span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;A)&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOAction[A]...&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">sealed trait IOAction[+A] extends 
+  Function1[WorldState, (WorldState, A)] 
+
+private class SimpleAction[+A](
+   expression: =&gt; A) extends IOAction[A]...
+</pre><p>Unlike WorldState we do need to create IOAction instances.  For example, getString and putString are in a separate file but they would need to create new IOActions.   We just need them to do so safely. It's a bit of a dilemma until we realize that getString and putString have two separate pieces: the piece that does the primitive IO and the piece that turns the input world state into the next world state.  A bit of a factory method might help keep things clean, too.</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTIO.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">trait</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v3[+A]&nbsp;</span><span class="keyword">extends</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;Function1[WorldState,&nbsp;(WorldState,&nbsp;A)]&nbsp;&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span><span class="keyword">object</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v3&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply[A](expression</span><span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;A)</span><span class="keyword">:</span><span>IOAction</span><span class="keyword">_</span><span>v3[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">new</span><span>&nbsp;SimpleAction(expression)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;SimpleAction&nbsp;[+A](&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;expression<span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;A)&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v3[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply(state</span><span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(state.nextState,&nbsp;expression)&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">trait</span><span>&nbsp;WorldState{</span><span class="keyword">def</span><span>&nbsp;nextState</span><span class="keyword">:</span><span>WorldState}&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span><span class="keyword">abstract</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v3&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;WorldStateImpl(id</span><span class="keyword">:</span><span>BigInt)&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;WorldState&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;nextState&nbsp;</span><span class="keyword">=</span><span>&nbsp;</span><span class="keyword">new</span><span>&nbsp;WorldStateImpl(id&nbsp;+&nbsp;</span><span class="number">1</span><span>)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">final</span><span>&nbsp;</span><span class="keyword">def</span><span>&nbsp;main(args</span><span class="keyword">:</span><span>Array[String])</span><span class="keyword">:</span><span>Unit&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;ioAction&nbsp;</span><span class="keyword">=</span><span>&nbsp;iomain(args)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;ioAction(<span class="keyword">new</span><span>&nbsp;WorldStateImpl(</span><span class="number">0</span><span>));&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(args</span><span class="keyword">:</span><span>Array[String])</span><span class="keyword">:</span><span>IOAction</span><span class="keyword">_</span><span>v3[</span><span class="keyword">_</span><span>]&nbsp;&nbsp;</span></span></li><li class=""><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTIO.scala
+sealed trait IOAction_v3[+A] extends 
+  Function1[WorldState, (WorldState, A)] 
+
+object IOAction_v3 {
+  def apply[A](expression: =&gt; A):IOAction_v3[A] = 
+    new SimpleAction(expression)
+
+  private class SimpleAction [+A](
+      expression: =&gt; A) extends IOAction_v3[A] {
+    def apply(state:WorldState) = 
+      (state.nextState, expression)
+  }
+}
+
+sealed trait WorldState{def nextState:WorldState}
+
+abstract class IOApplication_v3 {
+  private class WorldStateImpl(id:BigInt) 
+      extends WorldState {
+    def nextState = new WorldStateImpl(id + 1)
+  }
+  final def main(args:Array[String]):Unit = {
+    val ioAction = iomain(args)
+    ioAction(new WorldStateImpl(0));
+  }
+  def iomain(args:Array[String]):IOAction_v3[_]
+}
+
+</pre><p>The IOAction object is just a nice factory to create SimpleActions.  SimpleAction's constructor takes a lazy expression as an argument, hence the "=&gt; A" annotation.   That expression won't be evaluated until SimpleAction's apply method is called.  To call SimpleAction's apply method, a WorldState must be passed in.   What comes out is a tuple with the new WorldState and the result of the expression.</p><p>Here's what our IO methods look like now</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTConsole.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">object</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v3&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;getString&nbsp;</span><span class="keyword">=</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v3(Console.readLine)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;putString(s</span><span class="keyword">:</span><span>&nbsp;String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;IOAction<span class="keyword">_</span><span>v3(Console.print(s))&nbsp;&nbsp;</span></span></li><li class=""><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTConsole.scala
+object RTConsole_v3 {
+  def getString = IOAction_v3(Console.readLine)
+  def putString(s: String) = 
+    IOAction_v3(Console.print(s))
+}
+</pre><p>And finally our HelloWorld class doesn't change a bit</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">class</span><span>&nbsp;HelloWorld</span><span class="keyword">_</span><span>v3&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v3&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">import</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v3.</span><span class="keyword">_</span><span>&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(args</span><span class="keyword">:</span><span>Array[String])&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;putString(<span class="string">"Hello&nbsp;world"</span><span>)&nbsp;&nbsp;</span></span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">class HelloWorld_v3 extends IOApplication_v3 {
+  import RTConsole_v3._
+  def iomain(args:Array[String]) = 
+    putString("Hello world")
+}
+</pre><p>A little thought shows that there's no way to create an Evil IOApplication now.   A programmer simply has no access to a WorldState.  It has become totally sealed away.  The main driver will only pass a WorldState to an IOAction's apply method, and we can't create arbitrary IOAction subclasses with custom definitions of apply.</p><p>Unfortunately, we've got a combining problem.  We can't combine multiple IOActions so we can't do something as simple as "What's your name", Bob, "Hello Bob."</p>  <p>Hmmmm, IOAction is a container for an expression and monads are containers.  IOAction needs to be combined and monads are combinable.  Maybe, just maybe...</p><h3>Ladies and Gentleman I Present the Mighty IO Monad</h3><p>The IOAction.apply factory method takes an expression of type A and returns an IOAction[A].  It sure looks like "unit."  It's not, but it's close enough for now.  And if we knew what flatMap was for this monad then the monad laws would tell us how to create map using it and unit.  But what's flatMap going to be? The signature needs to look like def flatMap[B](f: A=&gt;IOAction[B]):IOAction[B].  But what does it do?</p>  <p>What we want it to do is chain an action to a function that returns an action and when activated causes the two actions to occur in order. In other words, getString.flatMap{y =&gt; putString(y)} should result in a new IOAction monad that, when activated, first activates the getString action then does the action that putString returns. Let's give it a whirl.</p>
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTIO.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">abstract</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v4[+A]&nbsp;</span><span class="keyword">extends</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;Function1[WorldState,&nbsp;(WorldState,&nbsp;A)]&nbsp;{&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;map[B](f</span><span class="keyword">:</span><span>A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;B)</span><span class="keyword">:</span><span>IOAction</span><span class="keyword">_</span><span>v4[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;flatMap&nbsp;{x&nbsp;<span class="keyword">=</span><span>&gt;&nbsp;IOAction</span><span class="keyword">_</span><span>v4(f(x))}&nbsp;&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;flatMap[B](f</span><span class="keyword">:</span><span>A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;IOAction</span><span class="keyword">_</span><span>v4[B])</span><span class="keyword">:</span><span>IOAction</span><span class="keyword">_</span><span>v4[B]</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">new</span><span>&nbsp;ChainedAction(</span><span class="keyword">this</span><span>,&nbsp;f)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;ChainedAction[+A,&nbsp;B](&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action1<span class="keyword">:</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v4[B],&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f<span class="keyword">:</span><span>&nbsp;B&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;IOAction</span><span class="keyword">_</span><span>v4[A])&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v4[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply(state1</span><span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;(state2,&nbsp;intermediateResult)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action1(state1);&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;action2&nbsp;</span><span class="keyword">=</span><span>&nbsp;f(intermediateResult)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action2(state2)&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span><span class="keyword">object</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v4&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply[A](expression</span><span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;A)</span><span class="keyword">:</span><span>IOAction</span><span class="keyword">_</span><span>v4[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">new</span><span>&nbsp;SimpleAction(expression)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;SimpleAction[+A](expression</span><span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;A)&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;IOAction</span><span class="keyword">_</span><span>v4[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply(state</span><span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(state.nextState,&nbsp;expression)&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class=""><span>}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span><span class="comment">//&nbsp;the&nbsp;rest&nbsp;remains&nbsp;the&nbsp;same</span><span>&nbsp;&nbsp;</span></span></li><li class="alt"><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">trait</span><span>&nbsp;WorldState{</span><span class="keyword">def</span><span>&nbsp;nextState</span><span class="keyword">:</span><span>WorldState}&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span><span class="keyword">abstract</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v4&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;WorldStateImpl(id</span><span class="keyword">:</span><span>BigInt)&nbsp;...&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTIO.scala
+sealed abstract class IOAction_v4[+A] extends 
+    Function1[WorldState, (WorldState, A)] {
+  def map[B](f:A =&gt; B):IOAction_v4[B] = 
+    flatMap {x =&gt; IOAction_v4(f(x))}  
+  def flatMap[B](f:A =&gt; IOAction_v4[B]):IOAction_v4[B]= 
+    new ChainedAction(this, f)
+  
+  private class ChainedAction[+A, B](
+      action1: IOAction_v4[B], 
+      f: B =&gt; IOAction_v4[A]) extends IOAction_v4[A] {
+    def apply(state1:WorldState) = {
+      val (state2, intermediateResult) = 
+        action1(state1);
+      val action2 = f(intermediateResult)
+      action2(state2)
+    }
+  }  
+}
+
+object IOAction_v4 {
+  def apply[A](expression: =&gt; A):IOAction_v4[A] = 
+    new SimpleAction(expression)
+
+  private class SimpleAction[+A](expression: =&gt; A) 
+      extends IOAction_v4[A] {
+    def apply(state:WorldState) = 
+      (state.nextState, expression)
+  }    
+}
+
+// the rest remains the same
+sealed trait WorldState{def nextState:WorldState}
+
+abstract class IOApplication_v4 {
+  private class WorldStateImpl(id:BigInt) ...
+</pre><p>The IOAction factory and SimpleAction remain the same.  The IOAction class gets the monad methods.  Per the monad laws, map is just defined in terms of flatMap and what we're using as unit for now.  flatMap defers all the hard work to a new IOAction implementation called ChainedAction.</p><p>The trick in ChainedAction is its apply method.  First it calls action1 with the first world state.  This results in a second world state and an intermediate result.  The function it was chained to needs that result and in return the function generates another action: action2.  action2 is called with the second world state and the tuple that come out is the end result.  Remember that none of this will happen until the main driver passes in an initial WorldState object.</p><h3>A Test Drive</h3><p>At some point you may have wondered why getString and putString weren't renamed to something like createGetStringAction/createPutStringAction since that's in fact what they do.  For an answer, look at what happens when we stick 'em in our old friend "for".</p>
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">object</span><span>&nbsp;HelloWorld</span><span class="keyword">_</span><span>v4&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOApplication</span><span class="keyword">_</span><span>v4&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">import</span><span>&nbsp;RTConsole</span><span class="keyword">_</span><span>v4.</span><span class="keyword">_</span><span>&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(args</span><span class="keyword">:</span><span>Array[String])&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span><span>{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">_</span><span>&nbsp;&lt;-&nbsp;putString(&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"This&nbsp;is&nbsp;an&nbsp;example&nbsp;of&nbsp;the&nbsp;IO&nbsp;monad."</span><span>);&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">_</span><span>&nbsp;&lt;-&nbsp;putString(</span><span class="string">"What's&nbsp;your&nbsp;name?"</span><span>);&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;&lt;-&nbsp;getString;&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">_</span><span>&nbsp;&lt;-&nbsp;putString(</span><span class="string">"Hello&nbsp;"</span><span>&nbsp;+&nbsp;name)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span class="keyword">yield</span><span>&nbsp;()&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">object HelloWorld_v4 extends IOApplication_v4 {
+  import RTConsole_v4._
+  def iomain(args:Array[String]) = {
+    for{
+        _ &lt;- putString(
+            "This is an example of the IO monad.");
+        _ &lt;- putString("What's your name?");
+        name &lt;- getString;
+        _ &lt;- putString("Hello " + name)
+    } yield ()
+  }
+}
+</pre><p>It's as if "for" and getString/putString work together to create a mini language just for creating a complex IOActions.</p><h3>Take a Deep Breath</h3><p>Now's a good moment to sum up what we've got.  IOApplication is pure plumbing.  Users subclass it and create a method called iomain which is called by main.  What comes back is an IOAction - which could in fact be a single action or several actions chained together.  This IOAction is just "waiting" for a WorldState object before it can do its work.  The ChainedAction class is responsible for ensuring that the WorldState is changed and threaded through each chained action in turn.</p><p>getString and putString don't actually get or put Strings as their names might indicate.  Instead, they create IOActions.  But, since IOAction is a monad we can stick it into a "for" statement and the result looks as if getString/putString really do what they say the do.</p><p>It's a good start; we've almost got a perfectly good monad in IOAction.  We've got two problems.  The first is that, because unit changes the world state we're breaking the monad laws slightly (e.g. m flatMap unit === m).  That's kinda trivial in this case because it's invisible.   But we might as well fix it.</p> <p>The second problem is that, in general, IO can fail and we haven't captured that just yet.</p>  <h3>IO Errors</h3><p>In monadic terms, failure is represented by a zero.  So all we need to do is map the native concept of failure (exceptions) to our monad.  At this point I'm going to take a different tack from what I've been doing so far: I'll write one final version of the library with comments inline as I go.</p><p>The IOAction object remains a convenient module to hold several factories and private implementations (which could be anonymous classes, but it's easier to explain with names).  SimpleAction remains the same and IOAction's apply method is a factory for them.</p>  
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTIO.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">object</span><span>&nbsp;IOAction&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;SimpleAction[+A](expression</span><span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;A)&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;IOAction[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply(state</span><span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(state.nextState,&nbsp;expression)&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply[A](expression</span><span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;A)</span><span class="keyword">:</span><span>IOAction[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">new</span><span>&nbsp;SimpleAction(expression)&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTIO.scala
+object IOAction {
+  private class SimpleAction[+A](expression: =&gt; A) 
+      extends IOAction[A] {
+    def apply(state:WorldState) = 
+      (state.nextState, expression)
+  }
+
+  def apply[A](expression: =&gt; A):IOAction[A] = 
+    new SimpleAction(expression)
+</pre><p>UnitAction is a class for unit actions - actions that return the specified value but don't change the world state.  unit is a factory method for it.  It's kind of odd to make a distinction from SimpleAction, but we might as well get in good monad habits now for monads where it does matter.</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;UnitAction[+A](value</span><span class="keyword">:</span><span>&nbsp;A)&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;IOAction[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply(state</span><span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;(state,&nbsp;value)&nbsp;&nbsp;</span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span><span class="keyword">def</span><span>&nbsp;unit[A](value</span><span class="keyword">:</span><span>A)</span><span class="keyword">:</span><span>IOAction[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">new</span><span>&nbsp;UnitAction(value)&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">  private class UnitAction[+A](value: A) 
+      extends IOAction[A] {
+    def apply(state:WorldState) = 
+      (state, value)
+  }
+  
+  def unit[A](value:A):IOAction[A] = 
+    new UnitAction(value)
+</pre><p>FailureAction is a class for our zeros.  It's an IOAction that always throws an exception.  UserException is one such possible exception.   The fail and ioError methods are factory methods for creating zeroes.  Fail takes a string and results in an action that will raise a UserException whereas ioError takes an arbitrary exception and results in an action that will throw that exception.</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span>&nbsp;&nbsp;</span><span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;FailureAction(e</span><span class="keyword">:</span><span>Exception)&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;IOAction[Nothing]&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply(state</span><span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;</span><span class="keyword">throw</span><span>&nbsp;e&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;UserException(msg</span><span class="keyword">:</span><span>String)&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;Exception(msg)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;fail(msg</span><span class="keyword">:</span><span>String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;ioError(<span class="keyword">new</span><span>&nbsp;UserException(msg))&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;ioError[A](e</span><span class="keyword">:</span><span>Exception)</span><span class="keyword">:</span><span>IOAction[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">new</span><span>&nbsp;FailureAction(e)&nbsp;&nbsp;</span></span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">
+  private class FailureAction(e:Exception) 
+      extends IOAction[Nothing] {
+    def apply(state:WorldState) = throw e
+  }
+  
+  private class UserException(msg:String) 
+    extends Exception(msg)
+
+  def fail(msg:String) = 
+    ioError(new UserException(msg))    
+  def ioError[A](e:Exception):IOAction[A] = 
+    new FailureAction(e)
+}
+</pre><p>IOAction's flatMap, and ChainedAction remain the same. Map changes to actually call the unit method so that it complies with the monad laws.  I've also added two bits of convenience: &gt;&gt; and &lt;&lt;.  Where flatMap sequences this action with a function that returns an action, &gt;&gt; and &lt;&lt; sequence this action with another action. It's just a question of which result you get back.  &gt;&gt;, which can be pronounced "then", creates an action that returns the second result, so 'putString "What's your name" &gt;&gt; getString' creates an action that will display a prompt then return the user's response.  Conversely, &lt;&lt;, which can be called "before" creates an action that will return the result from the first action.</p>
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">abstract</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;IOAction[+A]&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;Function1[WorldState,&nbsp;(WorldState,&nbsp;A)]&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;map[B](f</span><span class="keyword">:</span><span>A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;B)</span><span class="keyword">:</span><span>IOAction[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;flatMap&nbsp;{x&nbsp;<span class="keyword">=</span><span>&gt;&nbsp;IOAction.unit(f(x))}&nbsp;&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;flatMap[B](f</span><span class="keyword">:</span><span>A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;IOAction[B])</span><span class="keyword">:</span><span>IOAction[B]</span><span class="keyword">=</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">new</span><span>&nbsp;ChainedAction(</span><span class="keyword">this</span><span>,&nbsp;f)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;ChainedAction[+A,&nbsp;B](&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action1<span class="keyword">:</span><span>&nbsp;IOAction[B],&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f<span class="keyword">:</span><span>&nbsp;B&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;IOAction[A])&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOAction[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply(state1</span><span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;(state2,&nbsp;intermediateResult)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action1(state1);&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;action2&nbsp;</span><span class="keyword">=</span><span>&nbsp;f(intermediateResult)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action2(state2)&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;&gt;&gt;[B](next</span><span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;IOAction[B])</span><span class="keyword">:</span><span>IOAction[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">_</span><span>&nbsp;&lt;-&nbsp;</span><span class="keyword">this</span><span>;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;second&nbsp;&lt;-&nbsp;next&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span class="keyword">yield</span><span>&nbsp;second&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;&lt;&lt;[B](next</span><span class="keyword">:</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;IOAction[B])</span><span class="keyword">:</span><span>IOAction[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;first&nbsp;&lt;-&nbsp;<span class="keyword">this</span><span>;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">_</span><span>&nbsp;&lt;-&nbsp;next&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span class="keyword">yield</span><span>&nbsp;first&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">sealed abstract class IOAction[+A] 
+    extends Function1[WorldState, (WorldState, A)] {
+  def map[B](f:A =&gt; B):IOAction[B] = 
+    flatMap {x =&gt; IOAction.unit(f(x))}  
+  def flatMap[B](f:A =&gt; IOAction[B]):IOAction[B]=
+    new ChainedAction(this, f)
+
+  private class ChainedAction[+A, B](
+      action1: IOAction[B], 
+      f: B =&gt; IOAction[A]) extends IOAction[A] {
+    def apply(state1:WorldState) = {
+      val (state2, intermediateResult) = 
+        action1(state1);
+      val action2 = f(intermediateResult)
+      action2(state2)
+    }
+  }  
+
+  def &gt;&gt;[B](next: =&gt; IOAction[B]):IOAction[B] =
+    for {
+      _ &lt;- this;
+      second &lt;- next
+    } yield second
+    
+  def &lt;&lt;[B](next: =&gt; IOAction[B]):IOAction[A] =
+    for {
+      first &lt;- this;
+      _ &lt;- next
+    } yield first
+
+</pre><p>Because we've got a zero now, it's possible to add a filter method by just following the monad laws.  But here I've created two forms of filter method.  One takes a user specified message to indicate why the filter didn't match whereas the other complies with Scala's required interface and uses a generic error message.</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">def</span><span>&nbsp;filter(&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;p<span class="keyword">:</span><span>&nbsp;A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;Boolean,&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;msg<span class="keyword">:</span><span>String)</span><span class="keyword">:</span><span>IOAction[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;flatMap{x&nbsp;<span class="keyword">=</span><span>&gt;&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span><span>&nbsp;(p(x))&nbsp;IOAction.unit(x)&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">else</span><span>&nbsp;IOAction.fail(msg)}&nbsp;&nbsp;</span></span></li><li class="alt"><span><span class="keyword">def</span><span>&nbsp;filter(p</span><span class="keyword">:</span><span>&nbsp;A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;Boolean)</span><span class="keyword">:</span><span>IOAction[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;filter(p,&nbsp;<span class="string">"Filter&nbsp;mismatch"</span><span>)&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">  def filter(
+      p: A =&gt; Boolean, 
+      msg:String):IOAction[A] =
+    flatMap{x =&gt; 
+      if (p(x)) IOAction.unit(x) 
+      else IOAction.fail(msg)}
+  def filter(p: A =&gt; Boolean):IOAction[A] =
+    filter(p, "Filter mismatch")
+</pre><p>A zero also means we can create a monadic plus.  As some infrastructure for creating it, HandlingAction is an action that wraps another action and if that action throws an exception then it sends that exception to a handler function.  onError is a factory method for creating HandlingActions.  Finally, "or" is the monadic plus.  It basically says that if this action fails with an exception then try the alternative action.</p>
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span>&nbsp;&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;HandlingAction[+A](&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;action<span class="keyword">:</span><span>IOAction[A],&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;handler<span class="keyword">:</span><span>&nbsp;Exception&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;IOAction[A])&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;IOAction[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;apply(state</span><span class="keyword">:</span><span>WorldState)&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">try</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;action(state)&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span class="keyword">catch</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">case</span><span>&nbsp;e</span><span class="keyword">:</span><span>Exception&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;handler(e)(state)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span><span class="keyword">def</span><span>&nbsp;onError[B&nbsp;&gt;</span><span class="keyword">:</span><span>&nbsp;A](&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;handler<span class="keyword">:</span><span>&nbsp;Exception&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;IOAction[B])</span><span class="keyword">:</span><span>&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;IOAction[B]&nbsp;<span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">new</span><span>&nbsp;HandlingAction(</span><span class="keyword">this</span><span>,&nbsp;handler)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span><span class="keyword">def</span><span>&nbsp;or[B&nbsp;&gt;</span><span class="keyword">:</span><span>&nbsp;A](&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;alternative<span class="keyword">:</span><span>IOAction[B])</span><span class="keyword">:</span><span>IOAction[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">this</span><span>&nbsp;onError&nbsp;{ex&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;alternative}&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">    
+  private class HandlingAction[+A](
+      action:IOAction[A],
+      handler: Exception =&gt; IOAction[A]) 
+      extends IOAction[A] {
+    def apply(state:WorldState) = {
+      try {
+        action(state)
+      } catch {
+        case e:Exception =&gt; handler(e)(state)
+      }
+    }    
+  }
+
+  def onError[B &gt;: A](
+      handler: Exception =&gt; IOAction[B]):
+      IOAction[B] = 
+    new HandlingAction(this, handler)      
+
+  def or[B &gt;: A](
+      alternative:IOAction[B]):IOAction[B] =
+    this onError {ex =&gt; alternative}
+}
+</pre><p>The final version of IOApplication stays the same</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">sealed</span><span>&nbsp;</span><span class="keyword">trait</span><span>&nbsp;WorldState{</span><span class="keyword">def</span><span>&nbsp;nextState</span><span class="keyword">:</span><span>WorldState}&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span><span class="keyword">abstract</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;IOApplication&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">private</span><span>&nbsp;</span><span class="keyword">class</span><span>&nbsp;WorldStateImpl(id</span><span class="keyword">:</span><span>BigInt)&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">extends</span><span>&nbsp;WorldState&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;nextState&nbsp;</span><span class="keyword">=</span><span>&nbsp;</span><span class="keyword">new</span><span>&nbsp;WorldStateImpl(id&nbsp;+&nbsp;</span><span class="number">1</span><span>)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">final</span><span>&nbsp;</span><span class="keyword">def</span><span>&nbsp;main(args</span><span class="keyword">:</span><span>Array[String])</span><span class="keyword">:</span><span>Unit&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;ioaction&nbsp;</span><span class="keyword">=</span><span>&nbsp;iomain(args)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;ioaction(<span class="keyword">new</span><span>&nbsp;WorldStateImpl(</span><span class="number">0</span><span>));&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(args</span><span class="keyword">:</span><span>Array[String])</span><span class="keyword">:</span><span>IOAction[</span><span class="keyword">_</span><span>]&nbsp;&nbsp;</span></span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">sealed trait WorldState{def nextState:WorldState}
+
+abstract class IOApplication {
+  private class WorldStateImpl(id:BigInt) 
+      extends WorldState {
+    def nextState = new WorldStateImpl(id + 1)
+  }
+  final def main(args:Array[String]):Unit = {
+    val ioaction = iomain(args)
+    ioaction(new WorldStateImpl(0));
+  }
+  def iomain(args:Array[String]):IOAction[_]
+}
+</pre><p>RTConsole stays mostly the same, but I've added a putLine method as an analog to println.  I've also changed getString to be a val.  Why not? It's always the same action.</p>
+
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="comment">//file&nbsp;RTConsole.scala</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">object</span><span>&nbsp;RTConsole&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;getString&nbsp;</span><span class="keyword">=</span><span>&nbsp;IOAction(Console.readLine)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;putString(s</span><span class="keyword">:</span><span>&nbsp;String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;IOAction(Console.print(s))&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;putLine(s</span><span class="keyword">:</span><span>&nbsp;String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;IOAction(Console.println(s))&nbsp;&nbsp;</span></li><li class=""><span>}&nbsp;&nbsp;&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">//file RTConsole.scala
+object RTConsole {
+  val getString = IOAction(Console.readLine)
+  def putString(s: String) = 
+    IOAction(Console.print(s))
+  def putLine(s: String) = 
+    IOAction(Console.println(s))
+}  
+</pre><p>And now a HelloWorld application to exercise some of this new functionality.  sayHello creates an action from a string.  If the string is a recognized name then the result is an appropriate (or inappropriate) greeting.  Otherwise it's a failure action.</p><p>Ask is a  convenience method that creates an action that will display a specified string then get one.  The &gt;&gt; operator ensures that the action's result will be the result of getString.</p><p>processsString takes an arbitrary string and, if it's 'quit' then it creates an action that will say goodbye and be done.  On any other string sayHello is called.   The result is combined with another action using 'or' in case sayHello fails.  Either way the action is sequenced with the loop action.</p><p>Loop is interesting.  It's defined as a val just because it can be - a def would work just as well.  So it's not quite a loop in the sense of being a recursive function, but it is a recursive value since it's defined in terms of processString which in turn is defined based on loop.</p><p>The iomain function kicks everything off by creating an action that will display an intro then do what the loop action specifies.</p><p><b>Warning: because of the way the library is implemented this loop will eventually blow the stack. Do not use it in production code. Read the comments to see why.</b></p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">object</span><span>&nbsp;HelloWorld&nbsp;</span><span class="keyword">extends</span><span>&nbsp;IOApplication&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">import</span><span>&nbsp;IOAction.</span><span class="keyword">_</span><span>&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">import</span><span>&nbsp;RTConsole.</span><span class="keyword">_</span><span>&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;sayHello(n</span><span class="keyword">:</span><span>String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;n&nbsp;</span><span class="keyword">match</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">case</span><span>&nbsp;</span><span class="string">"Bob"</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;putLine(</span><span class="string">"Hello,&nbsp;Bob"</span><span>)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">case</span><span>&nbsp;</span><span class="string">"Chuck"</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;putLine(</span><span class="string">"Hey,&nbsp;Chuck"</span><span>)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">case</span><span>&nbsp;</span><span class="string">"Sarah"</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;putLine(</span><span class="string">"Helloooo,&nbsp;Sarah"</span><span>)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">case</span><span>&nbsp;</span><span class="keyword">_</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;fail(</span><span class="string">"match&nbsp;exception"</span><span>)&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;ask(q</span><span class="keyword">:</span><span>String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;putString(q)&nbsp;&gt;&gt;&nbsp;getString&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;processString(s</span><span class="keyword">:</span><span>String)&nbsp;</span><span class="keyword">=</span><span>&nbsp;s&nbsp;</span><span class="keyword">match</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">case</span><span>&nbsp;</span><span class="string">"quit"</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;putLine(</span><span class="string">"Catch&nbsp;ya&nbsp;later"</span><span>)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">case</span><span>&nbsp;</span><span class="keyword">_</span><span>&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;(sayHello(s)&nbsp;or&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;putLine(s&nbsp;+&nbsp;<span class="string">",&nbsp;I&nbsp;don't&nbsp;know&nbsp;you."</span><span>))&nbsp;&gt;&gt;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loop&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">val</span><span>&nbsp;loop</span><span class="keyword">:</span><span>IOAction[Unit]&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name&nbsp;&lt;-&nbsp;ask(<span class="string">"What's&nbsp;your&nbsp;name?&nbsp;"</span><span>);&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">_</span><span>&nbsp;&lt;-&nbsp;processString(name)&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<span class="keyword">yield</span><span>&nbsp;()&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;iomain(args</span><span class="keyword">:</span><span>Array[String])&nbsp;</span><span class="keyword">=</span><span>&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;putLine(&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"This&nbsp;is&nbsp;an&nbsp;example&nbsp;of&nbsp;the&nbsp;IO&nbsp;monad."</span><span>)&nbsp;&gt;&gt;&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;&nbsp;putLine(<span class="string">"Enter&nbsp;a&nbsp;name&nbsp;or&nbsp;'quit'"</span><span>)&nbsp;&gt;&gt;&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;&nbsp;loop&nbsp;&nbsp;</span></li><li class=""><span>&nbsp;&nbsp;}&nbsp;&nbsp;</span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">object HelloWorld extends IOApplication {
+  import IOAction._
+  import RTConsole._
+  
+  def sayHello(n:String) = n match {
+    case "Bob" =&gt; putLine("Hello, Bob")
+    case "Chuck" =&gt; putLine("Hey, Chuck")
+    case "Sarah" =&gt; putLine("Helloooo, Sarah")
+    case _ =&gt; fail("match exception")
+  }
+  
+  def ask(q:String) =
+    putString(q) &gt;&gt; getString
+
+  def processString(s:String) = s match {
+    case "quit" =&gt; putLine("Catch ya later")
+    case _ =&gt; (sayHello(s) or         
+        putLine(s + ", I don't know you.")) &gt;&gt;
+
+        loop 
+  }
+    
+  val loop:IOAction[Unit] = 
+    for {
+      name &lt;- ask("What's your name? ");
+      _ &lt;- processString(name)
+    } yield ()
+  
+  def iomain(args:Array[String]) = {
+    putLine(
+        "This is an example of the IO monad.") &gt;&gt;
+    putLine("Enter a name or 'quit'") &gt;&gt;
+    loop
+  }
+}
+</pre><h3>Conclusion for Part 4</h3><p>In this article I've called the IO monad 'IOAction' to make it clear that instances are actions that are waiting to be performed.  Many will find the IO monad of little practical value in Scala.  That's okay, I'm not here to preach about referential transparency.  However, the IO monad is one of the simplest monads that's clearly not a collection in any sense.</p><p>Still, instances of the IO monad can be seen as containers.  But instead of containing values they contain expressions.  flatMap and map in essence turn the embedded expressions into more complex expressions.</p><p>Perhaps a more useful mental model is to see instances of the IO monad as computations or functions.  flatMap can be seen as applying a  function to the computation to create a more complex computation.</p><p>In the last part of this series I'll cover a way to unify the container and computation models.  But first I want to reinforce how useful monads can be by showing an application that uses an elephantine herd of monads to do something a bit more complicated.</p>
+<div style="clear: both;"></div>
+</div>
+<div class="post-footer">
+<div class="post-footer-line post-footer-line-1"><span class="post-author vcard">
+Posted by
+<span class="fn">James Iry</span>
+</span>
+<span class="post-timestamp">
+at
+<a class="timestamp-link" href="./One Div Zero  Monads are Elephants Part 4_files/One Div Zero  Monads are Elephants Part 4.htm" rel="bookmark" title="permanent link"><abbr class="published" title="2007-11-06T19:50:00-08:00">7:50 PM</abbr></a>
+</span>
+<span class="post-comment-link" style="visibility: visible;"></span>
+<span class="post-icons">
+<span class="item-control blog-admin pid-1767151345">
+<a href="http://www.blogger.com/post-edit.g?blogID=178174920347765771&postID=5675298408512871978&from=pencil" title="Edit Post">
+<img alt="" class="icon-action" height="18" src="./One Div Zero  Monads are Elephants Part 4_files/icon18_edit_allbkg.gif" width="18">
+</a>
+</span>
+</span>
+<span class="post-backlinks post-comment-link" style="visibility: visible;"><a class="comment-link disqus-blogger-comment-link" href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html#disqus_thread">36 Comments</a></span>
+</div>
+<div class="post-footer-line post-footer-line-2"><span class="post-labels">
+Labels:
+<a href="http://james-iry.blogspot.com/search/label/functional%20programming" rel="tag">functional programming</a>,
+<a href="http://james-iry.blogspot.com/search/label/monads" rel="tag">monads</a>,
+<a href="http://james-iry.blogspot.com/search/label/scala" rel="tag">scala</a>
+</span>
+</div>
+<div class="post-footer-line post-footer-line-3"><span class="post-location">
+</span>
+</div>
+</div>
+</div>
+<div class="comments" id="comments" style="display: block;"><div id="disqus_thread"><iframe id="dsq-2" data-disqus-uid="2" allowtransparency="true" frameborder="0" tabindex="0" title="Disqus" width="100%" src="./One Div Zero  Monads are Elephants Part 4_files/saved_resource.htm" style="width: 100% !important; border: none !important; overflow: hidden !important; height: 12113px !important;" scrolling="no" horizontalscrolling="no" verticalscrolling="no"></iframe></div></div>
+</div>
+
+        </div></div>
+      
+<!-- google_ad_section_end -->
+</div>
+<div class="blog-pager" id="blog-pager">
+<span id="blog-pager-newer-link">
+<a class="blog-pager-newer-link" href="http://james-iry.blogspot.com/2008/06/lambda-in-sun_23.html" id="Blog1_blog-pager-newer-link" title="Newer Post">Newer Post</a>
+</span>
+<span id="blog-pager-older-link">
+<a class="blog-pager-older-link" href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html" id="Blog1_blog-pager-older-link" title="Older Post">Older Post</a>
+</span>
+<a class="home-link" href="http://james-iry.blogspot.com/">Home</a>
+</div>
+<div class="clear"></div>
+<div class="post-feeds">
+<div class="feed-links">
+Subscribe to:
+<a class="feed-link" href="http://james-iry.blogspot.com/feeds/5675298408512871978/comments/default" target="_blank" type="application/atom+xml">Post Comments (Atom)</a>
+</div>
+</div>
+<script type="text/javascript">window.___gcfg = {'lang': 'en_US'};</script>
+</div></div>
+</div>
+<div id="sidebar-wrapper">
+<div class="sidebar section" id="sidebar"><div class="widget Image" id="Image1">
+<div class="widget-content">
+<img alt="" height="220" id="Image1_img" src="./One Div Zero  Monads are Elephants Part 4_files/Teotihuacan_62AF.jpg" width="220" style="visibility: visible;">
+<br>
+</div>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=Image&widgetId=Image1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;Image1&quot;));" target="configImage1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 4_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div><div class="widget Profile" id="Profile1">
+<h2>About Me</h2>
+<div class="widget-content">
+<dl class="profile-datablock">
+<dt class="profile-data">
+<a class="profile-name-link g-profile" href="http://www.blogger.com/profile/02835376424060382389" rel="author" style="background-image: url(//www.blogger.com/img/logo-16.png);" data-gapiscan="true" data-onload="true" data-gapiattached="true">
+James Iry
+</a>
+</dt>
+<dd class="profile-data">San Francisco, CA, United States</dd>
+<dd class="profile-textblock">If cars were built like software then...well, I don't know squat about building cars so who knows.  It might be kinda cool.  But probably not.</dd>
+</dl>
+<a class="profile-link" href="http://www.blogger.com/profile/02835376424060382389" rel="author">View my complete profile</a>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=Profile&widgetId=Profile1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;Profile1&quot;));" target="configProfile1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 4_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div>
+</div><div class="widget HTML" id="HTML1">
+<div class="widget-content">
+<a href="http://www.pogofish.com/">Check My Resume</a><br>
+<a href="http://twitter.com/jamesiry">Follow My Twitter</a><br>
+<a href="http://www.linkedin.com/in/jamesiry">Link In My Profile</a>
+</div>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=HTML&widgetId=HTML1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;HTML1&quot;));" target="configHTML1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 4_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div><div class="widget BlogArchive" id="BlogArchive1">
+<h2>Blog Archive</h2>
+<div class="widget-content">
+<div id="ArchiveList">
+<div id="BlogArchive1_ArchiveList">
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2013-01-01T00:00:00-08:00&updated-max=2014-01-01T00:00:00-08:00&max-results=3">2013</a>
+<span class="post-count" dir="ltr">(3)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2013_03_01_archive.html">March</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2013_02_01_archive.html">February</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2013_01_01_archive.html">January</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2012-01-01T00:00:00-08:00&updated-max=2013-01-01T00:00:00-08:00&max-results=4">2012</a>
+<span class="post-count" dir="ltr">(4)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2012_03_01_archive.html">March</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2012_02_01_archive.html">February</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2012_01_01_archive.html">January</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2011-01-01T00:00:00-08:00&updated-max=2012-01-01T00:00:00-08:00&max-results=3">2011</a>
+<span class="post-count" dir="ltr">(3)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2011_06_01_archive.html">June</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2011_05_01_archive.html">May</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2011_01_01_archive.html">January</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2010-01-01T00:00:00-08:00&updated-max=2011-01-01T00:00:00-08:00&max-results=16">2010</a>
+<span class="post-count" dir="ltr">(16)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_11_01_archive.html">November</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_10_01_archive.html">October</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_09_01_archive.html">September</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_08_01_archive.html">August</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_07_01_archive.html">July</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_05_01_archive.html">May</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_04_01_archive.html">April</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_03_01_archive.html">March</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2009-01-01T00:00:00-08:00&updated-max=2010-01-01T00:00:00-08:00&max-results=14">2009</a>
+<span class="post-count" dir="ltr">(14)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_08_01_archive.html">August</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_07_01_archive.html">July</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_05_01_archive.html">May</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_04_01_archive.html">April</a>
+<span class="post-count" dir="ltr">(6)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_03_01_archive.html">March</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_01_01_archive.html">January</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2008-01-01T00:00:00-08:00&updated-max=2009-01-01T00:00:00-08:00&max-results=5">2008</a>
+<span class="post-count" dir="ltr">(5)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2008_07_01_archive.html">July</a>
+<span class="post-count" dir="ltr">(4)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2008_06_01_archive.html">June</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate expanded">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy toggle-open">▼&nbsp;</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2007-01-01T00:00:00-08:00&updated-max=2008-01-01T00:00:00-08:00&max-results=7">2007</a>
+<span class="post-count" dir="ltr">(7)</span>
+<ul class="hierarchy">
+<li class="archivedate expanded">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy toggle-open">▼&nbsp;</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2007_11_01_archive.html">November</a>
+<span class="post-count" dir="ltr">(1)</span>
+<ul class="posts">
+<li><a href="./One Div Zero  Monads are Elephants Part 4_files/One Div Zero  Monads are Elephants Part 4.htm">Monads are Elephants Part 4</a></li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2007_10_01_archive.html">October</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2007_09_01_archive.html">September</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2007_08_01_archive.html">August</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=BlogArchive&widgetId=BlogArchive1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;BlogArchive1&quot;));" target="configBlogArchive1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 4_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div>
+</div><div class="widget Label" id="Label1">
+<h2>Labels</h2>
+<div class="widget-content list-label-widget-content">
+<ul>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/C">C</a>
+<span dir="ltr">(5)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/C%23">C#</a>
+<span dir="ltr">(2)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/C%2B%2B">C++</a>
+<span dir="ltr">(3)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/erlang">erlang</a>
+<span dir="ltr">(4)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/functional%20programming">functional programming</a>
+<span dir="ltr">(15)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/groovy">groovy</a>
+<span dir="ltr">(2)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/haskell">haskell</a>
+<span dir="ltr">(6)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/humor">humor</a>
+<span dir="ltr">(7)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/java">java</a>
+<span dir="ltr">(7)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/monads">monads</a>
+<span dir="ltr">(5)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/object%20oriented">object oriented</a>
+<span dir="ltr">(3)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/parallel%2Fdistributed%2Fconcurrent">parallel/distributed/concurrent</a>
+<span dir="ltr">(5)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/programming%20languages">programming languages</a>
+<span dir="ltr">(9)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/ruby">ruby</a>
+<span dir="ltr">(1)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/scala">scala</a>
+<span dir="ltr">(16)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/scala%20humor">scala humor</a>
+<span dir="ltr">(1)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/scuba">scuba</a>
+<span dir="ltr">(1)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/systems%20design">systems design</a>
+<span dir="ltr">(2)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/types">types</a>
+<span dir="ltr">(8)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/version%20control">version control</a>
+<span dir="ltr">(1)</span>
+</li>
+</ul>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=Label&widgetId=Label1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;Label1&quot;));" target="configLabel1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 4_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div>
+</div></div>
+</div>
+<!-- spacer for skins that want sidebar and main to be the same height-->
+<div class="clear">&nbsp;</div>
+</div>
+<!-- end content-wrapper -->
+<div id="footer-wrapper">
+<div class="footer section" id="footer"><div class="widget HTML" id="HTML2">
+<script type="text/javascript">
+                var disqus_shortname = 'onedivzero';
+                var disqus_blogger_current_url = "http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html";
+                if (!disqus_blogger_current_url.length) {
+                    disqus_blogger_current_url = "http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html";
+                }
+                var disqus_blogger_homepage_url = "http://james-iry.blogspot.com/";
+                var disqus_blogger_canonical_homepage_url = "http://james-iry.blogspot.com/";
+            </script>
+<style type="text/css">
+                    #comments {display:none;}
+                </style>
+<script type="text/javascript">
+                    (function() {
+                        var bloggerjs = document.createElement('script');
+                        bloggerjs.type = 'text/javascript';
+                        bloggerjs.async = true;
+                        bloggerjs.src = 'http://'+disqus_shortname+'.disqus.com/blogger_item.js';
+                        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(bloggerjs);
+                    })();
+                </script>
+<style type="text/css">
+                    .post-comment-link { visibility: hidden; }
+                </style>
+<script type="text/javascript">
+                (function() {
+                    var bloggerjs = document.createElement('script');
+                    bloggerjs.type = 'text/javascript';
+                    bloggerjs.async = true;
+                    bloggerjs.src = 'http://'+disqus_shortname+'.disqus.com/blogger_index.js';
+                    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(bloggerjs);
+                })();
+                </script>
+</div></div>
+</div>
+</div></div>
+<!-- end outer-wrapper -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script src="./One Div Zero  Monads are Elephants Part 4_files/ga.js" type="text/javascript"></script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-15939853-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+<script type="text/javascript">
+if (window.jstiming) window.jstiming.load.tick('widgetJsBefore');
+</script><script type="text/javascript" src="./One Div Zero  Monads are Elephants Part 4_files/1040640957-widgets.js"></script><iframe frameborder="0" id="google_top_static_frame" name="google_top_static_frame" src="./One Div Zero  Monads are Elephants Part 4_files/blank.htm" style="height: 0px; width: 0px; position: absolute;"></iframe>
+<script type="text/javascript" src="./One Div Zero  Monads are Elephants Part 4_files/plusone.js" gapi_processed="true"></script>
+<script type="text/javascript">
+if (typeof(BLOG_attachCsiOnload) != 'undefined' && BLOG_attachCsiOnload != null) { window['blogger_templates_experiment_id'] = "templatesV1";window['blogger_blog_id'] = '178174920347765771';BLOG_attachCsiOnload('item_'); }_WidgetManager._Init('//www.blogger.com/rearrange?blogID\x3d178174920347765771','//james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html','178174920347765771');
+_WidgetManager._SetDataContext([{'name': 'blog', 'data': {'blogId': '178174920347765771', 'bloggerUrl': 'http://www.blogger.com', 'title': 'One Div Zero', 'pageType': 'item', 'url': 'http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html', 'canonicalUrl': 'http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html', 'canonicalHomepageUrl': 'http://james-iry.blogspot.com/', 'homepageUrl': 'http://james-iry.blogspot.com/', 'blogspotFaviconUrl': 'http://james-iry.blogspot.com/favicon.ico', 'enabledCommentProfileImages': true, 'adultContent': false, 'disableAdSenseWidget': false, 'analyticsAccountNumber': '', 'searchLabel': '', 'searchQuery': '', 'pageName': 'Monads are Elephants Part 4', 'pageTitle': 'One Div Zero: Monads are Elephants Part 4', 'encoding': 'UTF-8', 'locale': 'en', 'localeUnderscoreDelimited': 'en', 'isPrivate': false, 'isMobile': false, 'isMobileRequest': false, 'mobileClass': '', 'isPrivateBlog': false, 'languageDirection': 'ltr', 'feedLinks': '\74link rel\75\42alternate\42 type\75\42application/atom+xml\42 title\75\42One Div Zero - Atom\42 href\75\42http://james-iry.blogspot.com/feeds/posts/default\42 /\76\n\74link rel\75\42alternate\42 type\75\42application/rss+xml\42 title\75\42One Div Zero - RSS\42 href\75\42http://james-iry.blogspot.com/feeds/posts/default?alt\75rss\42 /\76\n\74link rel\75\42service.post\42 type\75\42application/atom+xml\42 title\75\42One Div Zero - Atom\42 href\75\42http://www.blogger.com/feeds/178174920347765771/posts/default\42 /\76\n\n\74link rel\75\42alternate\42 type\75\42application/atom+xml\42 title\75\42One Div Zero - Atom\42 href\75\42http://james-iry.blogspot.com/feeds/5675298408512871978/comments/default\42 /\76\n', 'meTag': '', 'openIdOpTag': '', 'imageSrcTag': '', 'latencyHeadScript': '\74script type\75\42text/javascript\42\76(function() { var b\75window,f\75\42chrome\42,g\75\42jstiming\42,k\75\42tick\42;(function(){function d(a){this.t\75{};this.tick\75function(a,d,c){var e\75void 0!\75c?c:(new Date).getTime();this.t[a]\75[e,d];if(void 0\75\75c)try{b.console.timeStamp(\42CSI/\42+a)}catch(h){}};this[k](\42start\42,null,a)}var a;b.performance\46\46(a\75b.performance.timing);var n\75a?new d(a.responseStart):new d;b.jstiming\75{Timer:d,load:n};if(a){var c\75a.navigationStart,h\75a.responseStart;0\74c\46\46h\76\75c\46\46(b[g].srt\75h-c)}if(a){var e\75b[g].load;0\74c\46\46h\76\75c\46\46(e[k](\42_wtsrt\42,void 0,c),e[k](\42wtsrt_\42,\42_wtsrt\42,h),e[k](\42tbsd_\42,\42wtsrt_\42))}try{a\75null,\nb[f]\46\46b[f].csi\46\46(a\75Math.floor(b[f].csi().pageT),e\46\0460\74c\46\46(e[k](\42_tbnd\42,void 0,b[f].csi().startE),e[k](\42tbnd_\42,\42_tbnd\42,c))),null\75\75a\46\46b.gtbExternal\46\46(a\75b.gtbExternal.pageT()),null\75\75a\46\46b.external\46\46(a\75b.external.pageT,e\46\0460\74c\46\46(e[k](\42_tbnd\42,void 0,b.external.startE),e[k](\42tbnd_\42,\42_tbnd\42,c))),a\46\46(b[g].pt\75a)}catch(p){}})();b.tickAboveFold\75function(d){var a\0750;if(d.offsetParent){do a+\75d.offsetTop;while(d\75d.offsetParent)}d\75a;750\76\75d\46\46b[g].load[k](\42aft\42)};var l\75!1;function m(){l||(l\75!0,b[g].load[k](\42firstScrollTime\42))}b.addEventListener?b.addEventListener(\42scroll\42,m,!1):b.attachEvent(\42onscroll\42,m);\n })();\74/script\076', 'mobileHeadScript': '', 'view': '', 'dynamicViewsCommentsSrc': '//www.blogblog.com/dynamicviews/4224c15c4e7c9321/js/comments.js', 'dynamicViewsScriptSrc': '//www.blogblog.com/dynamicviews/d6f37bb30c327165', 'plusOneApiSrc': 'https://apis.google.com/js/plusone.js', 'testHtml5CssSrc': 'https://www.blogger.com/static/v1/widgets/3640646893-css_bundle_html5.css', 'sf': 'n', 'tf': ''}}, {'name': 'skin', 'data': {'vars': {'sidebartextcolor': '#666666', 'linkcolor': '#5588aa', 'visitedlinkcolor': '#999999', 'textcolor': '#333333', 'headerfont': 'normal normal 78% \47Trebuchet MS\47,Trebuchet,Arial,Verdana,Sans-serif', 'pagetitlefont': 'normal normal 200% Georgia, Serif', 'bgcolor': '#ffffff', 'descriptioncolor': '#999999', 'titlecolor': '#cc6600', 'bordercolor': '#cccccc', 'postfooterfont': 'normal normal 78% \47Trebuchet MS\47, Trebuchet, Arial, Verdana, Sans-serif', 'pagetitlecolor': '#666666', 'bodyfont': 'normal normal 100% Georgia, Serif', 'endSide': 'right', 'startSide': 'left', 'descriptionfont': 'normal normal 78% \47Trebuchet MS\47, Trebuchet, Arial, Verdana, Sans-serif', 'sidebarcolor': '#999999'}, 'override': ''}}, {'name': 'view', 'data': {'classic': {'name': 'classic', 'url': '/?view\75classic'}, 'flipcard': {'name': 'flipcard', 'url': '/?view\75flipcard'}, 'magazine': {'name': 'magazine', 'url': '/?view\75magazine'}, 'mosaic': {'name': 'mosaic', 'url': '/?view\75mosaic'}, 'sidebar': {'name': 'sidebar', 'url': '/?view\75sidebar'}, 'snapshot': {'name': 'snapshot', 'url': '/?view\75snapshot'}, 'timeslide': {'name': 'timeslide', 'url': '/?view\75timeslide'}}}]);
+_WidgetManager._RegisterWidget('_HTMLView', new _WidgetInfo('HTML2', 'footer', null, document.getElementById('HTML2'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_ImageView', new _WidgetInfo('Image1', 'sidebar', null, document.getElementById('Image1'), {'resize': true}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_ProfileView', new _WidgetInfo('Profile1', 'sidebar', null, document.getElementById('Profile1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_HTMLView', new _WidgetInfo('HTML1', 'sidebar', null, document.getElementById('HTML1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_BlogArchiveView', new _WidgetInfo('BlogArchive1', 'sidebar', null, document.getElementById('BlogArchive1'), {'languageDirection': 'ltr'}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_LabelView', new _WidgetInfo('Label1', 'sidebar', null, document.getElementById('Label1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_HeaderView', new _WidgetInfo('Header1', 'header', null, document.getElementById('Header1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_NavbarView', new _WidgetInfo('Navbar1', 'navbar', null, document.getElementById('Navbar1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_BlogView', new _WidgetInfo('Blog1', 'main', null, document.getElementById('Blog1'), {'cmtInteractionsEnabled': false, 'showBacklinks': true, 'postId': '5675298408512871978', 'lightboxEnabled': true, 'lightboxModuleUrl': 'https://www.blogger.com/static/v1/jsbin/936398874-lbx.js', 'lightboxCssUrl': 'https://www.blogger.com/static/v1/v-css/4138445517-lightbox_bundle.css'}, 'displayModeFull'));
+</script>
+
+</body></html>

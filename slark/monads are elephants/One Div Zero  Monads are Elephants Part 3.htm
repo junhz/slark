@@ -1,0 +1,1236 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0070)http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html -->
+<html dir="ltr" xmlns="http://www.w3.org/1999/xhtml" xmlns:b="http://www.google.com/2005/gml/b" xmlns:data="http://www.google.com/2005/gml/data" xmlns:expr="http://www.google.com/2005/gml/expr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="./One Div Zero  Monads are Elephants Part 3_files/SyntaxHighlighter.css" rel="stylesheet" type="text/css">
+<script src="./One Div Zero  Monads are Elephants Part 3_files/cb=gapi.loaded_3" async=""></script><script src="./One Div Zero  Monads are Elephants Part 3_files/cb=gapi.loaded_2" async=""></script><script src="./One Div Zero  Monads are Elephants Part 3_files/cb=gapi.loaded_1" async=""></script><script src="./One Div Zero  Monads are Elephants Part 3_files/cb=gapi.loaded_0" async=""></script><script language="javascript" src="./One Div Zero  Monads are Elephants Part 3_files/shCore.js"></script>
+<script language="javascript" src="./One Div Zero  Monads are Elephants Part 3_files/shBrushJava.js"></script>
+<script language="javascript" src="./One Div Zero  Monads are Elephants Part 3_files/shBrushScala.js"></script>
+<script language="javascript">
+window.onload = function () {
+    dp.SyntaxHighlighter.BloggerMode();
+    dp.SyntaxHighlighter.ClipboardSwf = 'http://syntaxhighlighter.googlecode.com/svn-history/r92/trunk/Scripts/clipboard.swf';
+    dp.SyntaxHighlighter.HighlightAll('code');
+}
+</script>
+
+<script type="text/javascript">(function() { var b=window,f="chrome",g="jstiming",k="tick";(function(){function d(a){this.t={};this.tick=function(a,d,c){var e=void 0!=c?c:(new Date).getTime();this.t[a]=[e,d];if(void 0==c)try{b.console.timeStamp("CSI/"+a)}catch(h){}};this[k]("start",null,a)}var a;b.performance&&(a=b.performance.timing);var n=a?new d(a.responseStart):new d;b.jstiming={Timer:d,load:n};if(a){var c=a.navigationStart,h=a.responseStart;0<c&&h>=c&&(b[g].srt=h-c)}if(a){var e=b[g].load;0<c&&h>=c&&(e[k]("_wtsrt",void 0,c),e[k]("wtsrt_","_wtsrt",h),e[k]("tbsd_","wtsrt_"))}try{a=null,
+b[f]&&b[f].csi&&(a=Math.floor(b[f].csi().pageT),e&&0<c&&(e[k]("_tbnd",void 0,b[f].csi().startE),e[k]("tbnd_","_tbnd",c))),null==a&&b.gtbExternal&&(a=b.gtbExternal.pageT()),null==a&&b.external&&(a=b.external.pageT,e&&0<c&&(e[k]("_tbnd",void 0,b.external.startE),e[k]("tbnd_","_tbnd",c))),a&&(b[g].pt=a)}catch(p){}})();b.tickAboveFold=function(d){var a=0;if(d.offsetParent){do a+=d.offsetTop;while(d=d.offsetParent)}d=a;750>=d&&b[g].load[k]("aft")};var l=!1;function m(){l||(l=!0,b[g].load[k]("firstScrollTime"))}b.addEventListener?b.addEventListener("scroll",m,!1):b.attachEvent("onscroll",m);
+ })();</script>
+<meta content="blogger" name="generator">
+<link href="http://james-iry.blogspot.com/favicon.ico" rel="icon" type="image/x-icon">
+<link href="./One Div Zero  Monads are Elephants Part 3_files/One Div Zero  Monads are Elephants Part 3.htm" rel="canonical">
+<link rel="alternate" type="application/atom+xml" title="One Div Zero - Atom" href="http://james-iry.blogspot.com/feeds/posts/default">
+<link rel="alternate" type="application/rss+xml" title="One Div Zero - RSS" href="http://james-iry.blogspot.com/feeds/posts/default?alt=rss">
+<link rel="service.post" type="application/atom+xml" title="One Div Zero - Atom" href="http://www.blogger.com/feeds/178174920347765771/posts/default">
+
+<link rel="alternate" type="application/atom+xml" title="One Div Zero - Atom" href="http://james-iry.blogspot.com/feeds/1560748452919590443/comments/default">
+<!--[if IE]> <script> (function() { var html5 = ("abbr,article,aside,audio,canvas,datalist,details," + "figure,footer,header,hgroup,mark,menu,meter,nav,output," + "progress,section,time,video").split(','); for (var i = 0; i < html5.length; i++) { document.createElement(html5[i]); } try { document.execCommand('BackgroundImageCache', false, true); } catch(e) {} })(); </script> <![endif]-->
+<title>One Div Zero: Monads are Elephants Part 3</title>
+<link type="text/css" rel="stylesheet" href="./One Div Zero  Monads are Elephants Part 3_files/3028179046-widget_css_bundle.css">
+<link type="text/css" rel="stylesheet" href="./One Div Zero  Monads are Elephants Part 3_files/authorization.css">
+<style id="page-skin-1" type="text/css"><!--
+/*
+-----------------------------------------------
+Blogger Template Style
+Name:     Minima
+Date:     26 Feb 2004
+Updated by: Blogger Team
+----------------------------------------------- */
+/* Variable definitions
+====================
+<Variable name="bgcolor" description="Page Background Color"
+type="color" default="#fff">
+<Variable name="textcolor" description="Text Color"
+type="color" default="#333">
+<Variable name="linkcolor" description="Link Color"
+type="color" default="#58a">
+<Variable name="pagetitlecolor" description="Blog Title Color"
+type="color" default="#666">
+<Variable name="descriptioncolor" description="Blog Description Color"
+type="color" default="#999">
+<Variable name="titlecolor" description="Post Title Color"
+type="color" default="#c60">
+<Variable name="bordercolor" description="Border Color"
+type="color" default="#ccc">
+<Variable name="sidebarcolor" description="Sidebar Title Color"
+type="color" default="#999">
+<Variable name="sidebartextcolor" description="Sidebar Text Color"
+type="color" default="#666">
+<Variable name="visitedlinkcolor" description="Visited Link Color"
+type="color" default="#999">
+<Variable name="bodyfont" description="Text Font"
+type="font" default="normal normal 100% Georgia, Serif">
+<Variable name="headerfont" description="Sidebar Title Font"
+type="font"
+default="normal normal 78% 'Trebuchet MS',Trebuchet,Arial,Verdana,Sans-serif">
+<Variable name="pagetitlefont" description="Blog Title Font"
+type="font"
+default="normal normal 200% Georgia, Serif">
+<Variable name="descriptionfont" description="Blog Description Font"
+type="font"
+default="normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif">
+<Variable name="postfooterfont" description="Post Footer Font"
+type="font"
+default="normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif">
+<Variable name="startSide" description="Side where text starts in blog language"
+type="automatic" default="left">
+<Variable name="endSide" description="Side where text ends in blog language"
+type="automatic" default="right">
+*/
+/* Use this with templates/template-twocol.html */
+body {
+background:#ffffff;
+margin:0;
+color:#333333;
+font:x-small Georgia Serif;
+font-size/* */:/**/small;
+font-size: /**/small;
+text-align: center;
+}
+a:link {
+color:#5588aa;
+text-decoration:none;
+}
+a:visited {
+color:#999999;
+text-decoration:none;
+}
+a:hover {
+color:#cc6600;
+text-decoration:underline;
+}
+a img {
+border-width:0;
+}
+/* Header
+-----------------------------------------------
+*/
+#header-wrapper {
+width:660px;
+margin:0 auto 10px;
+border:1px solid #cccccc;
+}
+#header-inner {
+background-position: center;
+margin-left: auto;
+margin-right: auto;
+}
+#header {
+margin: 5px;
+border: 1px solid #cccccc;
+text-align: center;
+color:#666666;
+}
+#header h1 {
+margin:5px 5px 0;
+padding:15px 20px .25em;
+line-height:1.2em;
+text-transform:uppercase;
+letter-spacing:.2em;
+font: normal normal 200% Georgia, Serif;
+}
+#header a {
+color:#666666;
+text-decoration:none;
+}
+#header a:hover {
+color:#666666;
+}
+#header .description {
+margin:0 5px 5px;
+padding:0 20px 15px;
+max-width:700px;
+text-transform:uppercase;
+letter-spacing:.2em;
+line-height: 1.4em;
+font: normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif;
+color: #999999;
+}
+#header img {
+margin-left: auto;
+margin-right: auto;
+}
+/* Outer-Wrapper
+----------------------------------------------- */
+#outer-wrapper {
+width: 660px;
+margin:0 auto;
+padding:10px;
+text-align:left;
+font: normal normal 100% Georgia, Serif;
+}
+#main-wrapper {
+width: 410px;
+float: left;
+word-wrap: break-word; /* fix for long text breaking sidebar float in IE */
+overflow: hidden;     /* fix for long non-text content breaking IE sidebar float */
+}
+#sidebar-wrapper {
+width: 220px;
+float: right;
+word-wrap: break-word; /* fix for long text breaking sidebar float in IE */
+overflow: hidden;      /* fix for long non-text content breaking IE sidebar float */
+}
+/* Headings
+----------------------------------------------- */
+h2 {
+margin:1.5em 0 .75em;
+font:normal normal 78% 'Trebuchet MS',Trebuchet,Arial,Verdana,Sans-serif;
+line-height: 1.4em;
+text-transform:uppercase;
+letter-spacing:.2em;
+color:#999999;
+}
+/* Posts
+-----------------------------------------------
+*/
+h2.date-header {
+margin:1.5em 0 .5em;
+}
+.post {
+margin:.5em 0 1.5em;
+border-bottom:1px dotted #cccccc;
+padding-bottom:1.5em;
+}
+.post h3 {
+margin:.25em 0 0;
+padding:0 0 4px;
+font-size:140%;
+font-weight:normal;
+line-height:1.4em;
+color:#cc6600;
+}
+.post h3 a, .post h3 a:visited, .post h3 strong {
+display:block;
+text-decoration:none;
+color:#cc6600;
+font-weight:normal;
+}
+.post h3 strong, .post h3 a:hover {
+color:#333333;
+}
+.post-body {
+margin:0 0 .75em;
+line-height:1.6em;
+}
+.post-body blockquote {
+line-height:1.3em;
+}
+.post-footer {
+margin: .75em 0;
+color:#999999;
+text-transform:uppercase;
+letter-spacing:.1em;
+font: normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif;
+line-height: 1.4em;
+}
+.comment-link {
+margin-left:.6em;
+}
+.post img, table.tr-caption-container {
+padding:4px;
+border:1px solid #cccccc;
+}
+.tr-caption-container img {
+border: none;
+padding: 0;
+}
+.post blockquote {
+margin:1em 20px;
+}
+.post blockquote p {
+margin:.75em 0;
+}
+/* Comments
+----------------------------------------------- */
+#comments h4 {
+margin:1em 0;
+font-weight: bold;
+line-height: 1.4em;
+text-transform:uppercase;
+letter-spacing:.2em;
+color: #999999;
+}
+#comments-block {
+margin:1em 0 1.5em;
+line-height:1.6em;
+}
+#comments-block .comment-author {
+margin:.5em 0;
+}
+#comments-block .comment-body {
+margin:.25em 0 0;
+}
+#comments-block .comment-footer {
+margin:-.25em 0 2em;
+line-height: 1.4em;
+text-transform:uppercase;
+letter-spacing:.1em;
+}
+#comments-block .comment-body p {
+margin:0 0 .75em;
+}
+.deleted-comment {
+font-style:italic;
+color:gray;
+}
+#blog-pager-newer-link {
+float: left;
+}
+#blog-pager-older-link {
+float: right;
+}
+#blog-pager {
+text-align: center;
+}
+.feed-links {
+clear: both;
+line-height: 2.5em;
+}
+/* Sidebar Content
+----------------------------------------------- */
+.sidebar {
+color: #666666;
+line-height: 1.5em;
+}
+.sidebar ul {
+list-style:none;
+margin:0 0 0;
+padding:0 0 0;
+}
+.sidebar li {
+margin:0;
+padding-top:0;
+padding-right:0;
+padding-bottom:.25em;
+padding-left:15px;
+text-indent:-15px;
+line-height:1.5em;
+}
+.sidebar .widget, .main .widget {
+border-bottom:1px dotted #cccccc;
+margin:0 0 1.5em;
+padding:0 0 1.5em;
+}
+.main .Blog {
+border-bottom-width: 0;
+}
+/* Profile
+----------------------------------------------- */
+.profile-img {
+float: left;
+margin-top: 0;
+margin-right: 5px;
+margin-bottom: 5px;
+margin-left: 0;
+padding: 4px;
+border: 1px solid #cccccc;
+}
+.profile-data {
+margin:0;
+text-transform:uppercase;
+letter-spacing:.1em;
+font: normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif;
+color: #999999;
+font-weight: bold;
+line-height: 1.6em;
+}
+.profile-datablock {
+margin:.5em 0 .5em;
+}
+.profile-textblock {
+margin: 0.5em 0;
+line-height: 1.6em;
+}
+.profile-link {
+font: normal normal 78% 'Trebuchet MS', Trebuchet, Arial, Verdana, Sans-serif;
+text-transform: uppercase;
+letter-spacing: .1em;
+}
+/* Footer
+----------------------------------------------- */
+#footer {
+width:660px;
+clear:both;
+margin:0 auto;
+padding-top:15px;
+line-height: 1.6em;
+text-transform:uppercase;
+letter-spacing:.1em;
+text-align: center;
+}
+
+--></style>
+<script type="text/javascript">var a="indexOf",b="&m=1",e="(^|&)m=",f="?",g="?m=1";function h(){var c=window.location.href,d=c.split(f);switch(d.length){case 1:return c+g;case 2:return 0<=d[1].search(e)?null:c+b;default:return null}}var k=navigator.userAgent;if(-1!=k[a]("Mobile")&&-1!=k[a]("WebKit")&&-1==k[a]("iPad")||-1!=k[a]("Opera Mini")||-1!=k[a]("IEMobile")){var l=h();l&&window.location.replace(l)};
+</script><script type="text/javascript">
+if (window.jstiming) window.jstiming.load.tick('headEnd');
+</script><script type="text/javascript" src="./One Div Zero  Monads are Elephants Part 3_files/google_top_exp.js"></script><script type="text/javascript" async="" src="./One Div Zero  Monads are Elephants Part 3_files/blogger_item.js"></script><script type="text/javascript" async="" src="./One Div Zero  Monads are Elephants Part 3_files/blogger_index.js"></script><script async="" src="./One Div Zero  Monads are Elephants Part 3_files/embed.js"></script><script async="" src="./One Div Zero  Monads are Elephants Part 3_files/count.js"></script><style>.gc-bubbleDefault{background-color:transparent !important;text-align:left;padding:0 !important;margin:0 !important;border:0 !important;table-layout:auto !important}.gc-reset{background-color:transparent !important;border:0 !important;padding:0 !important;margin:0 !important;text-align:left}.pls-bubbleTop{border-bottom:1px solid #ccc !important}.pls-topTail,.pls-vertShimLeft,.pls-contentLeft{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/border_3.gif) !important}.pls-topTail{background-repeat:repeat-x !important;background-position:bottom !important}.pls-vertShim{background-color:#fff !important;text-align:right}.tbl-grey .pls-vertShim{background-color:#f5f5f5 !important}.pls-vertShimLeft{background-repeat:repeat-y !important;background-position:right !important;height:4px}.pls-vertShimRight{height:4px}.pls-confirm-container .pls-vertShim{background-color:#fff3c2 !important}.pls-contentWrap{background-color:#fff !important;position:relative !important;vertical-align:top}.pls-contentLeft{background-repeat:repeat-y;background-position:right;vertical-align:top}.pls-dropRight{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/bubbleDropR_3.png) !important;background-repeat:repeat-y !important;vertical-align:top}.pls-vert,.pls-tailleft,.pls-dropTR .pls-dropBR,.pls-dropBL,.pls-vert img{vertical-align:top}.pls-dropBottom{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/bubbleDropB_3.png) !important;background-repeat:repeat-x !important;width:100%;vertical-align:top}.pls-topLeft{background:inherit !important;text-align:right;vertical-align:bottom}.pls-topRight{background:inherit !important;text-align:left;vertical-align:bottom}.pls-bottomLeft{background:inherit !important;text-align:right}.pls-bottomRight{background:inherit !important;text-align:left;vertical-align:top}.pls-tailtop,.pls-tailright,.pls-tailbottom,.pls-tailleft{display:none;position:relative}.pls-tailbottom,.pls-tailtop,.pls-tailright,.pls-tailleft,.pls-dropTR,.pls-dropBR,.pls-dropBL{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/bubbleSprite_3.png) !important;background-repeat:no-repeat}.tbl-grey .pls-tailbottom,.tbl-grey .pls-tailtop,.tbl-grey .pls-tailright,.tbl-grey .pls-tailleft,.tbl-grey .pls-dropTR,.tbl-grey .pls-dropBR,.tbl-grey .pls-dropBL{background-image:url(//ssl.gstatic.com/s2/oz/images/stars/po/bubblev1/bubbleSprite-grey.png) !important}.pls-tailbottom{background-position:-23px 0}.pls-confirm-container .pls-tailbottom{background-position:-23px -10px}.pls-tailtop{background-position:-19px -20px}.pls-tailright{background-position:0 0}.pls-tailleft{background-position:-10px 0}.pls-tailtop{vertical-align:top}.gc-bubbleDefault td{line-height:0;font-size:0}.pls-topLeft img,.pls-topRight img,.pls-tailbottom{vertical-align:bottom}.pls-bottomLeft img,.bubbleDropTR,.pls-dropBottomL img,.pls-dropBottom img,.pls-dropBottomR img,.pls-bottomLeft{vertical-align:top}.pls-dropTR{background-position:0 -22px}.pls-dropBR{background-position:0 -27px}.pls-dropBL{background-position:0 -16px}.pls-spacertop,.pls-spacerright,.pls-spacerbottom,.pls-spacerleft{position:static !important}.pls-spinner{bottom:0;position:absolute;left:0;margin:auto;right:0;top:0}</style><script async="" src="./One Div Zero  Monads are Elephants Part 3_files/count-data.js"></script><script src="./One Div Zero  Monads are Elephants Part 3_files/alfie.f51946af45e0b561c60f768335c9eb79.js" async="" charset="UTF-8"></script><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style><style type="text/css">.dp-j .annotation { color: #646464; }.dp-j .number { color: #C00000; }</style></head>
+<body>
+<div class="navbar section" id="navbar"><div class="widget Navbar" id="Navbar1"><script type="text/javascript">
+    function setAttributeOnload(object, attribute, val) {
+      if(window.addEventListener) {
+        window.addEventListener('load',
+          function(){ object[attribute] = val; }, false);
+      } else {
+        window.attachEvent('onload', function(){ object[attribute] = val; });
+      }
+    }
+  </script>
+<div id="navbar-iframe-container"><iframe frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" style="" tabindex="0" vspace="0" width="100%" id="navbar-iframe" name="navbar-iframe" src="./One Div Zero  Monads are Elephants Part 3_files/navbar.htm"></iframe></div>
+<script type="text/javascript" src="./One Div Zero  Monads are Elephants Part 3_files/plusone.js" gapi_processed="true"></script>
+<script type="text/javascript">
+        gapi.load("gapi.iframes:gapi.iframes.style.bubble", function() {
+          if (gapi.iframes && gapi.iframes.getContext) {
+            gapi.iframes.getContext().openChild({
+                url: 'https://www.blogger.com/navbar.g?targetBlogID\075178174920347765771\46blogName\75One+Div+Zero\46publishMode\75PUBLISH_MODE_BLOGSPOT\46navbarType\75BLUE\46layoutType\75LAYOUTS\46searchRoot\75http://james-iry.blogspot.com/search\46blogLocale\75en_US\46v\0752\46homepageUrl\75http://james-iry.blogspot.com/\46targetPostID\0751560748452919590443\46blogPostOrPageUrl\75http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html\46vt\75-2836896939113442612',
+                where: document.getElementById("navbar-iframe-container"),
+                id: "navbar-iframe"
+            });
+          }
+        });
+      </script><script type="text/javascript">
+(function() {
+var script = document.createElement('script');
+script.type = 'text/javascript';
+script.src = '//pagead2.googlesyndication.com/pagead/js/google_top_exp.js';
+var head = document.getElementsByTagName('head')[0];
+if (head) {
+head.appendChild(script);
+}})();
+</script>
+</div></div>
+<div id="outer-wrapper"><div id="wrap2">
+<!-- skip links for text browsers -->
+<span id="skiplinks" style="display:none;">
+<a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#main">skip to main </a> |
+      <a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#sidebar">skip to sidebar</a>
+</span>
+<div id="header-wrapper">
+<div class="header section" id="header"><div class="widget Header" id="Header1">
+<div id="header-inner">
+<div class="titlewrapper">
+<h1 class="title">
+<a href="http://james-iry.blogspot.com/">One Div Zero</a>
+</h1>
+</div>
+<div class="descriptionwrapper">
+<p class="description"><span>An exploration of software development.</span></p>
+</div>
+</div>
+</div></div>
+</div>
+<div id="content-wrapper">
+<div id="crosscol-wrapper" style="text-align:center">
+<div class="crosscol section" id="crosscol"></div>
+</div>
+<div id="main-wrapper">
+<div class="main section" id="main"><div class="widget Blog" id="Blog1">
+<div class="blog-posts hfeed">
+<!-- google_ad_section_start(name=default) -->
+
+          <div class="date-outer">
+        
+<h2 class="date-header"><span>Thursday, October 18, 2007</span></h2>
+
+          <div class="date-posts">
+        
+<div class="post-outer">
+<div class="post hentry">
+<a name="1560748452919590443"></a>
+<h3 class="post-title entry-title">
+<a href="./One Div Zero  Monads are Elephants Part 3_files/One Div Zero  Monads are Elephants Part 3.htm">Monads are Elephants Part 3</a>
+</h3>
+<div class="post-header">
+<div class="post-header-line-1"></div>
+</div>
+<div class="post-body entry-content">
+<p>In <a href="http://james-iry.blogspot.com/2007/09/monads-are-elephants-part-1.html">this</a> <a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-2.html">series</a> I've presented an alternative view on the old parable about the blind men and the elephant.  In this view, listening to the limited explanations from each of the blind men eventually leads to a pretty good understanding of elephants.</p><p>So far we've been looking at the outside of monads in <a href="http://www.scala-lang.org/">Scala</a>.  That's taken us a great distance, but it's time to look inside.  What really makes an elephant an elephant is its DNA.  Monads have a common DNA of their own in the form of the monadic laws.</p><p>This article is a lot to digest all at once.  It probably makes sense to read it in chunks.  It can also be useful to re-read by substituting a monad you already understand (like List) into the laws.</p><h3>Equality for All</h3><p>Before I continue, I have to semi-formally explain what I mean when I use triple equals in these laws as in "f(x) ≡ g(x)."  What I mean is what a mathematician might mean by "=" equality.  I'm just avoiding single "=" to prevent confusion with assignment.  </p><p>So I'm saying the expression on the left is "the same" as the expression on the right.  That just leads to a question of what I mean by "the same."</p><p>First, I'm not talking about reference identity (Scala's eq method).  Reference identity would satisfy my definition, but it's too strong a requirement. Second, I don't necessarily mean == equality either unless it happens to be implemented just right.</p><p>What I do mean by "the same" is that two objects are indistinguishable without directly or indirectly using primitive reference equality, reference based hash code, or isInstanceOf.  </p><p>In particular it's possible for the expression on the left to lead to an object with some subtle internal differences from the object on the right and still be "the same."  For example, one object might use an extra layer of indirection to achieve the same results as the one on the right.  The important part is that, from the outside, both objects must behave the same.</p><p>One more note on "the same."  All the laws I present implicitly assume that there are no side effects.  I'll have more to say about side effects at the end of the article.</p><h3>Breaking the Law</h3><p>Inevitably somebody will wonder "what happens if I break law x?"  The complete answer depends on what laws are broken and how, but I want to approach it holistically first.  Here's a reminder of some laws from another branch of mathematics.  If a, b, and c are rational numbers then multiplication (*) obeys the following laws:</p><p></p><blockquote><ol><li>a * 1 ≡ a</li><li>a * b ≡ b * a</li><li>(a * b) * c ≡ a * (b * c)</li></ol></blockquote><p></p><p>Certainly it would be easy to create a class called "RationalNumber" and implement a * operator.  But if it didn't follow these laws the result would be confusing to say the least.  Users of your class would try to plug it into formulas and would get the wrong answers.  Frankly, it would be hard to break these laws and still end up with anything that even looks like multiplication of rational numbers.</p><p>Monads are not rational numbers. But they do have laws that help define them and their operations.  Like arithmetic operations, they also have "formulas" that allow you to use them in interesting ways.  For instance, Scala's "for" notation is expanded using a formula that depends on these laws.  So breaking the monad laws is likely to break "for" or some other expectation that users of your class might have.</p><p>Enough intro.  To explain the monad laws, I'll start with another weird word: functor.</p><h3>WTF - What The Functor?</h3><p>Usually articles that start with words like "monad" and "functor" quickly devolve into soup of Greek letters.  That's because both are abstract concepts in a branch of mathematics called category theory and explaining them completely is a mathematical exercise.  Fortunately, my task isn't to explain them completely but just to cover them in Scala.</p><p>In Scala a functor is a class with a map method and a few simple properties.  For a functor of type M[A], the map method takes a function from A to B and returns an M[B].  In other words, map converts an M[A] into an M[B] based on a function argument.   It's important to think of map as performing a transformation and not necessarily having anything to do with loops.  It might be implemented as a loop, but then again it might not.</p><p>Map's signature looks like this</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">class</span><span>&nbsp;M[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;<span class="keyword">def</span><span>&nbsp;map[B](f</span><span class="keyword">:</span><span>&nbsp;A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;B)</span><span class="keyword">:</span><span>M[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;...&nbsp;&nbsp;</span></span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">class M[A] {
+ def map[B](f: A =&gt; B):M[B] = ...
+}
+</pre><h3>First Functor Law: Identity</h3><p>Let's say I invent a function called identity like so</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">def</span><span>&nbsp;identity[A](x</span><span class="keyword">:</span><span>A)&nbsp;</span><span class="keyword">=</span><span>&nbsp;x&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">def identity[A](x:A) = x
+</pre><p>This obviously has the property that for any x</p><p></p><blockquote>identity(x) ≡ x</blockquote><p></p><p>It doesn't do much and that's the point.  It just returns its argument (of whatever type) with no change.  So here's our first functor law: for any functor m</p><p></p><blockquote><ul><li>F1. m map identity ≡ m // or equivalently *</li><li>F1b. m map {x =&gt; identity(x)} ≡ m // or equivalently</li><li>F1c. m map {x =&gt; x} ≡ m</li></ul></blockquote><p></p><p>In other words, doing nothing much should result in no change.  Brilliant!  However, I should remind you that the expression on the left can return a different object and that object may even have a different internal structure.  Just so long as you can't tell them apart.</p><p>If you were to create a functor that didn't follow this law then the following wouldn't hold true.  To see why that would be confusing, pretend m is a List.</p><p></p><blockquote>F1d. for (x &lt;- m) yield x ≡ m</blockquote><p></p><h3>Second Functor Law: Composition</h3><p>The second functor law specifies the way several "maps" compose together.</p><p></p><blockquote>F2. m map g map f ≡ m map {x =&gt; f(g(x))}</blockquote><p></p><p>This just says that if you map with g and then map with f then it's exactly the same thing as mapping with the composition "f of g."  This composition law allows a programmer to do things all at once or stretch them out into multiple statements.  Based on this law, a programmer can always assume the following will work.</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">val</span><span>&nbsp;result1&nbsp;</span><span class="keyword">=</span><span>&nbsp;m&nbsp;map&nbsp;(f&nbsp;compose&nbsp;g)&nbsp;&nbsp;</span></span></li><li class=""><span><span class="keyword">val</span><span>&nbsp;temp&nbsp;</span><span class="keyword">=</span><span>&nbsp;m&nbsp;map&nbsp;g&nbsp;&nbsp;</span></span></li><li class="alt"><span><span class="keyword">val</span><span>&nbsp;result2&nbsp;</span><span class="keyword">=</span><span>&nbsp;&nbsp;temp&nbsp;map&nbsp;f&nbsp;&nbsp;</span></span></li><li class=""><span>assert&nbsp;result1&nbsp;<span class="keyword">==</span><span>&nbsp;result2&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">val result1 = m map (f compose g)
+val temp = m map g
+val result2 =  temp map f
+assert result1 == result2
+</pre><p>In "for" notation this law looks like the following eye bleeder</p><p></p><blockquote>F2b. for (y&lt;- (for (x &lt;-m) yield g(x)) yield f(y) ≡ for (x &lt;- m) yield f(g(x))</blockquote><p></p><h3>Functors and Monads, Alive, Alive Oh</h3><p>As you may have guessed by now all monads are functors so they must follow the functor laws.  In fact, the functor laws can be deduced from the monad laws.  It's just that the functor laws are so simple that it's easier to get a handle on them and see why they should be true.</p><p>As a reminder, a Scala monad has both map and flatMap methods with the following signatures</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">class</span><span>&nbsp;M[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;<span class="keyword">def</span><span>&nbsp;map[B](f</span><span class="keyword">:</span><span>&nbsp;A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;B)</span><span class="keyword">:</span><span>M[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;...&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;<span class="keyword">def</span><span>&nbsp;flatMap[B](f</span><span class="keyword">:</span><span>&nbsp;A</span><span class="keyword">=</span><span>&gt;&nbsp;M[B])</span><span class="keyword">:</span><span>&nbsp;M[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;...&nbsp;&nbsp;</span></span></li><li class=""><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">class M[A] {
+ def map[B](f: A =&gt; B):M[B] = ...
+ def flatMap[B](f: A=&gt; M[B]): M[B] = ...
+}
+</pre><p>Additionally, the laws I present here will be based on "unit."  "unit" stands for a single argument constructor or factory with the following signature</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">def</span><span>&nbsp;unit[A](x</span><span class="keyword">:</span><span>A)</span><span class="keyword">:</span><span>M[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;...&nbsp;&nbsp;</span></span></li></ol></div><pre name="code" class="scala" style="display: none;">def unit[A](x:A):M[A] = ...
+</pre><p>"unit" shouldn't be taken as the literal name of a function or method unless you want it to be.  Scala doesn't specify or use it but it's an important part of monads. Any function that satisfies this signature and behaves according to the monad laws will do.  Normally it's handy to create a monad M as a case class or with a companion object with an appropriate apply(x:A):M[A] method so that the expression M(x) behaves as unit(x).</p><h3>The Functor/Monad Connection Law: The Zeroth Law</h3><p>In the very first installment of this series I introduced a relationship</p><p></p><blockquote>FM1. m map f ≡ m flatMap {x =&gt; unit(f(x))}</blockquote><p></p><p>This law doesn't do much for us alone, but it does create a connection between three concepts: unit, map, and flatMap.</p><p>This law can be expressed using "for" notation pretty nicely</p><p></p><blockquote>FM1a. for (x &lt;- m) yield f(x) ≡ for (x &lt;- m; y &lt;- unit(f(x))) yield y</blockquote><p></p><h3>Flatten Revisited</h3><p>In the very first article I mentioned the concept of "flatten" or "join" as something that converts a monad of type M[M[A]] into M[A], but didn't describe it formally.  In that article I said that flatMap is a map followed by a flatten.</p><p></p><blockquote>FL1. m flatMap f ≡ flatten(m map f)</blockquote><p></p><p>This leads to a very simple definition of flatten</p><p></p><blockquote><ol><li>flatten(m map identity) ≡ m flatMap identity // substitute identity for f</li><li>FL1a. flatten(m) ≡ m flatMap identity // by F1</li></ol></blockquote><p></p><p>So flattening m is the same as flatMapping m with the identity function.  I won't use the flatten laws in this article as flatten isn't required by Scala but it's a nice concept to keep in your back pocket when flatMap seems too abstract.</p><h3>The First Monad Law: Identity</h3><p>The first and simplest of the monad laws is the monad identity law</p><p></p><blockquote><ul><li>M1. m flatMap unit ≡ m // or equivalently</li><li>M1a. m flatMap {x =&gt; unit(x)} ≡ m</li></ul></blockquote><p></p><p>Where the connector law connected 3 concepts, this law focuses on the relationship between 2 of them.  One way of reading this law is that, in a sense, flatMap undoes whatever unit does.  Again the reminder that the object that results on the left may actually be a bit different internally as long as it behaves the same as "m."</p><p>Using this and the connection law, we can derive the functor identity law</p><p></p><blockquote><ol><li>m flatMap {x =&gt; unit(x)} ≡ m // M1a</li><li>m flatMap {x =&gt; unit(identity(x))}≡ m // identity</li><li>F1b. m map {x =&gt; identity(x)} ≡ m // by FM1</li></ol></blockquote><p></p><p>The same derivation works in reverse, too.  Expressed in "for" notation, the monad identity law is pretty straight forward</p><p></p><blockquote>M1c. for (x &lt;- m; y &lt;- unit(x)) yield y ≡ m</blockquote><p></p><h3>The Second Monad Law: Unit</h3><p>Monads have a sort of reverse to the monad identity law.</p><p></p><blockquote><ul><li>M2. unit(x) flatMap f ≡ f(x) // or equivalently</li><li>M2a. unit(x) flatMap {y =&gt; f(y)} ≡ f(x)</li></ul></blockquote><p></p><p>The law is basically saying that unit(x) must somehow preserve x in order to be able to figure out f(x) if f is handed to it.  It's in precisely this sense that it's safe to say that any monad is a type of container (but that doesn't mean a monad is a collection!).</p><p>In "for" notation, the unit law becomes</p><p></p><blockquote>M2b. for (y &lt;- unit(x); result &lt;- f(y)) yield result ≡ f(x)</blockquote><p></p><p>This law has another implication for unit and how it relates to map</p><p></p><blockquote><ol><li>unit(x) map f  ≡ unit(x) map f  // no, really, it does!</li><li>unit(x) map f ≡ unit(x) flatMap {y =&gt; unit(f(y))} // by FM1</li><li>M2c. unit(x) map f ≡ unit(f(x)) // by M2a</li></ol></blockquote><p></p><p>In other words, if we create a monad instance from a single argument x and then map it using f we should get the same result as if we had created the monad instance from the result of applying f to x.  In for notation</p><blockquote>M2d. for (y &lt;- unit(x)) yield f(y) ≡ unit(f(x))</blockquote><h3>The Third Monad Law: Composition</h3><p>The composition law for monads is a rule for how a series of flatMaps work together.</p>  <p></p><blockquote><ul><li>M3.  m flatMap g flatMap f ≡ m flatMap {x =&gt; g(x) flatMap f} // or equivalently</li><li>M3a. m flatMap {x =&gt; g(x)} flatMap {y =&gt; f(y)} ≡ m flatMap {x =&gt; g(x) flatMap {y =&gt; f(y) }}</li></ul></blockquote><p></p><p>It's the most complicated of all our laws and takes some time to appreciate.  On the left side we start with a monad, m, flatMap it with g.  Then that result is flatMapped with f.  On the right side, we create an anonymous function that applies g to its argument and then flatMaps that result with f.  Finally m is flatMapped with the anonymous function. Both have same result.</p><p>In "for" notation, the composition law will send you fleeing in terror, so I recommend skipping it</p><p></p><blockquote>M3b. for (a &lt;- m;b &lt;- g(a);result &lt;- f(b)) yield result ≡ for(a &lt;- m; result &lt;- for(b &lt; g(a); temp &lt;- f(b)) yield temp) yield result</blockquote><p></p><p>From this law, we can derive the functor composition law.  Which is to say breaking the monad composition law also breaks the (simpler) functor composition.  The proof involves throwing several monad laws at the problem and it's not for the faint of heart</p><p></p><blockquote><ol><li>m map g map f ≡ m map g map f // I'm pretty sure</li><li>m map g map f ≡ m flatMap {x =&gt; unit(g(x))} flatMap {y =&gt; unit(f(y))} // by FM1, twice</li><li>m map g map f ≡  m flatMap {x =&gt; unit(g(x)) flatMap {y =&gt; unit(f(y))}} // by M3a</li><li>m map g map f ≡  m flatMap {x =&gt; unit(g(x)) map {y =&gt; f(y)}} // by FM1a</li><li>m map g map f ≡ m flatMap {x =&gt; unit(f(g(x))} // by M2c</li><li>F2. m map g map f ≡ m map {x =&gt; f(g(x))} // by FM1a</li></ol></blockquote><p></p><h3>Total Loser Zeros</h3><p>List has Nil (the empty list) and Option has None.  Nil and None seem to have a certain similarity: they both represent a kind of emptiness.  Formally they're called monadic zeros.</p><p></p>A monad may have many zeros.  For instance, imagine an Option-like monad called Result.  A Result can either be a Success(value) or a Failure(msg).  The Failure constructor takes a string indicating why the failure occurred.  Every different failure object is a different zero for Result.  <p></p>A monad may have no zeros. While all collection monads will have zeros (empty collections) other kinds of monads may or may not depending on whether they have a concept of emptiness or failure that can follow the zero laws.<p></p><h3>The First Zero Law: Identity</h3><p>If mzero is a monadic zero then for any f it makes sense that</p><p></p><blockquote>MZ1. mzero flatMap f ≡ mzero</blockquote><p></p><p>Translated into Texan: if t'ain't nothin' to start with then t'ain't gonna be nothin' after neither.</p>  <p>This law allows us to derive another zero law</p><p></p><blockquote><ol><li>mzero map f ≡ mzero map f // identity</li><li>mzero map f ≡ mzero flatMap {x =&gt; unit(f(x)) // by FM1</li><li>MZ1b. mzero map f ≡ mzero // by MZ1</li></ol></blockquote><p></p><p>So taking a zero and mapping with any function also results in a zero. This law makes clear that a zero is different from, say, unit(null) or some other construction that may appear empty but isn't quite empty enough.  To see why look at this</p><p></p><blockquote>unit(null) map {x =&gt; "Nope, not empty enough to be a zero"} ≡ unit("Nope, not empty enough to be a zero")</blockquote><p></p><h3>The Second Zero Law: M to Zero in Nothing Flat</h3><p>The reverse of the zero identity law looks like this</p><p></p><blockquote>MZ2. m flatMap {x =&gt; mzero} ≡ mzero</blockquote><p></p><p>Basically this says that replacing everything with nothing results in nothing which um...sure.  This law just formalizes your intuition about how zeros "flatten."</p><h3>The Third and Fourth Zero Laws: Plus</h3><p>Monads that have zeros can also have something that works a bit like addition.  For List, the "plus" equivalent is ":::" and for Option it's "orElse."   Whatever it's called its signature will look this</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">class</span><span>&nbsp;M[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;...&nbsp;&nbsp;</span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;plus(other</span><span class="keyword">:</span><span>M[B&nbsp;&gt;</span><span class="keyword">:</span><span>&nbsp;A])</span><span class="keyword">:</span><span>&nbsp;M[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;...&nbsp;&nbsp;</span></span></li><li class=""><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">class M[A] {
+   ...
+   def plus(other:M[B &gt;: A]): M[B] = ...
+}
+</pre><p>Plus has the following two laws which should make sense: adding anything to a zero is that thing.</p><p></p><blockquote><ul><li>MZ3. mzero plus m ≡ m</li><li>MZ4. m plus mzero ≡ m</li></ul></blockquote><p></p><p>The plus laws don't say much about what "m plus n" is if neither is a monadic zero.  That's left entirely up to you and will vary quite a bit depending on the monad.  Typically, if concatenation makes sense for the monad then that's what plus will be.  Otherwise, it will typically behave like an "or," returning the first non-zero value.</p><h3>Filtering Revisited</h3><p>In the previous installment I briefly mentioned that filter can be seen in purely monadic terms, and monadic zeros are just the trick to seeing how.  As a reminder, a filterable monad looks like this</p>
+<div class="dp-highlighter"><div class="bar"><div class="tools"><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;ViewSource&#39;,this);return false;">view plain</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;CopyToClipboard&#39;,this);return false;">copy to clipboard</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;PrintSource&#39;,this);return false;">print</a><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#" onclick="dp.sh.Toolbar.Command(&#39;About&#39;,this);return false;">?</a></div></div><ol class="dp-j"><li class="alt"><span><span class="keyword">class</span><span>&nbsp;M[A]&nbsp;{&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;map[B](f</span><span class="keyword">:</span><span>&nbsp;A&nbsp;</span><span class="keyword">=</span><span>&gt;&nbsp;B)</span><span class="keyword">:</span><span>M[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;...&nbsp;&nbsp;</span></span></li><li class="alt"><span>&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;flatMap[B](f</span><span class="keyword">:</span><span>&nbsp;A</span><span class="keyword">=</span><span>&gt;&nbsp;M[B])</span><span class="keyword">:</span><span>&nbsp;M[B]&nbsp;</span><span class="keyword">=</span><span>&nbsp;...&nbsp;&nbsp;</span></span></li><li class=""><span>&nbsp;&nbsp;&nbsp;<span class="keyword">def</span><span>&nbsp;filter(p</span><span class="keyword">:</span><span>&nbsp;A</span><span class="keyword">=</span><span>&gt;&nbsp;Boolean)</span><span class="keyword">:</span><span>&nbsp;M[A]&nbsp;</span><span class="keyword">=</span><span>&nbsp;...&nbsp;&nbsp;</span></span></li><li class="alt"><span>}&nbsp;&nbsp;</span></li></ol></div><pre name="code" class="scala" style="display: none;">class M[A] {
+   def map[B](f: A =&gt; B):M[B] = ...
+   def flatMap[B](f: A=&gt; M[B]): M[B] = ...
+   def filter(p: A=&gt; Boolean): M[A] = ...
+}</pre><p>The filter method is completely described in one simple law</p><p></p><blockquote>FIL1. m filter p ≡ m flatMap {x =&gt; if(p(x)) unit(x) else mzero}</blockquote><p></p><p>We create an anonymous function that takes x and either returns unit(x) or mzero depending on what the predicate says about x.  This anonymous function is then used in a flatMap.   Here are a couple of results from this</p><p></p><blockquote><ol><li>m filter {x =&gt; true} ≡ m filter {x =&gt; true} // identity</li><li>m filter {x =&gt; true} ≡ m flatMap {x =&gt; if (true) unit(x) else mzero} // by FIL1</li><li>m filter {x =&gt; true} ≡ m flatMap {x =&gt; unit(x)} // by definition of if</li><li>FIL1a. m filter {x =&gt; true} ≡ m // by M1</li></ol></blockquote><p></p><p>So filtering with a constant "true" results in the same object.  Conversely</p><p></p><blockquote><ol><li>m filter {x =&gt; false} ≡ m filter {x =&gt; false} // identity</li><li>m filter {x =&gt; false} ≡ m flatMap {x =&gt; if (false) unit(x) else mzero} // by FIL1</li><li>m filter {x =&gt; false} ≡ m flatMap {x =&gt; mzero} // by definition of if</li><li>FIL1b. m filter {x =&gt; false} ≡ mzero // by MZ1</li></ol></blockquote><p></p><p>Filtering with a constant false results in a monadic zero.</p><h3>Side Effects</h3><p>Throughout this article I've implicitly assumed no side effects.  Let's revisit our second functor law</p><p></p><blockquote>m map g map f ≡ m map {x =&gt; (f(g(x)) }</blockquote><p></p><p>If m is a List with several elements, then the order of the operations will be different between the left and right side.  On the left, g will be called for every element and then f will be called for every element.  On the right, calls to f and g will be interleaved.  If f and g have side effects like doing IO or modifying the state of other variables then the system might behave differently if somebody "refactors" one expression into the other.</p>  <p>The moral of the story is this: avoid side effects when defining or using map, flatMap, and filter.  Stick to foreach for side effects.  Its very definition is a big warning sign that reordering things might cause different behavior.</p><p>Speaking of which, where are the foreach laws?  Well, given that foreach returns no result, the only real rule I can express in this notation is</p><p></p><blockquote>m foreach f ≡ ()</blockquote><p></p><p>Which would imply that foreach does nothing.  In a purely functional sense that's true, it converts m and f into a void result.  But foreach is meant to be used for side effects - it's an imperative construct.</p><h3>Conclusion for Part 3</h3><p>Up until now, I've focused on Option and List to let your intuition get a feel for monads.  With this article you've finally seen what really makes a monad a monad.  It turns out that the monad laws say nothing about collections; they're more general than that.  It's just that the monad laws happen to apply very well to collections.</p><p>In part 4 I'm going to present a full grown adult elephant er monad that has nothing collection-like about it and is only a container if seen in the right light.</p><p>Here's the obligatory Scala to Haskell cheet sheet showing the more important laws</p><table border="1px"><tbody><tr><th>&nbsp;</th><th>Scala</th><th>Haskell</th></tr><tr><th>FM1</th><td>m map f ≡ m flatMap {x =&gt; unit(f(x))}</td><td>fmap f m ≡ m &gt;&gt;= \x -&gt; return (f x)</td></tr><tr><th>M1</th><td>m flatMap unit ≡ m</td><td>m &gt;&gt;= return ≡ m</td></tr><tr><th>M2</th><td>unit(x) flatMap f ≡ f(x)</td><td>(return x) &gt;&gt;= f ≡ f x</td></tr><tr><th>M3</th><td>m flatMap g flatMap f ≡ m flatMap {x =&gt; g(x) flatMap f}</td><td>(m &gt;&gt;= f) &gt;&gt;= g ≡ m &gt;&gt;= (\x -&gt; f x &gt;&gt;= g)</td></tr><tr><th>MZ1</th><td>mzero flatMap f ≡ mzero</td><td>mzero &gt;&gt;= f ≡ mzero</td></tr><tr><th>MZ2</th><td>m flatMap {x =&gt; mzero} ≡ mzero</td><td>m &gt;&gt;= (\x -&gt; mzero) ≡ mzero</td></tr><tr><th>MZ3</th><td>mzero plus m ≡ m</td><td>mzero 'mplus' m ≡ m</td></tr><tr><th>MZ4</th><td>m plus mzero ≡ m</td><td>m 'mplus' mzero ≡ m</td></tr><tr><th>FIL1</th><td>m filter p ≡ m flatMap {x =&gt; if(p(x)) unit(x) else mzero}</td><td>mfilter p m ≡  m &gt;&gt;= (\x -&gt; if p x then return x else mzero)</td></tr></tbody></table>
+<div style="clear: both;"></div>
+</div>
+<div class="post-footer">
+<div class="post-footer-line post-footer-line-1"><span class="post-author vcard">
+Posted by
+<span class="fn">James Iry</span>
+</span>
+<span class="post-timestamp">
+at
+<a class="timestamp-link" href="./One Div Zero  Monads are Elephants Part 3_files/One Div Zero  Monads are Elephants Part 3.htm" rel="bookmark" title="permanent link"><abbr class="published" title="2007-10-18T20:31:00-07:00">8:31 PM</abbr></a>
+</span>
+<span class="post-comment-link" style="visibility: visible;"></span>
+<span class="post-icons">
+<span class="item-control blog-admin pid-1767151345">
+<a href="http://www.blogger.com/post-edit.g?blogID=178174920347765771&postID=1560748452919590443&from=pencil" title="Edit Post">
+<img alt="" class="icon-action" height="18" src="./One Div Zero  Monads are Elephants Part 3_files/icon18_edit_allbkg.gif" width="18">
+</a>
+</span>
+</span>
+<span class="post-backlinks post-comment-link" style="visibility: visible;"><a class="comment-link disqus-blogger-comment-link" href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html#disqus_thread">35 Comments</a></span>
+</div>
+<div class="post-footer-line post-footer-line-2"><span class="post-labels">
+Labels:
+<a href="http://james-iry.blogspot.com/search/label/functional%20programming" rel="tag">functional programming</a>,
+<a href="http://james-iry.blogspot.com/search/label/monads" rel="tag">monads</a>,
+<a href="http://james-iry.blogspot.com/search/label/scala" rel="tag">scala</a>
+</span>
+</div>
+<div class="post-footer-line post-footer-line-3"><span class="post-location">
+</span>
+</div>
+</div>
+</div>
+<div class="comments" id="comments" style="display: block;"><div id="disqus_thread"><iframe id="dsq-2" data-disqus-uid="2" allowtransparency="true" frameborder="0" tabindex="0" title="Disqus" width="100%" src="./One Div Zero  Monads are Elephants Part 3_files/saved_resource.htm" style="width: 100% !important; border: none !important; overflow: hidden !important; height: 9042px !important;" scrolling="no" horizontalscrolling="no" verticalscrolling="no"></iframe></div></div>
+</div>
+
+        </div></div>
+      
+<!-- google_ad_section_end -->
+</div>
+<div class="blog-pager" id="blog-pager">
+<span id="blog-pager-newer-link">
+<a class="blog-pager-newer-link" href="http://james-iry.blogspot.com/2007/11/monads-are-elephants-part-4.html" id="Blog1_blog-pager-newer-link" title="Newer Post">Newer Post</a>
+</span>
+<span id="blog-pager-older-link">
+<a class="blog-pager-older-link" href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-2.html" id="Blog1_blog-pager-older-link" title="Older Post">Older Post</a>
+</span>
+<a class="home-link" href="http://james-iry.blogspot.com/">Home</a>
+</div>
+<div class="clear"></div>
+<div class="post-feeds">
+<div class="feed-links">
+Subscribe to:
+<a class="feed-link" href="http://james-iry.blogspot.com/feeds/1560748452919590443/comments/default" target="_blank" type="application/atom+xml">Post Comments (Atom)</a>
+</div>
+</div>
+<script type="text/javascript">window.___gcfg = {'lang': 'en_US'};</script>
+</div></div>
+</div>
+<div id="sidebar-wrapper">
+<div class="sidebar section" id="sidebar"><div class="widget Image" id="Image1">
+<div class="widget-content">
+<img alt="" height="220" id="Image1_img" src="./One Div Zero  Monads are Elephants Part 3_files/Teotihuacan_62AF.jpg" width="220" style="visibility: visible;">
+<br>
+</div>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=Image&widgetId=Image1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;Image1&quot;));" target="configImage1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 3_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div><div class="widget Profile" id="Profile1">
+<h2>About Me</h2>
+<div class="widget-content">
+<dl class="profile-datablock">
+<dt class="profile-data">
+<a class="profile-name-link g-profile" href="http://www.blogger.com/profile/02835376424060382389" rel="author" style="background-image: url(//www.blogger.com/img/logo-16.png);" data-gapiscan="true" data-onload="true" data-gapiattached="true">
+James Iry
+</a>
+</dt>
+<dd class="profile-data">San Francisco, CA, United States</dd>
+<dd class="profile-textblock">If cars were built like software then...well, I don't know squat about building cars so who knows.  It might be kinda cool.  But probably not.</dd>
+</dl>
+<a class="profile-link" href="http://www.blogger.com/profile/02835376424060382389" rel="author">View my complete profile</a>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=Profile&widgetId=Profile1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;Profile1&quot;));" target="configProfile1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 3_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div>
+</div><div class="widget HTML" id="HTML1">
+<div class="widget-content">
+<a href="http://www.pogofish.com/">Check My Resume</a><br>
+<a href="http://twitter.com/jamesiry">Follow My Twitter</a><br>
+<a href="http://www.linkedin.com/in/jamesiry">Link In My Profile</a>
+</div>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=HTML&widgetId=HTML1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;HTML1&quot;));" target="configHTML1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 3_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div><div class="widget BlogArchive" id="BlogArchive1">
+<h2>Blog Archive</h2>
+<div class="widget-content">
+<div id="ArchiveList">
+<div id="BlogArchive1_ArchiveList">
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2013-01-01T00:00:00-08:00&updated-max=2014-01-01T00:00:00-08:00&max-results=3">2013</a>
+<span class="post-count" dir="ltr">(3)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2013_03_01_archive.html">March</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2013_02_01_archive.html">February</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2013_01_01_archive.html">January</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2012-01-01T00:00:00-08:00&updated-max=2013-01-01T00:00:00-08:00&max-results=4">2012</a>
+<span class="post-count" dir="ltr">(4)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2012_03_01_archive.html">March</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2012_02_01_archive.html">February</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2012_01_01_archive.html">January</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2011-01-01T00:00:00-08:00&updated-max=2012-01-01T00:00:00-08:00&max-results=3">2011</a>
+<span class="post-count" dir="ltr">(3)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2011_06_01_archive.html">June</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2011_05_01_archive.html">May</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2011_01_01_archive.html">January</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2010-01-01T00:00:00-08:00&updated-max=2011-01-01T00:00:00-08:00&max-results=16">2010</a>
+<span class="post-count" dir="ltr">(16)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_11_01_archive.html">November</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_10_01_archive.html">October</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_09_01_archive.html">September</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_08_01_archive.html">August</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_07_01_archive.html">July</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_05_01_archive.html">May</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_04_01_archive.html">April</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2010_03_01_archive.html">March</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2009-01-01T00:00:00-08:00&updated-max=2010-01-01T00:00:00-08:00&max-results=14">2009</a>
+<span class="post-count" dir="ltr">(14)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_08_01_archive.html">August</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_07_01_archive.html">July</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_05_01_archive.html">May</a>
+<span class="post-count" dir="ltr">(2)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_04_01_archive.html">April</a>
+<span class="post-count" dir="ltr">(6)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_03_01_archive.html">March</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2009_01_01_archive.html">January</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2008-01-01T00:00:00-08:00&updated-max=2009-01-01T00:00:00-08:00&max-results=5">2008</a>
+<span class="post-count" dir="ltr">(5)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2008_07_01_archive.html">July</a>
+<span class="post-count" dir="ltr">(4)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2008_06_01_archive.html">June</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate expanded">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy toggle-open">▼&nbsp;</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/search?updated-min=2007-01-01T00:00:00-08:00&updated-max=2008-01-01T00:00:00-08:00&max-results=7">2007</a>
+<span class="post-count" dir="ltr">(7)</span>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2007_11_01_archive.html">November</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate expanded">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy toggle-open">▼&nbsp;</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2007_10_01_archive.html">October</a>
+<span class="post-count" dir="ltr">(2)</span>
+<ul class="posts">
+<li><a href="./One Div Zero  Monads are Elephants Part 3_files/One Div Zero  Monads are Elephants Part 3.htm">Monads are Elephants Part 3</a></li>
+<li><a href="http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-2.html">Monads are Elephants Part 2</a></li>
+</ul>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2007_09_01_archive.html">September</a>
+<span class="post-count" dir="ltr">(1)</span>
+</li>
+</ul>
+<ul class="hierarchy">
+<li class="archivedate collapsed">
+<a class="toggle" href="javascript:void(0)">
+<span class="zippy">
+
+          ►&nbsp;
+        
+</span>
+</a>
+<a class="post-count-link" href="http://james-iry.blogspot.com/2007_08_01_archive.html">August</a>
+<span class="post-count" dir="ltr">(3)</span>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=BlogArchive&widgetId=BlogArchive1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;BlogArchive1&quot;));" target="configBlogArchive1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 3_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div>
+</div><div class="widget Label" id="Label1">
+<h2>Labels</h2>
+<div class="widget-content list-label-widget-content">
+<ul>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/C">C</a>
+<span dir="ltr">(5)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/C%23">C#</a>
+<span dir="ltr">(2)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/C%2B%2B">C++</a>
+<span dir="ltr">(3)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/erlang">erlang</a>
+<span dir="ltr">(4)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/functional%20programming">functional programming</a>
+<span dir="ltr">(15)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/groovy">groovy</a>
+<span dir="ltr">(2)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/haskell">haskell</a>
+<span dir="ltr">(6)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/humor">humor</a>
+<span dir="ltr">(7)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/java">java</a>
+<span dir="ltr">(7)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/monads">monads</a>
+<span dir="ltr">(5)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/object%20oriented">object oriented</a>
+<span dir="ltr">(3)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/parallel%2Fdistributed%2Fconcurrent">parallel/distributed/concurrent</a>
+<span dir="ltr">(5)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/programming%20languages">programming languages</a>
+<span dir="ltr">(9)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/ruby">ruby</a>
+<span dir="ltr">(1)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/scala">scala</a>
+<span dir="ltr">(16)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/scala%20humor">scala humor</a>
+<span dir="ltr">(1)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/scuba">scuba</a>
+<span dir="ltr">(1)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/systems%20design">systems design</a>
+<span dir="ltr">(2)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/types">types</a>
+<span dir="ltr">(8)</span>
+</li>
+<li>
+<a dir="ltr" href="http://james-iry.blogspot.com/search/label/version%20control">version control</a>
+<span dir="ltr">(1)</span>
+</li>
+</ul>
+<div class="clear"></div>
+<span class="widget-item-control">
+<span class="item-control blog-admin">
+<a class="quickedit" href="http://www.blogger.com/rearrange?blogID=178174920347765771&widgetType=Label&widgetId=Label1&action=editWidget&sectionId=sidebar" onclick="return _WidgetManager._PopupConfig(document.getElementById(&quot;Label1&quot;));" target="configLabel1" title="Edit">
+<img alt="" height="18" src="./One Div Zero  Monads are Elephants Part 3_files/icon18_wrench_allbkg.png" width="18">
+</a>
+</span>
+</span>
+<div class="clear"></div>
+</div>
+</div></div>
+</div>
+<!-- spacer for skins that want sidebar and main to be the same height-->
+<div class="clear">&nbsp;</div>
+</div>
+<!-- end content-wrapper -->
+<div id="footer-wrapper">
+<div class="footer section" id="footer"><div class="widget HTML" id="HTML2">
+<script type="text/javascript">
+                var disqus_shortname = 'onedivzero';
+                var disqus_blogger_current_url = "http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html";
+                if (!disqus_blogger_current_url.length) {
+                    disqus_blogger_current_url = "http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html";
+                }
+                var disqus_blogger_homepage_url = "http://james-iry.blogspot.com/";
+                var disqus_blogger_canonical_homepage_url = "http://james-iry.blogspot.com/";
+            </script>
+<style type="text/css">
+                    #comments {display:none;}
+                </style>
+<script type="text/javascript">
+                    (function() {
+                        var bloggerjs = document.createElement('script');
+                        bloggerjs.type = 'text/javascript';
+                        bloggerjs.async = true;
+                        bloggerjs.src = 'http://'+disqus_shortname+'.disqus.com/blogger_item.js';
+                        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(bloggerjs);
+                    })();
+                </script>
+<style type="text/css">
+                    .post-comment-link { visibility: hidden; }
+                </style>
+<script type="text/javascript">
+                (function() {
+                    var bloggerjs = document.createElement('script');
+                    bloggerjs.type = 'text/javascript';
+                    bloggerjs.async = true;
+                    bloggerjs.src = 'http://'+disqus_shortname+'.disqus.com/blogger_index.js';
+                    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(bloggerjs);
+                })();
+                </script>
+</div></div>
+</div>
+</div></div>
+<!-- end outer-wrapper -->
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script><script src="./One Div Zero  Monads are Elephants Part 3_files/ga.js" type="text/javascript"></script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-15939853-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+<script type="text/javascript">
+if (window.jstiming) window.jstiming.load.tick('widgetJsBefore');
+</script><script type="text/javascript" src="./One Div Zero  Monads are Elephants Part 3_files/1040640957-widgets.js"></script>
+<script type="text/javascript" src="./One Div Zero  Monads are Elephants Part 3_files/plusone.js" gapi_processed="true"></script>
+<script type="text/javascript">
+if (typeof(BLOG_attachCsiOnload) != 'undefined' && BLOG_attachCsiOnload != null) { window['blogger_templates_experiment_id'] = "templatesV1";window['blogger_blog_id'] = '178174920347765771';BLOG_attachCsiOnload('item_'); }_WidgetManager._Init('//www.blogger.com/rearrange?blogID\x3d178174920347765771','//james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html','178174920347765771');
+_WidgetManager._SetDataContext([{'name': 'blog', 'data': {'blogId': '178174920347765771', 'bloggerUrl': 'http://www.blogger.com', 'title': 'One Div Zero', 'pageType': 'item', 'url': 'http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html', 'canonicalUrl': 'http://james-iry.blogspot.com/2007/10/monads-are-elephants-part-3.html', 'canonicalHomepageUrl': 'http://james-iry.blogspot.com/', 'homepageUrl': 'http://james-iry.blogspot.com/', 'blogspotFaviconUrl': 'http://james-iry.blogspot.com/favicon.ico', 'enabledCommentProfileImages': true, 'adultContent': false, 'disableAdSenseWidget': false, 'analyticsAccountNumber': '', 'searchLabel': '', 'searchQuery': '', 'pageName': 'Monads are Elephants Part 3', 'pageTitle': 'One Div Zero: Monads are Elephants Part 3', 'encoding': 'UTF-8', 'locale': 'en', 'localeUnderscoreDelimited': 'en', 'isPrivate': false, 'isMobile': false, 'isMobileRequest': false, 'mobileClass': '', 'isPrivateBlog': false, 'languageDirection': 'ltr', 'feedLinks': '\74link rel\75\42alternate\42 type\75\42application/atom+xml\42 title\75\42One Div Zero - Atom\42 href\75\42http://james-iry.blogspot.com/feeds/posts/default\42 /\76\n\74link rel\75\42alternate\42 type\75\42application/rss+xml\42 title\75\42One Div Zero - RSS\42 href\75\42http://james-iry.blogspot.com/feeds/posts/default?alt\75rss\42 /\76\n\74link rel\75\42service.post\42 type\75\42application/atom+xml\42 title\75\42One Div Zero - Atom\42 href\75\42http://www.blogger.com/feeds/178174920347765771/posts/default\42 /\76\n\n\74link rel\75\42alternate\42 type\75\42application/atom+xml\42 title\75\42One Div Zero - Atom\42 href\75\42http://james-iry.blogspot.com/feeds/1560748452919590443/comments/default\42 /\76\n', 'meTag': '', 'openIdOpTag': '', 'imageSrcTag': '', 'latencyHeadScript': '\74script type\75\42text/javascript\42\76(function() { var b\75window,f\75\42chrome\42,g\75\42jstiming\42,k\75\42tick\42;(function(){function d(a){this.t\75{};this.tick\75function(a,d,c){var e\75void 0!\75c?c:(new Date).getTime();this.t[a]\75[e,d];if(void 0\75\75c)try{b.console.timeStamp(\42CSI/\42+a)}catch(h){}};this[k](\42start\42,null,a)}var a;b.performance\46\46(a\75b.performance.timing);var n\75a?new d(a.responseStart):new d;b.jstiming\75{Timer:d,load:n};if(a){var c\75a.navigationStart,h\75a.responseStart;0\74c\46\46h\76\75c\46\46(b[g].srt\75h-c)}if(a){var e\75b[g].load;0\74c\46\46h\76\75c\46\46(e[k](\42_wtsrt\42,void 0,c),e[k](\42wtsrt_\42,\42_wtsrt\42,h),e[k](\42tbsd_\42,\42wtsrt_\42))}try{a\75null,\nb[f]\46\46b[f].csi\46\46(a\75Math.floor(b[f].csi().pageT),e\46\0460\74c\46\46(e[k](\42_tbnd\42,void 0,b[f].csi().startE),e[k](\42tbnd_\42,\42_tbnd\42,c))),null\75\75a\46\46b.gtbExternal\46\46(a\75b.gtbExternal.pageT()),null\75\75a\46\46b.external\46\46(a\75b.external.pageT,e\46\0460\74c\46\46(e[k](\42_tbnd\42,void 0,b.external.startE),e[k](\42tbnd_\42,\42_tbnd\42,c))),a\46\46(b[g].pt\75a)}catch(p){}})();b.tickAboveFold\75function(d){var a\0750;if(d.offsetParent){do a+\75d.offsetTop;while(d\75d.offsetParent)}d\75a;750\76\75d\46\46b[g].load[k](\42aft\42)};var l\75!1;function m(){l||(l\75!0,b[g].load[k](\42firstScrollTime\42))}b.addEventListener?b.addEventListener(\42scroll\42,m,!1):b.attachEvent(\42onscroll\42,m);\n })();\74/script\076', 'mobileHeadScript': '', 'view': '', 'dynamicViewsCommentsSrc': '//www.blogblog.com/dynamicviews/4224c15c4e7c9321/js/comments.js', 'dynamicViewsScriptSrc': '//www.blogblog.com/dynamicviews/d6f37bb30c327165', 'plusOneApiSrc': 'https://apis.google.com/js/plusone.js', 'testHtml5CssSrc': 'https://www.blogger.com/static/v1/widgets/3640646893-css_bundle_html5.css', 'sf': 'n', 'tf': ''}}, {'name': 'skin', 'data': {'vars': {'sidebartextcolor': '#666666', 'linkcolor': '#5588aa', 'visitedlinkcolor': '#999999', 'textcolor': '#333333', 'headerfont': 'normal normal 78% \47Trebuchet MS\47,Trebuchet,Arial,Verdana,Sans-serif', 'pagetitlefont': 'normal normal 200% Georgia, Serif', 'bgcolor': '#ffffff', 'descriptioncolor': '#999999', 'titlecolor': '#cc6600', 'bordercolor': '#cccccc', 'postfooterfont': 'normal normal 78% \47Trebuchet MS\47, Trebuchet, Arial, Verdana, Sans-serif', 'pagetitlecolor': '#666666', 'bodyfont': 'normal normal 100% Georgia, Serif', 'endSide': 'right', 'startSide': 'left', 'descriptionfont': 'normal normal 78% \47Trebuchet MS\47, Trebuchet, Arial, Verdana, Sans-serif', 'sidebarcolor': '#999999'}, 'override': ''}}, {'name': 'view', 'data': {'classic': {'name': 'classic', 'url': '/?view\75classic'}, 'flipcard': {'name': 'flipcard', 'url': '/?view\75flipcard'}, 'magazine': {'name': 'magazine', 'url': '/?view\75magazine'}, 'mosaic': {'name': 'mosaic', 'url': '/?view\75mosaic'}, 'sidebar': {'name': 'sidebar', 'url': '/?view\75sidebar'}, 'snapshot': {'name': 'snapshot', 'url': '/?view\75snapshot'}, 'timeslide': {'name': 'timeslide', 'url': '/?view\75timeslide'}}}]);
+_WidgetManager._RegisterWidget('_HTMLView', new _WidgetInfo('HTML2', 'footer', null, document.getElementById('HTML2'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_ImageView', new _WidgetInfo('Image1', 'sidebar', null, document.getElementById('Image1'), {'resize': true}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_ProfileView', new _WidgetInfo('Profile1', 'sidebar', null, document.getElementById('Profile1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_HTMLView', new _WidgetInfo('HTML1', 'sidebar', null, document.getElementById('HTML1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_BlogArchiveView', new _WidgetInfo('BlogArchive1', 'sidebar', null, document.getElementById('BlogArchive1'), {'languageDirection': 'ltr'}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_LabelView', new _WidgetInfo('Label1', 'sidebar', null, document.getElementById('Label1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_HeaderView', new _WidgetInfo('Header1', 'header', null, document.getElementById('Header1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_NavbarView', new _WidgetInfo('Navbar1', 'navbar', null, document.getElementById('Navbar1'), {}, 'displayModeFull'));
+_WidgetManager._RegisterWidget('_BlogView', new _WidgetInfo('Blog1', 'main', null, document.getElementById('Blog1'), {'cmtInteractionsEnabled': false, 'showBacklinks': true, 'postId': '1560748452919590443', 'lightboxEnabled': true, 'lightboxModuleUrl': 'https://www.blogger.com/static/v1/jsbin/936398874-lbx.js', 'lightboxCssUrl': 'https://www.blogger.com/static/v1/v-css/4138445517-lightbox_bundle.css'}, 'displayModeFull'));
+</script>
+
+<iframe frameborder="0" id="google_top_static_frame" name="google_top_static_frame" src="./One Div Zero  Monads are Elephants Part 3_files/blank.htm" style="height: 0px; width: 0px; position: absolute;"></iframe></body></html>
