@@ -15,6 +15,10 @@ package object myhttp {
       protected[this] override def _port = 80
       protected[this] override def formatPath(path: List[String]) = path
     }
+    protected[this] override def _options = new Options {
+      override def rejectBWSAfterStartLine = true
+      override def rejectBWSAfterHeaderFieldName = true
+    }
   }
 
 }

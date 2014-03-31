@@ -5,6 +5,10 @@ import combinator.parser._
 
 trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers with uri.CharReaders]] with Literals =>
 
+  protected[this] def _options: Options
+  
+  final val options: Options = _options
+  
   import parsers._
   
   case class ResponseCode(code: Int, reason: String)
@@ -13,7 +17,7 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
   
   final val uriSymbols: Symbols[charParsers.type] with uri.Literals with uri.IPaddress with uri.Path with uri.Scheme = _uriSymbols
 
-  val http_version = ("HTTP/" :^ digit{1} ^ "." :^ digit{1}) | send(505, "HTTP Version Not Supported")
+  val http_version = ("HTTP/" :^ digit ^ "." :^ digit) | send(505, "HTTP Version Not Supported")
 
   val uri_reference: Parser[uriSymbols.UriReference] = uriSymbols.uri_reference
   
@@ -66,17 +70,21 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
 
   val request_line = method ^ sp :^ request_target ^ sp :^ http_version ^: crlf
 
-  val status_code = digit{3}
+  val status_code = digit{3} -> { case Natural0(i) => i }
 
-  val reason_phrase = (ht | sp | vchar | obs_text).* -> standarizeReasonPhrase
-  
-  def standarizeReasonPhrase(reasonPhrase: List[Byte]): String = reasonPhrase.foldLeft(new StringBuilder)((sb, b) => { sb.append(b.toChar); sb }).toString
+  val reason_phrase = (ht | sp | vchar | obs_text).* -> options.standarizeReasonPhrase
 
   val status_line = http_version ^ sp :^ status_code ^ sp :^ reason_phrase ^: crlf
   
   val header_field = token ^ (':' :^ ows) :^ (ht | sp | %(0x21, 0x7E)).* ^: ows
 
-  val request = (request_line ^ (header_field ^: crlf).*) ^: crlf
+  val request = {
+    val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail() else succ() }
+    (request_line ^ (bws) :^ (header_field ^: crlf).*) ^: crlf
+  }
 
-  val response = (status_line ^ (header_field ^: crlf).*) ^: crlf
+  val response = {
+    val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail() else succ() }
+    (status_line ^ bws :^ (header_field ^: crlf).*) ^: crlf
+  }
 }

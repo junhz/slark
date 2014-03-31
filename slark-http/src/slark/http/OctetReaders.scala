@@ -116,8 +116,4 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
 
     override val toString = f"%%x$start%02X-$end%02X"
   }
-
-  val octet = new AbstractParser[Byte] {
-    override def parse(input: Input) = if (input.atEnd) eof else Succ(input.head, input.tail)
-  }
 }
