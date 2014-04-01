@@ -72,10 +72,10 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
   val authority = {
     val p = _port
     ((userinfo ^: "@").? ^ host ^ (":" :^ port).?) -> {
-      case ((None, host), None) => Authority.annoymous(host, p)
-      case ((None, host), Some(port)) => Authority.annoymous(host, port)
-      case ((Some(userinfo), host), None) => Authority.as(userinfo, host, p)
-      case ((Some(userinfo), host), Some(port)) => Authority.as(userinfo, host, port)
+      case None ^ host ^ None => Authority.annoymous(host, p)
+      case None ^ host ^ Some(port) => Authority.annoymous(host, port)
+      case Some(userinfo) ^ host ^ None => Authority.as(userinfo, host, p)
+      case Some(userinfo) ^ host ^ Some(port) => Authority.as(userinfo, host, port)
     }
   }
 
@@ -104,13 +104,13 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
   }
 
   val relative_part = (
-    ("//" :^ authority ^ path_abempty) -> { case (authority, path) => Part.network(authority, path) } |
+    ("//" :^ authority ^ path_abempty) -> { case authority ^ path => Part.network(authority, path) } |
     path_absolute -> (Part.absolute(_)) |
     path_noscheme -> (Part.relative(_)) |
     succ(Part.empty))
 
   val hier_part = (
-    ("//" :^ authority ^ path_abempty) -> { case (authority, path) => Part.network(authority, path) } |
+    ("//" :^ authority ^ path_abempty) -> { case authority ^ path => Part.network(authority, path) } |
     path_absolute -> (Part.absolute(_)) |
     path_rootless -> (Part.relative(_)) |
     succ(Part.empty))

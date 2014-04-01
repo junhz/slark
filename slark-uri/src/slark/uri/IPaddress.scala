@@ -34,7 +34,7 @@ trait IPaddress { self: Symbols[Parsers with CharReaders] with Literals =>
   }
 
   val ipv4address = (dec_octet ^ "." :^ dec_octet ^ "." :^ dec_octet ^ "." :^ dec_octet) -> {
-    case (((byte1, byte2), byte3), byte4) => IPv4address(byte1, byte2, byte3, byte4)
+    case byte1 ^ byte2 ^ byte3 ^ byte4 => IPv4address(byte1, byte2, byte3, byte4)
   }
 
   val ls32 =
@@ -65,5 +65,5 @@ trait IPaddress { self: Symbols[Parsers with CharReaders] with Literals =>
     override def toString = s"v$version.$address"
   }
 
-  val ipvFuture = ("v".ignoreCase :^ hexdig(1, `>`) ^ "." :^ (unreserved | sub_delims | ':')(1, `>`)) -> { case (version, address) => new IPvFuture(version.mkString.toLowerCase(), address.mkString.toLowerCase()) }
+  val ipvFuture = ("v".ignoreCase :^ hexdig(1, `>`) ^ "." :^ (unreserved | sub_delims | ':')(1, `>`)) -> { case version ^ address => new IPvFuture(version.mkString.toLowerCase(), address.mkString.toLowerCase()) }
 }

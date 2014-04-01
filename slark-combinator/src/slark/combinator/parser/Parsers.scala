@@ -6,6 +6,9 @@ import Trampolines._
 
 trait Parsers { parsers =>
   type Input
+  
+  type ^[+A, +B] = (A, B)
+  final val ^ = Tuple2
 
   sealed trait ParseResult[+S] {
   }
@@ -29,7 +32,7 @@ trait Parsers { parsers =>
     final def ->[T](fn: S => T): Parser[T] = self >> Cache(Parsers.this) { x => succ(fn(x)) }
 
     /** seq */
-    final def ^[T](that: Parser[T]): Parser[(S, T)] = self >> { x => that -> { y => (x, y) } }
+    final def ^[T](that: Parser[T]): Parser[S ^ T] = self >> { x => that -> { y => (x, y) } }
 
     /** guard */
     final def :^[T](that: Parser[T]): Parser[T] = self >> { _ => that }

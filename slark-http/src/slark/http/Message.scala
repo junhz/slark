@@ -17,8 +17,22 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
   
   final val uriSymbols: Symbols[charParsers.type] with uri.Literals with uri.IPaddress with uri.Path with uri.Scheme = _uriSymbols
 
-  val http_version = ("HTTP/" :^ digit ^ "." :^ digit) | send(505, "HTTP Version Not Supported")
-
+  val http_version = ("HTTP/" :^ digit ^ "." :^ digit) -> { case major ^ minor => HttpVersion(major - '0', minor - '0') } | send(505, "HTTP Version Not Supported")
+  
+  final class HttpVersion private[HttpVersion](val major: Int, val minor: Int) extends Ordered[HttpVersion] {
+    override def compare(that: HttpVersion) = (this.major - that.major) * 10 + (this.minor - that.minor)
+  }
+  
+  object HttpVersion {
+    val `1.1` = new HttpVersion(1, 1)
+    val `1.0` = new HttpVersion(1, 0)
+    
+    def apply(major: Int, minor: Int): HttpVersion = {
+      require(major >= 0 && major < 10 && minor >= 0 && minor < 10)
+      new HttpVersion(major, minor)
+    }
+  }
+  
   val uri_reference: Parser[uriSymbols.UriReference] = uriSymbols.uri_reference
   
   val absolute_uri: Parser[((String, uriSymbols.Part), Option[String])] = uriSymbols.absolute_uri
@@ -56,10 +70,10 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
   val request_target = {
 
     val origin_form = (absolute_path ^ ("?" :^ query).?) -> {
-      case (path, query) => Origin(path, query.getOrElse(""))
+      case path ^ query => Origin(path, query.getOrElse(""))
     }
     val absolute_form = absolute_uri -> {
-      case ((_, path), query) => Absolute(path, query.getOrElse(""))
+      case _ ^ path ^ query => Absolute(path, query.getOrElse(""))
     }
     val authority_form = authority -> (Authorize(_))
 
@@ -78,13 +92,21 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
   
   val header_field = token ^ (':' :^ ows) :^ (ht | sp | %(0x21, 0x7E)).* ^: ows
 
+  trait HttpMessageDef
+  case class HttpRequestDef(method: String, tar: RequestTarget, ver: HttpVersion, headers: List[(String, List[Byte])])
+  case class HttpResponseDef(ver: HttpVersion, code: Int, reason: String, headers: List[(String, List[Byte])])
+  
   val request = {
     val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail() else succ() }
-    (request_line ^ (bws) :^ (header_field ^: crlf).*) ^: crlf
+    ((request_line ^ bws :^ (header_field ^: crlf).*) ^: crlf) -> {
+      case method ^ tar ^ ver ^ headers => HttpRequestDef(method, tar, ver, headers)
+    }
   }
 
   val response = {
     val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail() else succ() }
-    (status_line ^ bws :^ (header_field ^: crlf).*) ^: crlf
+    ((status_line ^ bws :^ (header_field ^: crlf).*) ^: crlf) -> {
+      case ver ^ code ^ reason ^ headers => HttpResponseDef(ver, code, reason, headers)
+    }
   }
 }

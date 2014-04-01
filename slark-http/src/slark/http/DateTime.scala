@@ -19,23 +19,19 @@ trait DateTime { self: Symbols[Parsers with OctetReaders] with Literals =>
   val wkday = ("Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun")
   val weekday = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday"
   val month = "Jan" | "Feb" | "Mar" | "Apr" | "May" | "Jun" | "Jul" | "Aug" | "Sep" | "Oct" | "Nov" | "Dec"
-  val time = (digit{2} ^ ":" :^ digit{2} ^ ":" :^ digit{2}) -> {
-    case ((Natural0(_HH), Natural0(mm)), Natural0(ss)) => (_HH, mm, ss)
-  }
+  val time = (digit{2} ^ ":" :^ digit{2} ^ ":" :^ digit{2})
 
   val date1 = digit{2} ^ sp :^ month ^ sp :^ digit{4}
   val date2 = digit{2} ^ "-" :^ month ^ "-" :^ digit{2}
   val date3 = month ^ sp :^ (digit{2} | (sp :^ digit{1}))
   val rfc1123_date = (wkday ^ ", " :^ date1 ^ sp :^ time ^: " GMT") -> {
-    case ((_, ((Natural0(dd), _MMM), Natural0(yyyy))), (_HH, mm, ss)) => Rfc1123Date(yyyy, _MMM, dd, _HH, mm, ss)
+    case _ ^ (Natural0(d) ^ m ^ Natural0(y)) ^ (Natural0(h) ^ Natural0(mi) ^ Natural0(s)) => Rfc1123Date(y, m, d, h, mi, s)
   }
   val rfc850_date = (weekday ^ ", " :^ date2 ^ sp :^ time ^: " GMT") -> {
-    case ((_, ((Natural0(dd), _MMM), Natural0(yy))), (_HH, mm, ss)) => {
-      Rfc1123Date(y2k(yy, cntYYYY), _MMM, dd, _HH, mm, ss)
-    }
+    case _ ^ (Natural0(d) ^ m ^ Natural0(y)) ^ (Natural0(h) ^ Natural0(mi) ^ Natural0(s)) => Rfc1123Date(y2k(y, cntYYYY), m, d, h, mi, s)
   }
   val asctime_date = (wkday ^ sp :^ date3 ^ sp :^ time ^ sp :^ digit{4}) -> {
-    case (((_, (_MMM, Natural0(dd))), (_HH, mm, ss)), Natural0(yyyy)) => Rfc1123Date(yyyy, _MMM, dd, _HH, mm, ss)
+    case _ ^ (m ^ Natural0(d)) ^ (Natural0(h) ^ Natural0(mi) ^ Natural0(s)) ^ Natural0(y) => Rfc1123Date(y, m, d, h, mi, s)
   }
 
   case class Rfc1123Date(yyyy: Int, _MMM: String, dd: Int, _HH: Int, mm: Int, ss: Int) {

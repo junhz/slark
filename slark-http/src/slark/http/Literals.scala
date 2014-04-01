@@ -18,8 +18,6 @@ trait Literals { self: Symbols[Parsers with OctetReaders] =>
 
   val del = acsii(127)
 
-  val ctl = acsii(0, 31) | del
-
   val cr = acsii(13)
 
   val lf = acsii(10)

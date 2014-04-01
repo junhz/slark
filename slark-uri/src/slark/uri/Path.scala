@@ -39,14 +39,14 @@ trait Path { self: Symbols[Parsers with CharReaders] with Literals =>
 
   val path_absolute = "/" :^ (segment_nz ^ ("/" :^ segment).*).? -> {
     case None => List[String]()
-    case Some((p, ps)) => p :: ps
+    case Some(p ^ ps) => p :: ps
   }
 
   val path_rootless = (segment_nz ^ ("/" :^ segment).*) -> {
-    case (p, ps) => p :: ps
+    case p ^ ps => p :: ps
   }
 
   val path_noscheme = (segment_nz_nc ^ ("/" :^ segment).*) -> {
-    case (p, ps) => p :: ps
+    case p ^ ps => p :: ps
   }
 }
