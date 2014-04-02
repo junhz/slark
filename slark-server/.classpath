@@ -6,7 +6,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/slark"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/slark-http"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/slark-logger"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/slark-parser"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/slark-uri"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/slark-combinator"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
