@@ -45,7 +45,7 @@ object Futures {
 
     final def ->[U](f: T => U): Future[U] = Sync(this, f)
 
-    final def ~>[U](f: T => U): Future[U] = Async(this, f)
+    final def +>[U](f: T => U): Future[U] = Async(this, f)
   }
 
   private[this] case class Done[T](fun: () => T) extends Future[T]
@@ -56,5 +56,5 @@ object Futures {
     override def run = f(t)
   }
 
-  def future[T](fun: () => T): Future[T] = Done(fun)
+  def future[T](fun: => T): Future[T] = Done(() => fun)
 }
