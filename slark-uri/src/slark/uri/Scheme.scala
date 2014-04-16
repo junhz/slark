@@ -3,6 +3,7 @@ package uri
 
 import combinator.parser._
 import FuncLib._
+import java.net.InetSocketAddress
 
 trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddress with Path =>
 
@@ -25,24 +26,29 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
   val reg_name = (unreserved | pct_encoded | sub_delims).* -> (_.mkString.toLowerCase())
 
   trait Host {
-
+    // quick and dirty hack
+    def name: String
   }
 
   object Host {
     def apply(ipv4: IPv4address): Host = new Host {
       override def toString = ipv4.toString
+      override def name = ipv4.toString
     }
 
     def apply(ipv6: IPv6address): Host = new Host {
       override def toString = s"[$ipv6]"
+      override def name = ipv6.toString
     }
 
     def apply(ipvfuture: IPvFuture): Host = new Host {
       override def toString = s"[$ipvfuture]"
+      override def name = ipvfuture.toString
     }
 
     def apply(regname: String): Host = new Host {
       override def toString = regname
+      override def name = regname
     }
   }
 
