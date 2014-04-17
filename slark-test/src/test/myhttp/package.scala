@@ -5,10 +5,13 @@ import slark.http._
 
 package object myhttp {
 
-  val symbols = new HttpSymbols[Parsers with OctetReaders with ImportChars[Parsers with slark.uri.CharReaders]] with DateTime { self =>
-    protected[this] override def _parsers = new Parsers with OctetReaders with ImportChars[Parsers with slark.uri.CharReaders] {
-      protected[this] override def _charParsers = new Parsers with slark.uri.CharReaders
+  val acsiiParsers = new Parsers with slark.uri.CharReaders
+  val byteParsers = new Parsers with OctetReaders with ImportChars[acsiiParsers.type] {
+      protected[this] override def _charParsers = acsiiParsers
     }
+  
+  val symbols = new HttpSymbols[acsiiParsers.type, byteParsers.type] with DateTime { self =>
+    protected[this] override def _parsers = byteParsers
     protected[this] override def _uriSymbols = new slark.uri.UriSymbols[parsers.charParsers.type] {
       protected[this] override def _parsers = self.parsers.charParsers
       protected[this] override def _name = "http"

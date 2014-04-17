@@ -3,7 +3,7 @@ package http
 
 import combinator.parser._
 
-trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers with uri.CharReaders]] with Literals =>
+trait Message { self: Symbols[_ <: Parsers with OctetReaders with ImportChars[_ <: Parsers with uri.CharReaders]] with Literals =>
 
   protected[this] def _options: Options
   
@@ -21,6 +21,7 @@ trait Message { self: Symbols[Parsers with OctetReaders with ImportChars[Parsers
   
   final class HttpVersion private[HttpVersion](val major: Int, val minor: Int) extends Ordered[HttpVersion] {
     override def compare(that: HttpVersion) = (this.major - that.major) * 10 + (this.minor - that.minor)
+    override def toString = s"HTTP/$major.$minor"
   }
   
   object HttpVersion {

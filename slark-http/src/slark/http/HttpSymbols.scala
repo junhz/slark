@@ -3,4 +3,4 @@ package http
 
 import combinator.parser._
 
-abstract class HttpSymbols[+P <: Parsers with OctetReaders with ImportChars[Parsers with uri.CharReaders]] extends Symbols[P] with Literals with Message
+abstract class HttpSymbols[CharP <: Parsers with uri.CharReaders, +OctetP <: Parsers with OctetReaders with ImportChars[CharP]] extends Symbols[OctetP] with Literals with Message

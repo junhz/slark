@@ -1,4 +1,5 @@
-package slark.server
+package slark
+package server
 
 import java.util.concurrent.Executors
 import java.nio.channels.ServerSocketChannel
@@ -21,22 +22,22 @@ object Proxy {
     val local = ServerSocketChannel.open()
     local.socket().bind(new InetSocketAddress(10086))
 
-    val charParsers = new Parsers with CharReaders
+    val acsiiParsers = new Parsers with CharReaders
 
-    val uriSymbols = new UriSymbols[Parsers with CharReaders] {
-      protected[this] override def _parsers = charParsers
+    val httpUriSymbols = new UriSymbols[acsiiParsers.type] {
+      protected[this] override def _parsers = acsiiParsers
       protected[this] override def _name = "http"
       protected[this] override def _port = 80
       protected[this] override def formatPath(path: List[String]): List[String] = path
     }
 
-    val byteParsers = new Parsers with OctetReaders with ImportChars[Parsers with slark.uri.CharReaders] {
+    val byteParsers = new Parsers with OctetReaders with ImportChars[acsiiParsers.type] {
       protected[this] override def _charParsers = charParsers
     }
 
-    val httpSymbols = new HttpSymbols[Parsers with OctetReaders with ImportChars[Parsers with slark.uri.CharReaders]] { self =>
+    val httpSymbols = new HttpSymbols[acsiiParsers.type, byteParsers.type] { self =>
       protected[this] override def _parsers = byteParsers
-      protected[this] override def _uriSymbols = uriSymbols
+      protected[this] override def _uriSymbols = httpUriSymbols
 
       protected[this] override def _options = new Options {
         override def rejectBWSAfterStartLine = true
@@ -44,7 +45,7 @@ object Proxy {
       }
     }
 
-    type Addr = (uriSymbols.Host, Int)
+    type Addr = (httpUriSymbols.Host, Int)
     val Addr = Tuple2
 
     implicit val addrOrd = new Ordering[Addr] {
@@ -63,7 +64,40 @@ object Proxy {
     def isChannelOpen(channel: Channel): Boolean = channel.isOpen()
 
     implicit val socketToReader = (sc: SocketChannel) => {
-      val buffer = ByteBuffer.allocate(1024)
+
+      val it = new Iterator[Byte] {
+        val buffer = ByteBuffer.allocate(1024)
+        var cnt: Byte = _
+        var filled = false
+        var reachEOF = false
+
+        @tailrec
+        private[this] final def fill: Boolean = {
+          if (buffer.hasRemaining()) {
+            cnt = buffer.get()
+            filled = true
+            true
+          } else {
+            buffer.clear()
+            val size = sc.read(buffer)
+            if (size == -1) {
+              reachEOF = true
+              false
+            } else {
+              buffer.flip()
+              fill
+            }
+          }
+        }
+
+        override def hasNext = filled || (!reachEOF && sc.isOpen() && fill)
+
+        override def next = if (hasNext) {
+          filled = false
+          cnt
+        } else ???
+
+      }
 
       class SocketReader extends byteParsers.Reader {
         var hd: Byte = _
@@ -71,84 +105,35 @@ object Proxy {
         var filled = false
 
         def fill: Boolean = {
-          if (buffer.hasRemaining()) {
-            hd = buffer.get()
+          if (it.hasNext) {
+            hd = it.next
             tl = new SocketReader
             filled = true
             true
-          } else {
-            if (sc.isOpen()) {
-              buffer.clear()
-              val size = sc.read(buffer)
-              fill
-            } else {
-              false
-            }
-          }
+          } else false
         }
 
-        override def atEnd = filled | fill 
-        override def head = if(atEnd) ??? else hd
-        override def tail = if(atEnd) ??? else tl
+        override def atEnd = filled | fill
+        override def head = if (atEnd) ??? else hd
+        override def tail = if (atEnd) ??? else tl
       }
+
+      (new SocketReader).asInstanceOf[byteParsers.Reader]
     }
 
     while (true) {
       val client = local.accept
       val sockets = new Pool(openSocketChannel, closeChannel, isChannelOpen)
 
-      future {
-
+      val f = future {
+        import byteParsers._
+        httpSymbols.request parse client match {
+          case Succ(reqDef, n) => println(reqDef)
+          case Fail(msg) => println(msg)
+        }
       }
 
-      executor.execute(new Runnable {
-        /*def affair: Boolean = {
-          (try {
-            Some(Request(read(in(client))))
-          } catch {
-            case _: Throwable => None
-          }) match {
-            case Some(request) => {
-              request.headers.collectFirst {
-                case header: Host => {
-                  val server = sockets(header)
-                  request.write(server)
-
-                  readResponse(server)
-                }
-              } getOrElse false
-            }
-            case _ => {
-              println(acc+"_"+sessionAcc+"request")
-              false
-            }
-          }
-        }*/
-
-        /*def readResponse(server: SocketChannel): Boolean = {
-          (try {
-            Some(Response(read(in(server))))
-          } catch {
-            case _: Throwable => None
-          }) match {
-            case Some(response) => {
-              response.write(client)
-              true
-            }
-            case _ => {
-              println(acc+"_"+sessionAcc+"response")
-              false
-            }
-          }
-        }*/
-
-        override def run {
-          /*while (affair) {
-            sessionAcc += 1
-          }
-          sockets.closeAll*/
-        }
-      })
+      f.deploy(executor)
     }
   }
 }
