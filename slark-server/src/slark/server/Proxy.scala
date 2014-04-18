@@ -11,6 +11,7 @@ import java.nio.channels.SocketChannel
 import java.nio.channels.Channel
 import slark.combinator.future.Futures._
 import java.nio.ByteBuffer
+import java.nio.channels.Channels
 
 object Proxy {
   /**
@@ -32,7 +33,7 @@ object Proxy {
     }
 
     val byteParsers = new Parsers with OctetReaders with ImportChars[acsiiParsers.type] {
-      protected[this] override def _charParsers = charParsers
+      protected[this] override def _charParsers = acsiiParsers
     }
 
     val httpSymbols = new HttpSymbols[acsiiParsers.type, byteParsers.type] { self =>
@@ -44,8 +45,11 @@ object Proxy {
         override def rejectBWSAfterHeaderFieldName = true
       }
     }
+    
+    import httpSymbols._
+    import httpUriSymbols._
 
-    type Addr = (httpUriSymbols.Host, Int)
+    type Addr = (Host, Int)
     val Addr = Tuple2
 
     implicit val addrOrd = new Ordering[Addr] {
@@ -67,6 +71,7 @@ object Proxy {
 
       val it = new Iterator[Byte] {
         val buffer = ByteBuffer.allocate(1024)
+        buffer.flip()
         var cnt: Byte = _
         var filled = false
         var reachEOF = false
@@ -113,27 +118,33 @@ object Proxy {
           } else false
         }
 
-        override def atEnd = filled | fill
-        override def head = if (atEnd) ??? else hd
+        override def atEnd = !(filled || fill)
+        override def head = {
+          if (atEnd) ??? else hd
+        }
         override def tail = if (atEnd) ??? else tl
       }
 
       (new SocketReader).asInstanceOf[byteParsers.Reader]
     }
+    
+    def error(code: Int, reason: String): HttpResponseDef = ???
+    
+    def sendMsg(msg: HttpMessageDef, sc: SocketChannel): Unit = ???
 
     while (true) {
       val client = local.accept
       val sockets = new Pool(openSocketChannel, closeChannel, isChannelOpen)
 
-      val f = future {
-        import byteParsers._
-        httpSymbols.request parse client match {
-          case Succ(reqDef, n) => println(reqDef)
-          case Fail(msg) => println(msg)
-        }
+      val readRequest = future {
+        request parse client 
+      }
+      
+      val forwardRequest = (request: httpSymbols.HttpRequestDef) => {
+        println(request)
       }
 
-      f.deploy(executor)
+      readRequest -> (_ deploy executor)  deploy executor
     }
   }
 }

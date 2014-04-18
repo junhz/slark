@@ -32,6 +32,7 @@ Via: 1.1 aojpkkpx01a.statestr.com:80 (IronPort-WSA/7.1.3-021), 1.1 aocnhipx01a.s
 Connection: keep-alive
 Proxy-Connection: keep-alive
 
-""") :: Nil
+""") :: 
+Source(request_target parse "http://chinaconnects.statestr.com/ ") :: Nil
 
 }

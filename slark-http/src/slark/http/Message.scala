@@ -83,7 +83,7 @@ trait Message { self: Symbols[_ <: Parsers with OctetReaders with ImportChars[_ 
     origin_form | absolute_form | authority_form | asterisk_form
   }
 
-  val request_line = method ^ sp :^ request_target ^ sp :^ http_version ^: crlf
+  val request_line = (method ^ sp :^ request_target ^ sp :^ http_version ^: crlf) | send(404, "Bad Request")
 
   val status_code = digit{3} -> { case Natural0(i) => i }
 
@@ -94,8 +94,8 @@ trait Message { self: Symbols[_ <: Parsers with OctetReaders with ImportChars[_ 
   val header_field = token ^ (':' :^ ows) :^ (ht | sp | %(0x21, 0x7E)).* ^: ows
 
   trait HttpMessageDef
-  case class HttpRequestDef(method: String, tar: RequestTarget, ver: HttpVersion, headers: List[(String, List[Byte])])
-  case class HttpResponseDef(ver: HttpVersion, code: Int, reason: String, headers: List[(String, List[Byte])])
+  case class HttpRequestDef(method: String, tar: RequestTarget, ver: HttpVersion, headers: List[(String, List[Byte])]) extends HttpMessageDef
+  case class HttpResponseDef(ver: HttpVersion, code: Int, reason: String, headers: List[(String, List[Byte])]) extends HttpMessageDef
   
   val request = {
     val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail() else succ() }
