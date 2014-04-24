@@ -9,7 +9,7 @@ import slark.combinator.parser.Parsers
 import slark.http._
 import java.nio.channels.SocketChannel
 import java.nio.channels.Channel
-import slark.combinator.future.Futures._
+import slark.combinator.runnable.Runnables._
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 
@@ -45,7 +45,7 @@ object Proxy {
         override def rejectBWSAfterHeaderFieldName = true
       }
     }
-    
+
     import httpSymbols._
     import httpUriSymbols._
 
@@ -127,24 +127,33 @@ object Proxy {
 
       (new SocketReader).asInstanceOf[byteParsers.Reader]
     }
-    
+
     def error(code: Int, reason: String): HttpResponseDef = ???
-    
+
     def sendMsg(msg: HttpMessageDef, sc: SocketChannel): Unit = ???
 
     while (true) {
       val client = local.accept
       val sockets = new Pool(openSocketChannel, closeChannel, isChannelOpen)
 
-      val readRequest = future {
-        request parse client 
-      }
-      
-      val forwardRequest = (request: httpSymbols.HttpRequestDef) => {
-        println(request)
+      import byteParsers._
+
+      val readRequest = runnable { request parse client } flatMap { r =>
+        r match {
+          case Succ(r, n) => instant((r, n))
+          case Fail(msg) => {
+            println(msg)
+            NotRunnable
+          }
+        }
       }
 
-      readRequest -> (_ deploy executor)  deploy executor
+      val forwardRequest = (request: HttpRequestDef) => {
+        println(request)
+        NotRunnable
+      }
+      
+      deploy(for((r, n) <- readRequest; _ <- forwardRequest(r)) yield (), executor)
     }
   }
 }
