@@ -1,59 +1,54 @@
 package slark
 package combinator.runnable
 
-import java.lang.{ Runnable => JRunnable }
-import java.util.concurrent.{ ExecutorService => JExecutorService }
+import scala.language.implicitConversions
+import java.util.concurrent.{ ExecutorService => JExecutorService, Callable, Future }
 
 object Runnables {
 
   implicit class ExecutorService(executor: JExecutorService) {
-    def run[T](runnable: () => T): Unit = executor.submit(new JRunnable { override def run: Unit = runnable() })
+    def run[T](runnable: () => T): Future[T] = executor.submit(new Callable[T] { override def call: T = runnable() })
     def shutdown: Unit = executor.shutdown()
   }
 
-  sealed trait Runnable[+T] {
-    final def map[U](f: T => U): Runnable[U] = FlatMap(this, (t: T) => Cache(f){ Identity(() => f(t)) })
-    final def flatMap[U](f: T => Runnable[U]): Runnable[U] = FlatMap(this, f)
-    final def filter(f: T => Boolean): Runnable[T] = FlatMap(this, (t: T) => { if(f(t)) instant(t) else NotRunnable })
-    final def withFilter(f: T => Boolean): Runnable[T] = filter(f)
+  sealed trait Runnable[-T, +R] {
+    def >>[U](that: Runnable[R, U]): Runnable[T, U] = new >>(this, that)
+    def |[TT <: T, RR >: R](that: Runnable[TT, RR]): Runnable[TT, RR] = new |(this, that)
   }
   
-  private[Runnables] abstract class InternalRunnable[T] extends Runnable[T]
+  private[Runnables] abstract class InternalRunnable[T, R] extends Runnable[T, R]
 
-  val NotRunnable: Runnable[Nothing] = new InternalRunnable[Nothing] {}
+  // running to still
+  val Still: Runnable[Any, Nothing] = new InternalRunnable[Any, Nothing] {}
 
-  private[this] case class Identity[T](f: () => T) extends InternalRunnable[T]
+  private[this] case class Identity[T, R](f: T => R) extends InternalRunnable[T, R]
   
-  private[this] case class Instant[T](f: T) extends InternalRunnable[T]
+  private[this] case class Instant[T, R](r: R) extends InternalRunnable[T, R]
 
-  private[this] case class FlatMap[T, U](r: Runnable[T], f: T => Runnable[U]) extends InternalRunnable[U]
+  private[this] case class >>[T, R, U](r1: Runnable[T, R], r2: Runnable[R, U]) extends InternalRunnable[T, U]
+  
+  private[this] case class |[T, R](r1: Runnable[T, R], r2: Runnable[T, R]) extends InternalRunnable[T, R]
 
-  def deploy(r: Runnable[_], executor: ExecutorService): Unit = {
+  def deploy[T, R](r: Runnable[T, R], t: T, executor: ExecutorService): Unit = {
+    
     @tailrec
-    def rec(r: Runnable[_]): Unit = {
-      val next = r match {
-        case NotRunnable => ()
-        case Identity(f) => executor.run(f)
+    def rec(r: Runnable[Any, R], t: Any): Unit = {
+      r match {
+        case Still => ()
+        case Identity(f) => executor.run(() => Cache(f) { f(t) })
         case Instant(t) => ()
-        case FlatMap(r, f) => r match {
-          case NotRunnable => ()
-          case Identity(g) => Cache(f, g) { executor.run(() => deploy(f(g()), executor)) }
-          case Instant(t) => f(t)
-          case FlatMap(r, g) => Cache(f, g) { FlatMap(r, (t: Any) => FlatMap(g(t), f)) }
+        case r1 >> r2 => r1 match {
+          case Still => ()
+          case Identity(g) => Cache(r2, g) { executor.run(() => deploy(r2, g(t), executor)) }
+          case Instant(tt) => rec(r2, tt)
+          case r11 >> r12 => rec(new >>(r11, new >>(r12, r2)), t)
         }
-      }
-
-      next match {
-        case () => ()
-        case r: Runnable[_] => rec(r)
       }
     }
     
-    rec(r)
+    rec(r.asInstanceOf[Runnable[Any, R]], t)
   }
-  
-  def runnable[T](t: => T): Runnable[T] = Identity(() => t)
-  
-  def instant[T](t: T): Runnable[T] = Instant(t)
 
+  def runnable[T, R](f: T => R): Runnable[T, R] = Identity(f)
+  
 }

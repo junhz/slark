@@ -148,8 +148,21 @@ object Proxy {
         }
       }
 
+      class HttpBodyReader(private[this] var input: byteParsers.Input) {
+        def hasNext = !input.atEnd
+        def next: Byte = if(hasNext) {
+          val tmp = input.head
+          input = input.tail
+          tmp
+        } else ???
+      }
+      
+      class Headers(headers: List[(String, List[Byte])]) {
+        def list(name: String, parser)
+      }
+      
       val forwardRequest = (request: HttpRequestDef) => {
-        println(request)
+        
         NotRunnable
       }
       
