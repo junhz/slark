@@ -14,7 +14,7 @@ trait CharReaders extends Readers[Char] { self: Parsers =>
 
   implicit val stringCharReader: String => StringCharReader = new StringCharReader(_, 0)
 
-  final class StringParser(str: String) extends AbstractParser[String] {
+  final class StringParser(str: String) extends Parser[String] {
     lazy val pattern = stringCharReader(str)
 
     override def parse(input: Input) = {
@@ -32,7 +32,7 @@ trait CharReaders extends Readers[Char] { self: Parsers =>
      *
      * The other generic syntax components are assumed to be case-sensitive unless specifically defined otherwise by the scheme
      */
-    def ignoreCase: Parser[String] = new AbstractParser[String] {
+    def ignoreCase: Parser[String] = new Parser[String] {
       override def parse(input: Input) = {
         @tailrec
         def rec(lhs: StringCharReader, rhs: Input): Option[Input] = {
@@ -58,7 +58,7 @@ trait CharReaders extends Readers[Char] { self: Parsers =>
 
   implicit val stringParser: String => StringParser = new StringParser(_)
 
-  class CharParser(c: Char) extends AbstractParser[Char] {
+  class CharParser(c: Char) extends Parser[Char] {
     require(c >= 0 && c <= 127)
 
     override def parse(input: Input) = if (input.atEnd) eof else {
@@ -72,7 +72,7 @@ trait CharReaders extends Readers[Char] { self: Parsers =>
 
   implicit val charParser: Char => Parser[Char] = new CharParser(_)
 
-  def %(start: Byte, end: Byte): Parser[Char] = new AbstractParser[Char] {
+  def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
     require(start >= 0 && end > start)
 
     override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {

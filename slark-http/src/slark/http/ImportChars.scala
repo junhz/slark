@@ -30,7 +30,7 @@ trait ImportChars[P <: Parsers with Readers[Char]] { self: Parsers with Readers[
     override def tail = if (atEnd) ??? else tl
   }
 
-  final class TransParser[S](uriParser: charParsers.Parser[S]) extends AbstractParser[S] {
+  final class TransParser[S](uriParser: charParsers.Parser[S]) extends Parser[S] {
     override def parse(input: Input) = {
       uriParser.parse(new TransedCharReader(input)) match {
         case charParsers.Succ(r, n) => n match {

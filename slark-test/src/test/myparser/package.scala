@@ -24,14 +24,14 @@ package object myparser {
 
     implicit val singletonIterableReaderBuilder: Iterable[Char] => Input = new IterableReader(_)
 
-    class SParser(str: String) extends AbstractParser[String] {
+    class SParser(str: String) extends Parser[String] {
       override def parse(input: Input) = {
         input.startWith(str) match {
           case None => Fail(s"can't match $str")
           case Some(n) => Succ(str, n)
         }
       }
-
+      
       override def toString = "\""+str+"\""
     }
 

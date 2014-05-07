@@ -19,7 +19,7 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
 
   implicit val stringOctetReader: String => Reader = new StringOctetReader(_, 0)
 
-  final class StringParser(str: String) extends AbstractParser[String] {
+  final class StringParser(str: String) extends Parser[String] {
     lazy val pattern = stringOctetReader(str)
 
     override def parse(input: Input) = {
@@ -29,7 +29,7 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
       }
     }
 
-    def ignoreCase: Parser[String] = new AbstractParser[String] {
+    def ignoreCase: Parser[String] = new Parser[String] {
       override def parse(input: Input) = {
         @tailrec
         def rec(lhs: Reader, rhs: Reader): Option[Input] = {
@@ -55,7 +55,7 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
 
   implicit val stringParser: String => StringParser = new StringParser(_)
 
-  final class letterParser(char: Char) extends AbstractParser[Byte] {
+  final class letterParser(char: Char) extends Parser[Byte] {
     require(char >= 0 && char <= 127)
 
     override def parse(input: Input) = if (input.atEnd) eof else {
@@ -75,7 +75,7 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
 
   implicit val byteListOctetReader: List[Byte] => Reader = new ByteListOctetReader(_)
 
-  def letter(startChar: Char, endChar: Char): Parser[Byte] = new AbstractParser[Byte] {
+  def letter(startChar: Char, endChar: Char): Parser[Byte] = new Parser[Byte] {
     require(startChar >= 0 && endChar > startChar && endChar <= 127)
 
     override def parse(input: Input) = if (input.atEnd) eof else {
@@ -85,7 +85,7 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
     }
   }
 
-  def acsii(startByte: Byte, endByte: Byte): Parser[Byte] = new AbstractParser[Byte] {
+  def acsii(startByte: Byte, endByte: Byte): Parser[Byte] = new Parser[Byte] {
     require(startByte >= 0 && endByte > startByte && endByte <= 127)
 
     override def parse(input: Input) = if (input.atEnd) eof else {
@@ -95,7 +95,7 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
     }
   }
 
-  def acsii(byte: Byte): Parser[Byte] = new AbstractParser[Byte] {
+  def acsii(byte: Byte): Parser[Byte] = new Parser[Byte] {
     require(byte >= 0 && byte <= 127)
 
     override def parse(input: Input) = if (input.atEnd) eof else {
@@ -105,7 +105,7 @@ trait OctetReaders extends Readers[Byte] { self: Parsers =>
     }
   }
 
-  def %(start: Int, end: Int): Parser[Byte] = new AbstractParser[Byte] {
+  def %(start: Int, end: Int): Parser[Byte] = new Parser[Byte] {
     require((start & (1 << 31)) == 0 && end > start && ((end & 0xffffff00) == 0))
 
     override def parse(input: Input) = if (input.atEnd) eof else {
