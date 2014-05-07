@@ -137,36 +137,12 @@ object Proxy {
       val sockets = new Pool(openSocketChannel, closeChannel, isChannelOpen)
 
       import byteParsers._
-
-      val readRequest = runnable { request parse client } flatMap { r =>
-        r match {
-          case Succ(r, n) => instant((r, n))
-          case Fail(msg) => {
-            println(msg)
-            NotRunnable
-          }
-        }
-      }
-
-      class HttpBodyReader(private[this] var input: byteParsers.Input) {
-        def hasNext = !input.atEnd
-        def next: Byte = if(hasNext) {
-          val tmp = input.head
-          input = input.tail
-          tmp
-        } else ???
-      }
       
-      class Headers(headers: List[(String, List[Byte])]) {
-        def list(name: String, parser)
-      }
+      val proxy = runnable { (request: HttpRequestDef) => {
+        println(request)
+      }}
       
-      val forwardRequest = (request: HttpRequestDef) => {
-        
-        NotRunnable
-      }
-      
-      deploy(for((r, n) <- readRequest; _ <- forwardRequest(r)) yield (), executor)
+      request -> { req => deploy(proxy, req, executor); () } |> { msg => succ(println(msg)) } parse client
     }
   }
 }

@@ -1,4 +1,4 @@
-package test.muRunnable
+package test.myRunnable
 
 import slark.combinator.runnable.Runnables._
 import java.util.concurrent.Executors
@@ -22,26 +22,9 @@ object RunnableDiary {
     
     deploy(h, (), exe)
     
-    val some = runnable {
-      (s: Some[_]) => println(s.get)
-    }
-    
-    val none = runnable {
-      (n: None.type) => println("none")
-    }
-    
-    val option1 = runnable[Unit, Option[_]] {
-      (_: Unit) => Some(1)
-    }
-    
-    val option2 = runnable {
-      (_: Unit) => Some(1)
-    }
-    
-    deploy(option1 >> runnable { _ match { case s @ Some(_) => some; case _ => none } }, executor) 
+    Thread.sleep(1000)
+    exe.shutdown()
     
   }
-  
-  val threadID = (_: Unit) => println(Thread.currentThread().getId())
   
 }

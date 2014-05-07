@@ -4,7 +4,6 @@ FuncLib
 Composed, Curried Func
 Registry
 http://blog.ometer.com/2011/07/24/callbacks-synchronous-and-asynchronous/
-Cache string interpolation
 http://www.scala-lang.org/old/node/11434.html
 Scalatron
 Thrown as extractor
@@ -22,25 +21,6 @@ logger:
 better writer(pickler) and more open formatter
 file writer
 improve performance of record.message
-
-parser:
-parser builder?
-
-succ, fail, flatmap, or
-
-p map f = p flatmap { x => Succ(f(x)) }
-
-p ^ q = p flatmap { x => q map { y => (x, y) } }
-
-p | q = p or q
-
-! p = (p ^ fail("")) | succ(())
-
-rep p = p flatmap { x => rep p map { xs => x :: xs } }
-m p = if(m > 0) p flatmap { x => (m - 1) p map { xs => x :: xs } }
-           else succ(Nil)
-? m p = if(m > 0) (p flatmap { x => ? (m - 1) p map { xs => x :: xs } }) | succ(Nil)
-              else succ(Nil)
 
 test:
 diaryWriter for log

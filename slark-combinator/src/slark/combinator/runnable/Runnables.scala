@@ -13,7 +13,6 @@ object Runnables {
 
   sealed trait Runnable[-T, +R] {
     def >>[U](that: Runnable[R, U]): Runnable[T, U] = new >>(this, that)
-    def |[TT <: T, RR >: R](that: Runnable[TT, RR]): Runnable[TT, RR] = new |(this, that)
   }
   
   private[Runnables] abstract class InternalRunnable[T, R] extends Runnable[T, R]
@@ -26,8 +25,6 @@ object Runnables {
   private[this] case class Instant[T, R](r: R) extends InternalRunnable[T, R]
 
   private[this] case class >>[T, R, U](r1: Runnable[T, R], r2: Runnable[R, U]) extends InternalRunnable[T, U]
-  
-  private[this] case class |[T, R](r1: Runnable[T, R], r2: Runnable[T, R]) extends InternalRunnable[T, R]
 
   def deploy[T, R](r: Runnable[T, R], t: T, executor: ExecutorService): Unit = {
     
