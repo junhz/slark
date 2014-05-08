@@ -140,6 +140,10 @@ object Proxy {
       
       val proxy = runnable { (request: HttpRequestDef) => {
         println(request)
+        val r1 = content_length collect request.headers
+        println(r1)
+        val r2 = transfer_encoding collect request.headers
+        println(r2)
       }}
       
       request -> { req => deploy(proxy, req, executor); () } |> { msg => succ(println(msg)) } parse client
