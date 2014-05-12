@@ -45,6 +45,19 @@ object Proxy {
         override def rejectBWSAfterHeaderFieldName = true
       }
     }
+    val hs = httpSymbols
+    
+    val headerParsers = new Parsers with HeaderReaders {
+      type CharParsers = acsiiParsers.type
+      type ByteParsers = byteParsers.type
+      type HttpSymbols = hs.type
+  
+      val httpSymbols: HttpSymbols = hs
+    }
+    
+    val content_length = headerParsers.Ops("Content-Length").`:`(httpSymbols.digit(1, httpSymbols.parsers.`>`) -> { _ match { case Natural0(i) => i }})
+  
+    val transfer_encoding = headerParsers.Ops("Transfer-Encoding").`: #`(httpSymbols.token)
 
     import httpSymbols._
     import httpUriSymbols._
@@ -140,9 +153,9 @@ object Proxy {
       
       val proxy = runnable { (request: HttpRequestDef) => {
         println(request)
-        val r1 = content_length collect request.headers
+        val r1 = content_length parse headerParsers.listHeaderReader(request.headers)
         println(r1)
-        val r2 = transfer_encoding collect request.headers
+        val r2 = transfer_encoding parse headerParsers.listHeaderReader(request.headers)
         println(r2)
       }}
       
