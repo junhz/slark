@@ -45,7 +45,7 @@ trait HeaderReaders extends Readers[(String, List[Byte])] { self: Parsers =>
     def `: #`[T](p: httpSymbols.parsers.Parser[T]): Parser[List[T]] = {
       val leading = httpSymbols.ows :^ p
       val tail = (httpSymbols.ows ^ httpSymbols.parsers.stringParser(",") ^ httpSymbols.ows) :^ p
-      new HeaderParser(name, leading >> { x => (tail.*) -> { xs => x :: xs } }) -> (_.flatten)
+      new HeaderParser(name, leading >> { x => (tail.*) -> { xs => x :: xs } }) -> (_.flatten) >> { x => if (x.isEmpty) fail("header not found") else succ(x) }
     }
   } 
   

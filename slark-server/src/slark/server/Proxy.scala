@@ -140,6 +140,12 @@ object Proxy {
 
       (new SocketReader).asInstanceOf[byteParsers.Reader]
     }
+    
+    trait HttpMessageBody
+    
+    object Chunked extends HttpMessageBody
+    case class Fixed(len: Int) extends HttpMessageBody
+    object ToEOF extends HttpMessageBody
 
     def error(code: Int, reason: String): HttpResponseDef = ???
 
@@ -153,10 +159,10 @@ object Proxy {
       
       val proxy = runnable { (request: HttpRequestDef) => {
         println(request)
-        val r1 = content_length parse headerParsers.listHeaderReader(request.headers)
-        println(r1)
-        val r2 = transfer_encoding parse headerParsers.listHeaderReader(request.headers)
-        println(r2)
+        (transfer_encoding -> { _ => Chunked }) | content_length -> { len => Fixed(len) } | headerParsers.succ(Fixed(0)) parse headerParsers.listHeaderReader(request.headers) match {
+          case headerParsers.Succ(r, n) => { println(r); println(n) }
+          case headerParsers.Fail(msg) => println(msg)
+        }
       }}
       
       request -> { req => deploy(proxy, req, executor); () } |> { msg => succ(println(msg)) } parse client
