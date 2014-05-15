@@ -7,54 +7,134 @@ import java.sql.Statement
 import java.sql.SQLException
 import java.sql.PreparedStatement
 import scala.collection.mutable.ListBuffer
+import java.sql.Driver
 
 trait Sqls {
   trait Result[+T]
 
   case class Succ[T](t: T) extends Result[T]
 
-  case class Fail(msg: Any) extends Result[Nothing]
+  case class Fail(msg: String) extends Result[Nothing]
+
+  val driver: Driver
   
-  trait Sql[R, +T] { self =>
-    
-    trait Connection {
-      def update
-      def close: Unit
+  trait Connection {
+    val jConnection: java.sql.Connection
+    def update(sql: String, params: Any*): Statement[Int] = {
+      new Statement[Int] {
+        val jStatement = {
+          val stat = jConnection.prepareStatement(sql)
+          fill(stat, params)
+          stat
+        }
+        override def execute = {
+          try {
+            Succ(jStatement.executeUpdate())
+          } catch {
+            case e: SQLException => Fail(e.getMessage()) 
+          }
+        }
+        override def close: Unit = Sqls.this.close(jStatement)
+      }
     }
-    
-    trait Statement[T] {
-      def execute: T
-      def close: Unit
+    def query(sql: String, params: Any*): Statement[Iterator[Any]] = {
+      new Statement[Iterator[Any]] {
+        val jStatement = {
+          val stat = jConnection.prepareStatement(sql)
+          fill(stat, params)
+          stat
+        }
+        override def execute = {
+          try {
+            val rs = jStatement.executeQuery()
+            val it = new Iterator[Any] {
+              
+            }
+          } catch {
+            case e: SQLException => Fail(e.getMessage()) 
+          }
+        }
+        override def close: Unit = Sqls.this.close(jStatement)
+      }
     }
+    def close: Unit = Sqls.this.close(jConnection)
 
-  def prepare(conn: Connection): (PreparedStatement, PreparedStatement => R, R => T)
+    private[this] final def fill(stat: PreparedStatement, params: Seq[Any]): Unit = {
+      def rec(index: Int, params: Seq[Any]): Unit = {
+        if (!params.isEmpty) {
+          params.head match {
+            case i: Int => stat.setInt(index, i)
+            case s: String => stat.setString(index, s)
+            case d: java.util.Date => stat.setDate(index, new java.sql.Date(d.getTime()))
+            case NULL(flag) => stat.setNull(index, flag)
+          }
 
-  final def flatMap[U](fun: T => Sql[U]): Sql[U] = new Sql[U] {
-    override def prepare(conn: Connection) = {
-      val (stat, call) = self.prepare(conn) 
-      (stat, (it: Iterable[Any]) => { val(stat, call) = fun(call(it)).prepare(conn) })
+          rec(index + 1, params.tail)
+        }
+      }
+      rec(1, params)
     }
   }
-
-  final def map[U](fun: T => U): Sql[U] = new Sql[U] {
-    override def run(state: ConnState) = self.run(state) match {
-      case Succ(t, state) => Succ(fun(t), state)
-      case f: Fail => f
-    }
-  }
-
-  final def filter(fun: T => Boolean): Sql[T] = withFilter(fun)
-
-  final def withFilter(fun: T => Boolean): Sql[T] = new Sql[T] {
-    override def run(state: ConnState) = self.run(state) match {
-      case s @ Succ(t, state) if fun(t) => s
-      case Succ(t, _) => Fail(s"match error on $t")
-      case f => f
-    }
-  }
-
-}
   
+  def connect(url: String, user: String, password: String): Connection
+  
+  def close(conn: java.sql.Connection): Unit
+  
+  def close(statement: java.sql.PreparedStatement): Unit
+
+  trait Statement[+T] { self =>
+    def execute: Result[T]
+    def flatMap[U](f: T => Statement[U]): Statement[U] = new Statement[U] {
+      override def execute =  self.execute match {
+        case Succ(t) => f(t).execute
+        case Fail(msg) => Fail(msg)
+      }
+      override def close = self.close
+    }
+    def map[U](f: T => U): Statement[U] = new Statement[U] {
+      override def execute = self.execute match {
+        case Succ(t) => Succ(f(t))
+        case Fail(msg) => Fail(msg)
+      }
+      override def close = self.close
+    }
+    def close: Unit
+  }
+
+  trait Sql[+T] { self =>
+
+    def prepare(conn: Connection): Statement[T]
+
+    final def flatMap[U](fun: T => Sql[U]): Sql[U] = new Sql[U] {
+      override def prepare(conn: Connection) = {
+        self.prepare(conn) flatMap { (t: T) => fun(t).prepare(conn) }
+      }
+    }
+
+    final def map[U](fun: T => U): Sql[U] = new Sql[U] {
+      override def prepare(conn: Connection) = {
+        self.prepare(conn) map fun
+      }
+    }
+
+  }
+  
+  case class NULL(flag: Int)
+  
+  implicit class SqlContext(context: StringContext) {
+    /** don't care about return value */
+    def update(params: Any*): Sql[Int] = new Sql[Int] {
+      override def prepare(conn: Connection) = {
+        conn.update(context.parts.mkString("?"), params)
+      }
+    }
+    /** return table */
+    def query(params: Any*): Sql[Iterator[Any]] = new Sql[Iterator[Any]] {
+      override def prepare(conn: Connection) = {
+        conn.query(context.parts.mkString("?"), params)
+      }
+    }
+  }
 }
 
 trait Result[+T]
@@ -162,7 +242,7 @@ final class Columns(private[this] val rs: ResultSet) {
         }
       }
       rec(1)
-      f(buffer.toList match { 
+      f(buffer.toList match {
         case Nil => throw new IllegalArgumentException("no element")
         case x1 :: xs => xs match {
           case Nil => x1
@@ -182,7 +262,7 @@ final class Columns(private[this] val rs: ResultSet) {
 object Columns {
   def unapplySeq(cs: Columns): Option[Seq[Any]] = {
     val buffer = new ListBuffer[Any]
-    for(c <- cs) {
+    for (c <- cs) {
       buffer.append(c)
     }
     Some(buffer.toList)
