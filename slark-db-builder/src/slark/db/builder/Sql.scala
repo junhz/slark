@@ -8,6 +8,55 @@ import java.sql.SQLException
 import java.sql.PreparedStatement
 import scala.collection.mutable.ListBuffer
 
+trait Sqls {
+  trait Result[+T]
+
+  case class Succ[T](t: T) extends Result[T]
+
+  case class Fail(msg: Any) extends Result[Nothing]
+  
+  trait Sql[R, +T] { self =>
+    
+    trait Connection {
+      def update
+      def close: Unit
+    }
+    
+    trait Statement[T] {
+      def execute: T
+      def close: Unit
+    }
+
+  def prepare(conn: Connection): (PreparedStatement, PreparedStatement => R, R => T)
+
+  final def flatMap[U](fun: T => Sql[U]): Sql[U] = new Sql[U] {
+    override def prepare(conn: Connection) = {
+      val (stat, call) = self.prepare(conn) 
+      (stat, (it: Iterable[Any]) => { val(stat, call) = fun(call(it)).prepare(conn) })
+    }
+  }
+
+  final def map[U](fun: T => U): Sql[U] = new Sql[U] {
+    override def run(state: ConnState) = self.run(state) match {
+      case Succ(t, state) => Succ(fun(t), state)
+      case f: Fail => f
+    }
+  }
+
+  final def filter(fun: T => Boolean): Sql[T] = withFilter(fun)
+
+  final def withFilter(fun: T => Boolean): Sql[T] = new Sql[T] {
+    override def run(state: ConnState) = self.run(state) match {
+      case s @ Succ(t, state) if fun(t) => s
+      case Succ(t, _) => Fail(s"match error on $t")
+      case f => f
+    }
+  }
+
+}
+  
+}
+
 trait Result[+T]
 
 case class Succ[T](t: T, state: ConnState) extends Result[T]
