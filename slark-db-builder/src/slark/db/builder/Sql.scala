@@ -1,6 +1,9 @@
 package slark.db.builder
 
 import scala.collection.mutable.ListBuffer
+import scala.language.implicitConversions
+import scala.language.higherKinds
+import scala.annotation.tailrec
 
 trait Sqls {
   trait Result[+T]
@@ -73,6 +76,21 @@ trait Sqls {
       }
     }
   }
+  
+  implicit def flatten[T](trav: List[Statement[T]]):Statement[List[T]] = new Statement[List[T]] {
+    override def execute = {
+      @tailrec
+      def rec(rest: List[Statement[T]], processed: List[T]): Result[List[T]] = {
+        if (rest.isEmpty) Succ(processed.reverse)
+        else rest.head.execute match {
+          case Succ(t) => rec(rest.tail, t :: processed)
+          case Fail(msg) => Fail(msg)
+        }
+      }
+      
+      rec(trav, Nil)
+    }
+  }
 }
 
 object Sqls {
@@ -84,6 +102,7 @@ object Sqls {
           p.put("user", user)
           p.put("password", password)
           val jConn = driver.connect(url, p)
+          jConn.setAutoCommit(false)
           new Connection {
             def update(sql: String, params: Seq[Any]): Statement[Int] = {
               new Statement[Int] {
