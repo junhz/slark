@@ -2,8 +2,9 @@ package slark
 package server
 
 import combinator.parser._
+import combinator.collector._
 
-trait HeaderReaders extends Readers[(String, List[Byte])] { self: Parsers =>
+trait HeaderReaders extends Readers[(String, List[Byte])] { self: Collectors =>
   
   final class ListHeaderReader(val headers: List[(String, List[Byte])]) extends Reader {
     override def head = if (atEnd) ??? else headers.head
@@ -20,16 +21,21 @@ trait HeaderReaders extends Readers[(String, List[Byte])] { self: Parsers =>
   type HttpSymbols <: Symbols[ByteParsers] with http.Literals with http.Message
   
   val httpSymbols: HttpSymbols
+  import httpSymbols._
+  import parsers._
   
-  final class HeaderParser[T](name: String, value: httpSymbols.parsers.Parser[T]) extends Parser[List[T]] {
-    override def parse(input: Input) = {
+  final class HeaderCollector[T](name: String, value: Parser[T]) extends Collector[List[T]] {
+    override def collect(input: Input) = {
       @tailrec
-      def rec(headers: Input, collected: List[T], filtedOut: List[(String, List[Byte])]): Result = {
-        if (headers.atEnd) Succ(collected.reverse, filtedOut.reverse)
+      def rec(headers: Input, collected: List[T], filtedOut: List[(String, List[Byte])]): CollectResult[List[T]] = {
+        if (headers.atEnd) collected match {
+          case Nil => NotFound
+          case _ => Collected(collected.reverse, filtedOut.reverse)
+        }
         else headers.head match {
-          case (n, v) if (n.equalsIgnoreCase(name)) => value parse httpSymbols.parsers.byteListOctetReader(v) match {
-            case httpSymbols.parsers.Succ(r, n) if (n.atEnd) => rec(headers.tail, r :: collected, filtedOut)
-            case _ => Fail("malformed header")
+          case (n, v) if (n.equalsIgnoreCase(name)) => value parse v match {
+            case Succ(r, n) if (n.atEnd) => rec(headers.tail, r :: collected, filtedOut)
+            case _ => Malformed(name)
           }
           case _ => rec(headers.tail, collected, headers.head :: filtedOut)
         }
@@ -39,13 +45,13 @@ trait HeaderReaders extends Readers[(String, List[Byte])] { self: Parsers =>
   }
   
   implicit class Ops(name: String) {
-    def `:`[T](p: httpSymbols.parsers.Parser[T]): Parser[T] = 
-      new HeaderParser(name, p) >> { x => if(x.isEmpty || !x.tail.isEmpty) fail("no or more than one headers") else succ(x.head) }
+    def `: `[T](p: Parser[T]): Collector[T] = 
+      new HeaderCollector(name, p) flatMap { x => if(x.tail.isEmpty) collected(x.head) else malformed("no or more than one headers") }
       
-    def `: #`[T](p: httpSymbols.parsers.Parser[T]): Parser[List[T]] = {
-      val leading = httpSymbols.ows :^ p
-      val tail = (httpSymbols.ows ^ httpSymbols.parsers.stringParser(",") ^ httpSymbols.ows) :^ p
-      new HeaderParser(name, leading >> { x => (tail.*) -> { xs => x :: xs } }) -> (_.flatten) >> { x => if (x.isEmpty) fail("header not found") else succ(x) }
+    def `: #`[T](p: Parser[T]): Collector[List[T]] = {
+      val leading = ows :^ p
+      val tail = (ows ^ "," ^ ows) :^ p
+      new HeaderCollector(name, leading >> { x => (tail.*) -> { xs => x :: xs } }) map (_.flatten) flatMap { x => if (x.isEmpty) malformed("no header value") else collected(x) }
     }
   } 
   

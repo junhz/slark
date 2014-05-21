@@ -8,9 +8,8 @@ object SqlDiary extends Diary {
   val sqls = Sqls(new org.h2.Driver)
   import sqls._
 
-  val conn = connect("jdbc:h2:mem:test", "sa", "pwd")
-
   val content = Source {
+    val conn = connect("jdbc:h2:mem:test", "sa", "pwd")
     val r = for (
       _ <- update"create table LANG (name varchar(10))";
       rs1 <- query"select 'JAVA' from dual union select 'SCALA' from dual";

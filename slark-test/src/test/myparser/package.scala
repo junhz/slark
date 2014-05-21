@@ -1,6 +1,7 @@
 package test
 
 import slark.combinator.parser._
+import slark.Readers
 
 package object myparser {
 

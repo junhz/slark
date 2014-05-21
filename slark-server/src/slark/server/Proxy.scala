@@ -4,9 +4,10 @@ package server
 import java.util.concurrent.Executors
 import java.nio.channels.ServerSocketChannel
 import java.net.InetSocketAddress
-import slark.uri._
-import slark.combinator.parser.Parsers
-import slark.http._
+import uri._
+import combinator.parser.Parsers
+import combinator.collector.Collectors
+import http._
 import java.nio.channels.SocketChannel
 import java.nio.channels.Channel
 import slark.combinator.runnable.Runnables._
@@ -47,20 +48,22 @@ object Proxy {
     }
     val hs = httpSymbols
     
-    val headerParsers = new Parsers with HeaderReaders {
+    val headerCollectors = new Collectors with HeaderReaders {
       type CharParsers = acsiiParsers.type
       type ByteParsers = byteParsers.type
       type HttpSymbols = hs.type
   
       val httpSymbols: HttpSymbols = hs
     }
-    
-    val content_length = headerParsers.Ops("Content-Length").`:`(httpSymbols.digit(1, httpSymbols.parsers.`>`) -> { _ match { case Natural0(i) => i }})
-  
-    val transfer_encoding = headerParsers.Ops("Transfer-Encoding").`: #`(httpSymbols.token)
-
+    import headerCollectors._
+    import byteParsers._
     import httpSymbols._
-    import httpUriSymbols._
+    import httpUriSymbols.Host
+    
+    val content_length = "Content-Length" `: ` (digit(1, `>`) -> { _ match { case Natural0(i) => i }})
+  
+    val transfer_encoding = "Transfer-Encoding" `: #` token
+
 
     type Addr = (Host, Int)
     val Addr = Tuple2
@@ -159,9 +162,9 @@ object Proxy {
       
       val proxy = runnable { (request: HttpRequestDef) => {
         println(request)
-        (transfer_encoding -> { _ => Chunked }) | content_length -> { len => Fixed(len) } | headerParsers.succ(Fixed(0)) parse headerParsers.listHeaderReader(request.headers) match {
-          case headerParsers.Succ(r, n) => { println(r); println(n) }
-          case headerParsers.Fail(msg) => println(msg)
+        (transfer_encoding map { _ => Chunked }) | (content_length map { len => Fixed(len) }) | collected(Fixed(0)) collect request.headers match {
+          case Collected(r, n) => { println(r); println(n) }
+          case Malformed(msg) => println(msg)
         }
       }}
       

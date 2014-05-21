@@ -1,8 +1,6 @@
-package slark.combinator.parser
+package slark
 
-import scala.annotation.tailrec
-
-trait Readers[F] { self: Parsers =>
+trait Readers[F] { self: AbstractInput =>
 
   type From = F
 

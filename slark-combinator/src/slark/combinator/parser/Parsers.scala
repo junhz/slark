@@ -4,8 +4,7 @@ package combinator.parser
 import scala.annotation.tailrec
 import Trampolines._
 
-trait Parsers { parsers =>
-  type Input
+trait Parsers extends AbstractInput { parsers =>
 
   type ^[+A, +B] = (A, B)
   final val ^ = Tuple2
