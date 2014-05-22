@@ -29,7 +29,7 @@ object Proxy {
     val httpUriSymbols = new UriSymbols[acsiiParsers.type] {
       protected[this] override def _parsers = acsiiParsers
       protected[this] override def _name = "http"
-      protected[this] override def _port = 80
+      override def _port = 80
       protected[this] override def formatPath(path: List[String]): List[String] = path
     }
 
@@ -56,13 +56,15 @@ object Proxy {
       val httpSymbols: HttpSymbols = hs
     }
     import headerCollectors._
-    import byteParsers._
     import httpSymbols._
-    import httpUriSymbols.Host
+    import parsers._
+    import httpSymbols.uriSymbols.{ Host, host => uri_host, Part, Authority, _port }
     
     val content_length = "Content-Length" `: ` (digit(1, `>`) -> { _ match { case Natural0(i) => i }})
   
     val transfer_encoding = "Transfer-Encoding" `: #` token
+    
+    val host = "Host" `: ` (p(uri_host) ^ (":" :^ port).?).?
 
 
     type Addr = (Host, Int)
@@ -162,7 +164,21 @@ object Proxy {
       
       val proxy = runnable { (request: HttpRequestDef) => {
         println(request)
-        (transfer_encoding map { _ => Chunked }) | (content_length map { len => Fixed(len) }) | collected(Fixed(0)) collect request.headers match {
+        val r = (host map { h => {
+          request.tar match {
+            case a: Absolute => a
+            case Authorize(a) => Absolute(Part.network(a, Nil), "")
+            case Origin(p, q) => h match {
+              case None => Absolute(Part.network(Authority.annoymous(Host.localhost, client.socket().getPort()), p), q)
+              case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(_port)), p), q)
+            }
+            case Asterisk => h match {
+              case None => Absolute(Part.network(Authority.annoymous(Host.localhost, client.socket().getPort()), Nil), "")
+              case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(_port)), Nil), "")
+            }
+          }
+        } }) ^ ((transfer_encoding map { _ => Chunked }) | (content_length map { len => Fixed(len) }) | collected(Fixed(0)))
+        r collect request.headers match {
           case Collected(r, n) => { println(r); println(n) }
           case Malformed(msg) => println(msg)
         }

@@ -15,7 +15,7 @@ package object myhttp {
     protected[this] override def _uriSymbols = new slark.uri.UriSymbols[parsers.charParsers.type] {
       protected[this] override def _parsers = self.parsers.charParsers
       protected[this] override def _name = "http"
-      protected[this] override def _port = 80
+      override def _port = 80
       protected[this] override def formatPath(path: List[String]) = path
     }
     protected[this] override def _options = new Options {

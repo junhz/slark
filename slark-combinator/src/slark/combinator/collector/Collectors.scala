@@ -30,6 +30,7 @@ trait Collectors extends AbstractInput {
         case Malformed(msg) => Malformed(msg)
       }
     }
+    final def ^ [U](that: Collector[U]): Collector[T ^ U] = self flatMap { x => that map { y => (x, y) } } 
   }
   
   final def collected[T](t: T): Collector[T] = new Collector[T] {

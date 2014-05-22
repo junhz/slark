@@ -4,17 +4,8 @@ package server
 import combinator.parser._
 import combinator.collector._
 
-trait HeaderReaders extends Readers[(String, List[Byte])] { self: Collectors =>
-  
-  final class ListHeaderReader(val headers: List[(String, List[Byte])]) extends Reader {
-    override def head = if (atEnd) ??? else headers.head
-    override lazy val tail = if (atEnd) ??? else new ListHeaderReader(headers.tail)
-    override def atEnd = headers.isEmpty
-
-    override def toString = headers.mkString("\r\n")
-  }
-
-  implicit val listHeaderReader: List[(String, List[Byte])] => Reader = new ListHeaderReader(_)
+trait HeaderReaders { self: Collectors =>
+  type Input = List[(String, List[Byte])]
   
   type CharParsers <: Parsers with uri.CharReaders
   type ByteParsers <: Parsers with http.OctetReaders with http.ImportChars[CharParsers]
@@ -28,7 +19,7 @@ trait HeaderReaders extends Readers[(String, List[Byte])] { self: Collectors =>
     override def collect(input: Input) = {
       @tailrec
       def rec(headers: Input, collected: List[T], filtedOut: List[(String, List[Byte])]): CollectResult[List[T]] = {
-        if (headers.atEnd) collected match {
+        if (headers.isEmpty) collected match {
           case Nil => NotFound
           case _ => Collected(collected.reverse, filtedOut.reverse)
         }

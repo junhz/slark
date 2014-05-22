@@ -3,4 +3,7 @@ package object slark {
   
   type tailrec = scala.annotation.tailrec
   
+  type ^[+A, +B] = (A, B)
+  val ^ = Tuple2
+  
 }

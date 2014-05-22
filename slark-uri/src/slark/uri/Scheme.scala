@@ -9,7 +9,7 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
 
   protected[this] def _name: String
 
-  protected[this] def _port: Int
+  def _port: Int
 
   protected[this] def formatPath(path: List[String]): List[String]
 
@@ -50,6 +50,7 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
       override def toString = regname
       override def name = regname
     }
+    val localhost = apply("localhost")
   }
 
   val host = ("[" :^ (ipv6address -> (Host(_)) | ipvFuture -> (Host(_))) ^: "]") | ipv4address -> (Host(_)) | reg_name -> (Host(_))
@@ -60,7 +61,7 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
 
   val userinfo = (unreserved | pct_encoded | sub_delims | ':').* -> (_.mkString)
 
-  val port = digit.* -> { case Natural0(i) => i }
+  val port = digit(1, `>`) -> { case Natural0(i) => i } | succ(_port)
 
   trait Authority {
 

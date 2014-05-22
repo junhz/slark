@@ -6,9 +6,6 @@ import Trampolines._
 
 trait Parsers extends AbstractInput { parsers =>
 
-  type ^[+A, +B] = (A, B)
-  final val ^ = Tuple2
-
   sealed trait ParseResult[+S] {
   }
 
