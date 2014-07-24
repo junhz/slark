@@ -157,6 +157,7 @@ object Sqls {
                     if (index <= columNum) {
                       val a = meta.getColumnType(index) match {
                         case java.sql.Types.DATE => new java.util.Date(rs.getDate(index).getTime())
+                        case java.sql.Types.TIMESTAMP => new java.util.Date(rs.getTimestamp(index).getTime())
                         case java.sql.Types.INTEGER => rs.getInt(index)
                         case java.sql.Types.VARCHAR => rs.getString(index)
                         case java.sql.Types.NUMERIC => BigDecimal(rs.getBigDecimal(index))
@@ -192,7 +193,7 @@ object Sqls {
               params.head match {
                 case i: Int => stat.setInt(index, i)
                 case s: String => stat.setString(index, s)
-                case d: java.util.Date => stat.setDate(index, new java.sql.Date(d.getTime()))
+                case d: java.util.Date => stat.setTimestamp(index, new java.sql.Timestamp(d.getTime()))
                 case d: BigDecimal => stat.setBigDecimal(index, d.bigDecimal)
                 case NULL(flag) => stat.setNull(index, flag)
               }
