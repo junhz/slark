@@ -13,7 +13,7 @@ trait Readers[F] { self: AbstractInput =>
 
     def startWith(that: Reader): Option[Reader] = {
       @tailrec
-      def rec(lhs: Reader, rhs: Reader, isSame: (From, From) => Boolean = self.isSame): Option[Reader] = {
+      def rec(lhs: Reader, rhs: Reader): Option[Reader] = {
         if (rhs.atEnd) Some(lhs)
         else if (lhs.atEnd) None
         else {

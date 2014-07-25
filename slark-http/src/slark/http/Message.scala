@@ -111,44 +111,4 @@ trait Message { self: Symbols[_ <: Parsers with OctetReaders with ImportChars[_ 
     }
   }
   
-  trait HttpHeaderDef[T, R] {
-    def name: String
-    def value: Parser[T]
-    def collect(headers: List[(String, List[Byte])]): Option[R] = {
-      val values = headers.collect {
-        case (n, v) if (n.equalsIgnoreCase(name)) => value.parse(v)
-      }
-      val malformed = values.exists {
-        case Succ(r, n) if (n.atEnd) => false
-        case _ => true
-      }
-      if(malformed) None
-      else flatten(values.map(_.asInstanceOf[Succ[T]].result))
-    }
-    def flatten(headers: List[T]): Option[R]
-  }
-  
-  case class SingleHttpHeaderDef[T](name: String, value: Parser[T]) extends HttpHeaderDef[T, T] {
-    override def flatten(headers: List[T]) = if(headers.isEmpty || !headers.tail.isEmpty) None else Some(headers.head)
-  }
-  
-  case class MultipleHttpHeaderDef[T](name: String, value: Parser[List[T]]) extends HttpHeaderDef[List[T], List[T]] {
-    override def flatten(headers: List[List[T]]) = {
-      val h = headers.flatten
-      if(h.isEmpty) None else Some(h)
-    }
-  }
-  
-  val content_length = SingleHttpHeaderDef("Content-Length", digit(1, `>`) -> { _ match { case Natural0(i) => i }})
-  
-  val transfer_encoding = MultipleHttpHeaderDef("Transfer-Encoding", token.`#`)
-  
-  implicit class ListOf[T](p: Parser[T]) {
-    def `#` : Parser[List[T]] = {
-      val leading = ows :^ p
-      val tail = (ows ^ "," ^ ows) :^ p
-      leading >> { x => (tail.*) -> { xs => x :: xs } }
-    }
-  }
-  
 }
