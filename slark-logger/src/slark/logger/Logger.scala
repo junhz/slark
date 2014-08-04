@@ -40,14 +40,14 @@ sealed trait Logger {
 
   private[this] def logException(e: Throwable, writer: Writer): Unit = {
     @tailrec
-    def rec(throwns: List[Thrown[_]]): Unit = {
+    def rec(throwns: List[FailReason]): Unit = {
       if (throwns.isEmpty) {}
       else {
         writer.write(s"Caused by: ${throwns.head}\r\n")
         rec(throwns.tail)
       }
     }
-    val throwns = Thrown.wrap(e)
+    val throwns = FailReason.causedBy(e)
     writer.write(s"${throwns.head}\r\n")
     rec(throwns.tail)
   }
