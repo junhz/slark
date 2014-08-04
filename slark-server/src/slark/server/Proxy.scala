@@ -167,16 +167,16 @@ object Proxy {
           request.tar match {
             case a: Absolute => a
             case Authorize(a) => Absolute(Part.network(a, Nil), "")
-            case Origin(p, q) => h.get match {
+            case Origin(p, q) => h match {
               case None => Absolute(Part.network(Authority.annoymous(Host.localhost, client.socket().getPort()), p), q)
               case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(_port)), p), q)
             }
-            case Asterisk => h.get match {
+            case Asterisk => h match {
               case None => Absolute(Part.network(Authority.annoymous(Host.localhost, client.socket().getPort()), Nil), "")
               case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(_port)), Nil), "")
             }
           }
-        } }) ^ ((transfer_encoding -> { _ => Chunked }) | (content_length -> { len => Fixed(len.get) }) | headerCollectors.succ(Fixed(0)))
+        } }) ^ ((transfer_encoding -> { _ => Chunked }) | (content_length -> { len => Fixed(len) }) | headerCollectors.succ(Fixed(0)))
         r parse request.headers match {
           case headerCollectors.Succ(r, n) => { println(r); println(n) }
           case headerCollectors.Fail(msg) => println(msg)

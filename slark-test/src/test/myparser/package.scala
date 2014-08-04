@@ -2,6 +2,7 @@ package test
 
 import slark.combinator.parser._
 import slark.Readers
+import slark.FailReason
 
 package object myparser {
 
@@ -28,11 +29,11 @@ package object myparser {
     class SParser(str: String) extends Parser[String] {
       override def parse(input: Input) = {
         input.startWith(str) match {
-          case None => Fail(s"can't match $str")
+          case None => Fail(NotStartWith(str) :: Nil)
           case Some(n) => Succ(str, n)
         }
       }
-      
+
       override def toString = "\""+str+"\""
     }
 
@@ -43,6 +44,10 @@ package object myparser {
       override def head = c
       override lazy val tail = this
       override def toString = c.toString
+    }
+
+    case class NotStartWith(str: String) extends FailReason {
+      override def toString = s"input not start with $str"
     }
   }
 }

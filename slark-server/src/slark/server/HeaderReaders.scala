@@ -29,17 +29,17 @@ trait HeaderReaders extends Readers.Indexed[String, List[List[Byte]]] { self: Pa
   }
   
   implicit class Ops(name: String) {
-    def `: `[T](p: httpParsers.Parser[T]): Parser[Option[T]] = 
-      new Parser[Option[T]] {
+    def `: `[T](p: httpParsers.Parser[T]): Parser[T] = 
+      new Parser[T] {
       override def parse(src: Input): Result = {
         src.get(name) match {
-          case None => Fail("no header found")
+          case None => Fail(HeaderNotFound :: Nil)
           case Some((hs, rest)) => hs match {
             case h :: Nil => p.parse(h) match {
-              case httpParsers.Succ(r, n) if (n.atEnd) => Succ(Some(r), rest)
-              case _ => Succ(None, rest)
+              case httpParsers.Succ(r, n) if (n.atEnd) => Succ(r, rest)
+              case _ => Fail(MalformedHeader :: Nil)
             }
-            case _ => Fail("more than one headers found")
+            case _ => Fail(DuplicatedHeader :: Nil)
           }
         }
       }
@@ -52,14 +52,14 @@ trait HeaderReaders extends Readers.Indexed[String, List[List[Byte]]] { self: Pa
       new Parser[List[T]] {
         override def parse(src: Input): Result = {
           src.get(name) match {
-            case None => Fail("no header found")
+            case None => Fail(HeaderNotFound :: Nil)
             case Some((hs, rest)) =>  {
               @tailrec
               def rec(headers: List[List[Byte]], collected: List[List[T]]): Result = {
                 if (headers.isEmpty) Succ(collected.reverse.flatten, rest)
                 else all parse headers.head match {
                   case httpParsers.Succ(r, n) if (n.atEnd) => rec(headers.tail, r :: collected)
-                  case _ => Fail(Nil, rest)
+                  case _ => Fail(DuplicatedHeader :: Nil)
                 }
               }
               rec(hs, Nil)
@@ -68,6 +68,10 @@ trait HeaderReaders extends Readers.Indexed[String, List[List[Byte]]] { self: Pa
         }
       }
     }
-  } 
+  }
+  
+  case object HeaderNotFound extends FailReason
+  case object DuplicatedHeader extends FailReason
+  case object MalformedHeader extends FailReason
   
 }

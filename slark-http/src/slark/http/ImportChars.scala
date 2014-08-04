@@ -35,7 +35,7 @@ trait ImportChars[P <: Parsers with Readers.Linear[Char]] { self: Parsers with R
       uriParser.parse(new TransedCharReader(input)) match {
         case charParsers.Succ(r, n) => n match {
           case n: TransedCharReader => Succ(r, n.input)
-          case _ => Fail("parser shouldn't create input")
+          case _ => Fail(CreateInputInParser :: Nil)
         }
         case charParsers.Fail(msg) => Fail(msg)
       }
@@ -46,5 +46,7 @@ trait ImportChars[P <: Parsers with Readers.Linear[Char]] { self: Parsers with R
   private[this] val singletonUriParserToCntParser: (charParsers.Parser[Any] => Parser[Any]) = new TransParser(_)
   implicit def uriParserToCntParser[S]: (charParsers.Parser[S] => Parser[S]) =
     singletonUriParserToCntParser.asInstanceOf[charParsers.Parser[S] => Parser[S]]
+  
+  case object CreateInputInParser extends FailReason
 
 }

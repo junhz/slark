@@ -19,7 +19,7 @@ trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
 
     override def parse(input: Input) = {
       input.startWith(pattern) match {
-        case None => Fail(s"can't match $str")
+        case None => Fail(NotStartWith(str, false) :: Nil)
         case Some(n) => Succ(str, n)
       }
     }
@@ -46,7 +46,7 @@ trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
 
         rec(pattern, input) match {
           case Some(n) => Succ(str, n)
-          case _ => Fail(s"can't match $str with case ignored")
+          case _ => Fail(NotStartWith(str, true) :: Nil)
         }
       }
 
@@ -64,7 +64,7 @@ trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt == c) Succ(c, input.tail)
-      else Fail(s"$c expected but $cnt found")
+      else Fail(NotMatch(c, cnt) :: Nil)
     }
 
     override def toString = s"'$c'"
@@ -75,10 +75,10 @@ trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
   def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
     require(start >= 0 && end > start)
 
-    override def parse(input: Input) = if (input.atEnd) Fail("at end of input") else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
-      else Fail(f"$toString wanted but %%$cnt%02x found")
+      else Fail(NotInRange(start.toChar, end.toChar, cnt) :: Nil)
     }
 
     override def toString = f"%%($start%02x, $end%02x)"
@@ -96,6 +96,18 @@ trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
     def make(parts: Seq[String], args: Seq[Parser[Char]]): Parser[List[Char]] =
       if (args.isEmpty) parts.head -> { _ => Nil }
       else (parts.head :^ args.head) >> { c => make(parts.tail, args.tail) -> { cs => c :: cs } }
+  }
+  
+  case class NotStartWith(str: String, caseIgnored: Boolean) extends FailReason {
+    override def toString = s"input not start with $str${if (caseIgnored) "(case ignored)" else "" }"
+  }
+  
+  case class NotMatch(expected: Char, found: Char) extends FailReason {
+    override def toString = s"$expected expected but $found found"
+  }
+  
+  case class NotInRange(start: Char, end: Char, found: Char) extends FailReason {
+    override def toString = s"$found not in range($start, $end)"
   }
 
 }

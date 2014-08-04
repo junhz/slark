@@ -24,7 +24,7 @@ trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
 
     override def parse(input: Input) = {
       input.startWith(pattern) match {
-        case None => Fail(s"can't match $str")
+        case None => Fail(NotStartWith(str, false) :: Nil)
         case Some(n) => Succ(str, n)
       }
     }
@@ -43,7 +43,7 @@ trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
 
         rec(pattern, input) match {
           case Some(n) => Succ(str, n)
-          case _ => Fail(s"can't match $str with case ignored")
+          case _ => Fail(NotStartWith(str, true) :: Nil)
         }
       }
 
@@ -61,7 +61,7 @@ trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt - char == 0) Succ(cnt, input.tail)
-      else Fail(s"$char wanted but ${cnt.toChar} found")
+      else Fail(NotMatch(char, cnt) :: Nil)
     }
   }
 
@@ -81,17 +81,7 @@ trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt >= startChar && cnt <= endChar) Succ(cnt, input.tail)
-      else Fail(s"out of range of ($startChar, $endChar)")
-    }
-  }
-
-  def acsii(startByte: Byte, endByte: Byte): Parser[Byte] = new Parser[Byte] {
-    require(startByte >= 0 && endByte > startByte && endByte <= 127)
-
-    override def parse(input: Input) = if (input.atEnd) eof else {
-      val cnt = input.head
-      if (cnt >= startByte && cnt <= endByte) Succ(cnt, input.tail)
-      else Fail(s"acsii character out of range (octet $startByte - $endByte)")
+      else Fail(NotInRange(startChar, endChar, cnt) :: Nil)
     }
   }
 
@@ -101,7 +91,7 @@ trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt == byte) Succ(cnt, input.tail)
-      else Fail(s"acsii character (octet $byte ) wanted but $cnt found)")
+      else Fail(NotMatch(byte, cnt) :: Nil)
     }
   }
 
@@ -111,9 +101,21 @@ trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt >= start && (cnt & 0xff) <= end) Succ(cnt, input.tail)
-      else Fail(f"$toString wanted but %%x$cnt%02X found")
+      else Fail(NotInRange(start, end, cnt) :: Nil)
     }
 
     override val toString = f"%%x$start%02X-$end%02X"
+  }
+  
+  case class NotStartWith(str: String, caseIgnored: Boolean) extends FailReason {
+    override def toString = s"input not start with $str${if (caseIgnored) "(case ignored)" else "" }"
+  }
+  
+  case class NotMatch(expected: Int, found: Byte) extends FailReason {
+    override def toString = f"%%$expected%02x expected but %%$found%02x found"
+  }
+  
+  case class NotInRange(start: Int, end: Int, found: Byte) extends FailReason {
+    override def toString = f"%%($start%02x, $end%02x) wanted but %%$found%02x found"
   }
 }
