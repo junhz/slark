@@ -3,7 +3,7 @@ package http
 
 import combinator.parser._
 
-trait OctetReaders extends Readers[Byte] { self: Parsers =>
+trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
 
   final class StringOctetReader(str: String, index: Int) extends Reader {
     override def head = if (atEnd) ??? else {

@@ -2,47 +2,71 @@ package slark
 package server
 
 import combinator.parser._
-import combinator.collector._
+import combinator.parser.Parsers
 
-trait HeaderReaders { self: Collectors =>
-  type Input = List[(String, List[Byte])]
+trait HeaderReaders extends Readers.Indexed[String, List[List[Byte]]] { self: Parsers =>
   
   type CharParsers <: Parsers with uri.CharReaders
   type ByteParsers <: Parsers with http.OctetReaders with http.ImportChars[CharParsers]
   type HttpSymbols <: Symbols[ByteParsers] with http.Literals with http.Message
   
   val httpSymbols: HttpSymbols
-  import httpSymbols._
-  import parsers._
+  import httpSymbols.{ parsers => httpParsers, _ }
+  import httpSymbols.parsers.byteListOctetReader
+  import httpSymbols.parsers.stringParser
   
-  final class HeaderCollector[T](name: String, value: Parser[T]) extends Collector[List[T]] {
-    override def collect(input: Input) = {
-      @tailrec
-      def rec(headers: Input, collected: List[T], filtedOut: List[(String, List[Byte])]): CollectResult[List[T]] = {
-        if (headers.isEmpty) collected match {
-          case Nil => NotFound
-          case _ => Collected(collected.reverse, filtedOut.reverse)
-        }
-        else headers.head match {
-          case (n, v) if (n.equalsIgnoreCase(name)) => value parse v match {
-            case Succ(r, n) if (n.atEnd) => rec(headers.tail, r :: collected, filtedOut)
-            case _ => Malformed(name)
-          }
-          case _ => rec(headers.tail, collected, headers.head :: filtedOut)
-        }
+  final class MapReader(m: Map[String, List[List[Byte]]]) extends Reader {
+    override def get(key: String): Option[(List[List[Byte]], Reader)] = {
+      m.get(key.toLowerCase) match {
+        case None => None
+        case Some(bs) => Some((bs, new MapReader(m - key)))
       }
-      rec(input, Nil, Nil)
     }
   }
   
+  implicit val mapReader: List[(String, List[Byte])] => MapReader = {
+    headers => new MapReader(headers.groupBy(_._1.toLowerCase).map(e => (e._1, e._2.map(_._2))))
+  }
+  
   implicit class Ops(name: String) {
-    def `: `[T](p: Parser[T]): Collector[T] = 
-      new HeaderCollector(name, p) flatMap { x => if(x.tail.isEmpty) collected(x.head) else malformed("no or more than one headers") }
+    def `: `[T](p: httpParsers.Parser[T]): Parser[Option[T]] = 
+      new Parser[Option[T]] {
+      override def parse(src: Input): Result = {
+        src.get(name) match {
+          case None => Fail("no header found")
+          case Some((hs, rest)) => hs match {
+            case h :: Nil => p.parse(h) match {
+              case httpParsers.Succ(r, n) if (n.atEnd) => Succ(Some(r), rest)
+              case _ => Succ(None, rest)
+            }
+            case _ => Fail("more than one headers found")
+          }
+        }
+      }
+    }
       
-    def `: #`[T](p: Parser[T]): Collector[List[T]] = {
+    def `: #`[T](p: httpParsers.Parser[T]): Parser[List[T]] = {
       val leading = ows :^ p
       val tail = (ows ^ "," ^ ows) :^ p
-      new HeaderCollector(name, leading >> { x => (tail.*) -> { xs => x :: xs } }) map (_.flatten) flatMap { x => if (x.isEmpty) malformed("no header value") else collected(x) }
+      val all = leading >> { x => (tail.*) -> { xs => x :: xs } }
+      new Parser[List[T]] {
+        override def parse(src: Input): Result = {
+          src.get(name) match {
+            case None => Fail("no header found")
+            case Some((hs, rest)) =>  {
+              @tailrec
+              def rec(headers: List[List[Byte]], collected: List[List[T]]): Result = {
+                if (headers.isEmpty) Succ(collected.reverse.flatten, rest)
+                else all parse headers.head match {
+                  case httpParsers.Succ(r, n) if (n.atEnd) => rec(headers.tail, r :: collected)
+                  case _ => Fail(Nil, rest)
+                }
+              }
+              rec(hs, Nil)
+            }
+          }
+        }
+      }
     }
   } 
   

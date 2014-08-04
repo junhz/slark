@@ -24,6 +24,7 @@ improve performance of record.message
 
 test:
 diaryWriter for log
+run all
 
 uri:
 replacing | with % for better performance

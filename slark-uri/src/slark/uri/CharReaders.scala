@@ -3,7 +3,7 @@ package uri
 
 import combinator.parser._
 
-trait CharReaders extends Readers[Char] { self: Parsers =>
+trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
 
   final class StringCharReader(str: String, index: Int) extends Reader {
     override def head = if (atEnd) ??? else str.charAt(index)

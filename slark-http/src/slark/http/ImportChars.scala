@@ -3,14 +3,14 @@ package http
 
 import combinator.parser._
 
-trait ImportChars[P <: Parsers with Readers[Char]] { self: Parsers with Readers[Byte] =>
+trait ImportChars[P <: Parsers with Readers.Linear[Char]] { self: Parsers with Readers.Linear[Byte] =>
 
   protected[this] def _charParsers: P
   
   final val charParsers: P = _charParsers
 
   final class TransedCharReader(val input: Input) extends charParsers.Reader {
-    private[this] var hd: charParsers.From = _
+    private[this] var hd: Char = _
     private[this] var tl: TransedCharReader = _
 
     override lazy val atEnd = {

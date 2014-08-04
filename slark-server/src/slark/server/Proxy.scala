@@ -6,7 +6,6 @@ import java.nio.channels.ServerSocketChannel
 import java.net.InetSocketAddress
 import uri._
 import combinator.parser.Parsers
-import combinator.collector.Collectors
 import http._
 import java.nio.channels.SocketChannel
 import java.nio.channels.Channel
@@ -48,14 +47,14 @@ object Proxy {
     }
     val hs = httpSymbols
     
-    val headerCollectors = new Collectors with HeaderReaders {
+    val headerCollectors = new Parsers with HeaderReaders {
       type CharParsers = acsiiParsers.type
       type ByteParsers = byteParsers.type
       type HttpSymbols = hs.type
   
       val httpSymbols: HttpSymbols = hs
     }
-    import headerCollectors._
+    import headerCollectors.{ Ops, mapReader }
     import httpSymbols._
     import parsers._
     import httpSymbols.uriSymbols.{ Host, host => uri_host, Part, Authority, _port }
@@ -164,23 +163,23 @@ object Proxy {
       
       val proxy = runnable { (request: HttpRequestDef) => {
         println(request)
-        val r = (host map { h => {
+        val r = (host -> { h => {
           request.tar match {
             case a: Absolute => a
             case Authorize(a) => Absolute(Part.network(a, Nil), "")
-            case Origin(p, q) => h match {
+            case Origin(p, q) => h.get match {
               case None => Absolute(Part.network(Authority.annoymous(Host.localhost, client.socket().getPort()), p), q)
               case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(_port)), p), q)
             }
-            case Asterisk => h match {
+            case Asterisk => h.get match {
               case None => Absolute(Part.network(Authority.annoymous(Host.localhost, client.socket().getPort()), Nil), "")
               case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(_port)), Nil), "")
             }
           }
-        } }) ^ ((transfer_encoding map { _ => Chunked }) | (content_length map { len => Fixed(len) }) | collected(Fixed(0)))
-        r collect request.headers match {
-          case Collected(r, n) => { println(r); println(n) }
-          case Malformed(msg) => println(msg)
+        } }) ^ ((transfer_encoding -> { _ => Chunked }) | (content_length -> { len => Fixed(len.get) }) | headerCollectors.succ(Fixed(0)))
+        r parse request.headers match {
+          case headerCollectors.Succ(r, n) => { println(r); println(n) }
+          case headerCollectors.Fail(msg) => println(msg)
         }
       }}
       

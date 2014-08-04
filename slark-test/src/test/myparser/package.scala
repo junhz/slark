@@ -5,7 +5,7 @@ import slark.Readers
 
 package object myparser {
 
-  object parsers extends Parsers with Readers[Char] {
+  object parsers extends Parsers with Readers.Linear[Char] {
 
     class StringReader(str: String, index: Int) extends Reader {
       override def atEnd = index >= str.length()

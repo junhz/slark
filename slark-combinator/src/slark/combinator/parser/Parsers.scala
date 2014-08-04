@@ -4,7 +4,9 @@ package combinator.parser
 import scala.annotation.tailrec
 import Trampolines._
 
-trait Parsers extends AbstractInput { parsers =>
+trait Parsers { parsers =>
+  
+  type Input
 
   sealed trait ParseResult[+S] {
   }
