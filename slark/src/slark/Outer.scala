@@ -5,7 +5,7 @@ import scala.language.experimental.macros
 object Outer {
 
   def apply[T] = macro OuterMacros.apply[T]
-  
+
 }
 
 object OuterMacros {

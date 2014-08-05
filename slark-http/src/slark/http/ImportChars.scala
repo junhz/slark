@@ -5,9 +5,7 @@ import combinator.parser._
 
 trait ImportChars[P <: Parsers with Readers.Linear[Char]] { self: Parsers with Readers.Linear[Byte] =>
 
-  protected[this] def _charParsers: P
-  
-  final val charParsers: P = _charParsers
+  val charParsers: P
 
   final class TransedCharReader(val input: Input) extends charParsers.Reader {
     private[this] var hd: Char = _
@@ -46,7 +44,7 @@ trait ImportChars[P <: Parsers with Readers.Linear[Char]] { self: Parsers with R
   private[this] val singletonUriParserToCntParser: (charParsers.Parser[Any] => Parser[Any]) = new TransParser(_)
   implicit def uriParserToCntParser[S]: (charParsers.Parser[S] => Parser[S]) =
     singletonUriParserToCntParser.asInstanceOf[charParsers.Parser[S] => Parser[S]]
-  
+
   case object CreateInputInParser extends FailReason
 
 }

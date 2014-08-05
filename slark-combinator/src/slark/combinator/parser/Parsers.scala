@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import Trampolines._
 
 trait Parsers { parsers =>
-  
+
   type Input
 
   sealed trait ParseResult[+S] {
@@ -136,7 +136,7 @@ trait Parsers { parsers =>
   val `>` = Int.MaxValue
   val `<` = 0
   val eof = Fail(EOF :: Nil)
-  
+
   case object EOF extends FailReason
   case object MissingExpectedFailure extends FailReason
 }

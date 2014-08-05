@@ -86,10 +86,10 @@ trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
 
   implicit class NumericParserContext(context: StringContext) {
     def hex(digits: Parser[Char]*): Parser[Int] = {
-      NumericParserContext.make(context.parts, digits) -> { cs => context.s(cs:_*) match { case Natural0.Hex(i) => i } }
+      NumericParserContext.make(context.parts, digits) -> { cs => context.s(cs: _*) match { case Natural0.Hex(i) => i } }
     }
     def dec(digits: Parser[Char]*): Parser[Int] = {
-      NumericParserContext.make(context.parts, digits) -> { cs => context.s(cs:_*) match { case Natural0(i) => i } }
+      NumericParserContext.make(context.parts, digits) -> { cs => context.s(cs: _*) match { case Natural0(i) => i } }
     }
   }
   object NumericParserContext {
@@ -97,15 +97,15 @@ trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
       if (args.isEmpty) parts.head -> { _ => Nil }
       else (parts.head :^ args.head) >> { c => make(parts.tail, args.tail) -> { cs => c :: cs } }
   }
-  
+
   case class NotStartWith(str: String, caseIgnored: Boolean) extends FailReason {
-    override def toString = s"input not start with $str${if (caseIgnored) "(case ignored)" else "" }"
+    override def toString = s"input not start with $str${if (caseIgnored) "(case ignored)" else ""}"
   }
-  
+
   case class NotMatch(expected: Char, found: Char) extends FailReason {
     override def toString = s"$expected expected but $found found"
   }
-  
+
   case class NotInRange(start: Char, end: Char, found: Char) extends FailReason {
     override def toString = s"$found not in range($start, $end)"
   }

@@ -15,7 +15,7 @@ object Natural0 {
     rec(0, 0)
   }
 
-  def unapply[T : Integral](src: List[T]): Option[Int] = {
+  def unapply[T: Integral](src: List[T]): Option[Int] = {
     @tailrec
     def rec(rest: List[T], result: Int): Option[Int] = {
       if (rest.isEmpty) Some(result)

@@ -14,20 +14,20 @@ object Runnables {
   sealed trait Runnable[-T, +R] {
     def >>[U](that: Runnable[R, U]): Runnable[T, U] = new >>(this, that)
   }
-  
+
   private[Runnables] abstract class InternalRunnable[T, R] extends Runnable[T, R]
 
   // running to still
   val Still: Runnable[Any, Nothing] = new InternalRunnable[Any, Nothing] {}
 
   private[this] case class Identity[T, R](f: T => R) extends InternalRunnable[T, R]
-  
+
   private[this] case class Instant[T, R](r: R) extends InternalRunnable[T, R]
 
   private[this] case class >>[T, R, U](r1: Runnable[T, R], r2: Runnable[R, U]) extends InternalRunnable[T, U]
 
   def deploy[T, R](r: Runnable[T, R], t: T, executor: ExecutorService): Unit = {
-    
+
     @tailrec
     def rec(r: Runnable[Any, R], t: Any): Unit = {
       r match {
@@ -42,10 +42,10 @@ object Runnables {
         }
       }
     }
-    
+
     rec(r.asInstanceOf[Runnable[Any, R]], t)
   }
 
   def runnable[T, R](f: T => R): Runnable[T, R] = Identity(f)
-  
+
 }

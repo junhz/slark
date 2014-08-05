@@ -23,5 +23,5 @@ final class Pool[K: Ordering, V](allocate: K => V, release: V => Unit, alive: V 
     }
     this
   }
-  
+
 }

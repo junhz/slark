@@ -5,17 +5,12 @@ import combinator.parser._
 
 trait Message { self: Symbols[_ <: Parsers with OctetReaders with ImportChars[_ <: Parsers with uri.CharReaders]] with Literals =>
 
-  protected[this] def _options: Options
-  
-  final val options: Options = _options
-  
+  val options: Options
   import parsers._
+  val uriSymbols: Symbols[charParsers.type] with uri.Literals with uri.IPaddress with uri.Path with uri.Scheme
+  
   
   case class ResponseCode(code: Int, reason: String)
-  
-  protected[this] def _uriSymbols: Symbols[charParsers.type] with uri.Literals with uri.IPaddress with uri.Path with uri.Scheme
-  
-  final val uriSymbols: Symbols[charParsers.type] with uri.Literals with uri.IPaddress with uri.Path with uri.Scheme = _uriSymbols
 
   val http_version = ("HTTP/" :^ digit ^ "." :^ digit) -> { case major ^ minor => HttpVersion(major - '0', minor - '0') } | send(505, "HTTP Version Not Supported")
   

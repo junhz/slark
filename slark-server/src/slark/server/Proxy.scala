@@ -25,26 +25,25 @@ object Proxy {
 
     val acsiiParsers = new Parsers with CharReaders
 
-    val httpUriSymbols = new UriSymbols[acsiiParsers.type] {
-      protected[this] override def _parsers = acsiiParsers
-      protected[this] override def _name = "http"
-      override def _port = 80
-      protected[this] override def formatPath(path: List[String]): List[String] = path
+    val httpUriSymbols = new { 
+      val parsers: acsiiParsers.type = acsiiParsers
+      val schemeName = "http"
+      val defaultPort = 80
+    } with UriSymbols[acsiiParsers.type] {
+      override def formatPath(path: List[String]): List[String] = path
     }
 
-    val byteParsers = new Parsers with OctetReaders with ImportChars[acsiiParsers.type] {
-      protected[this] override def _charParsers = acsiiParsers
-    }
+    val byteParsers = new { val charParsers: acsiiParsers.type = acsiiParsers } with Parsers with OctetReaders with ImportChars[acsiiParsers.type]
 
-    val httpSymbols = new HttpSymbols[acsiiParsers.type, byteParsers.type] { self =>
-      protected[this] override def _parsers = byteParsers
-      protected[this] override def _uriSymbols = httpUriSymbols
-
-      protected[this] override def _options = new Options {
-        override def rejectBWSAfterStartLine = true
-        override def rejectBWSAfterHeaderFieldName = true
-      }
-    }
+    val httpSymbols = 
+      new { 
+        val parsers: byteParsers.type = byteParsers 
+        val uriSymbols = httpUriSymbols
+        val options = new Options {
+          override def rejectBWSAfterStartLine = true
+          override def rejectBWSAfterHeaderFieldName = true
+        }
+      } with HttpSymbols[acsiiParsers.type, byteParsers.type]
     val hs = httpSymbols
     
     val headerCollectors = new Parsers with HeaderReaders {
@@ -57,7 +56,7 @@ object Proxy {
     import headerCollectors.{ Ops, mapReader }
     import httpSymbols._
     import parsers._
-    import httpSymbols.uriSymbols.{ Host, host => uri_host, Part, Authority, _port }
+    import httpSymbols.uriSymbols.{ Host, host => uri_host, Part, Authority, defaultPort }
     
     val content_length = "Content-Length" `: ` (digit(1, `>`) -> { _ match { case Natural0(i) => i }})
   
@@ -169,11 +168,11 @@ object Proxy {
             case Authorize(a) => Absolute(Part.network(a, Nil), "")
             case Origin(p, q) => h match {
               case None => Absolute(Part.network(Authority.annoymous(Host.localhost, client.socket().getPort()), p), q)
-              case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(_port)), p), q)
+              case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(defaultPort)), p), q)
             }
             case Asterisk => h match {
               case None => Absolute(Part.network(Authority.annoymous(Host.localhost, client.socket().getPort()), Nil), "")
-              case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(_port)), Nil), "")
+              case Some(addr) => Absolute(Part.network(Authority.annoymous(addr._1, addr._2.getOrElse(defaultPort)), Nil), "")
             }
           }
         } }) ^ ((transfer_encoding -> { _ => Chunked }) | (content_length -> { len => Fixed(len) }) | headerCollectors.succ(Fixed(0)))

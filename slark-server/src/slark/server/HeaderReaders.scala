@@ -5,16 +5,16 @@ import combinator.parser._
 import combinator.parser.Parsers
 
 trait HeaderReaders extends Readers.Indexed[String, List[List[Byte]]] { self: Parsers =>
-  
+
   type CharParsers <: Parsers with uri.CharReaders
   type ByteParsers <: Parsers with http.OctetReaders with http.ImportChars[CharParsers]
   type HttpSymbols <: Symbols[ByteParsers] with http.Literals with http.Message
-  
+
   val httpSymbols: HttpSymbols
   import httpSymbols.{ parsers => httpParsers, _ }
   import httpSymbols.parsers.byteListOctetReader
   import httpSymbols.parsers.stringParser
-  
+
   final class MapReader(m: Map[String, List[List[Byte]]]) extends Reader {
     override def get(key: String): Option[(List[List[Byte]], Reader)] = {
       m.get(key.toLowerCase) match {
@@ -23,28 +23,28 @@ trait HeaderReaders extends Readers.Indexed[String, List[List[Byte]]] { self: Pa
       }
     }
   }
-  
+
   implicit val mapReader: List[(String, List[Byte])] => MapReader = {
     headers => new MapReader(headers.groupBy(_._1.toLowerCase).map(e => (e._1, e._2.map(_._2))))
   }
-  
+
   implicit class Ops(name: String) {
-    def `: `[T](p: httpParsers.Parser[T]): Parser[T] = 
+    def `: `[T](p: httpParsers.Parser[T]): Parser[T] =
       new Parser[T] {
-      override def parse(src: Input): Result = {
-        src.get(name) match {
-          case None => Fail(HeaderNotFound :: Nil)
-          case Some((hs, rest)) => hs match {
-            case h :: Nil => p.parse(h) match {
-              case httpParsers.Succ(r, n) if (n.atEnd) => Succ(r, rest)
-              case _ => Fail(MalformedHeader :: Nil)
+        override def parse(src: Input): Result = {
+          src.get(name) match {
+            case None => Fail(HeaderNotFound :: Nil)
+            case Some((hs, rest)) => hs match {
+              case h :: Nil => p.parse(h) match {
+                case httpParsers.Succ(r, n) if (n.atEnd) => Succ(r, rest)
+                case _ => Fail(MalformedHeader :: Nil)
+              }
+              case _ => Fail(DuplicatedHeader :: Nil)
             }
-            case _ => Fail(DuplicatedHeader :: Nil)
           }
         }
       }
-    }
-      
+
     def `: #`[T](p: httpParsers.Parser[T]): Parser[List[T]] = {
       val leading = ows :^ p
       val tail = (ows ^ "," ^ ows) :^ p
@@ -53,7 +53,7 @@ trait HeaderReaders extends Readers.Indexed[String, List[List[Byte]]] { self: Pa
         override def parse(src: Input): Result = {
           src.get(name) match {
             case None => Fail(HeaderNotFound :: Nil)
-            case Some((hs, rest)) =>  {
+            case Some((hs, rest)) => {
               @tailrec
               def rec(headers: List[List[Byte]], collected: List[List[T]]): Result = {
                 if (headers.isEmpty) Succ(collected.reverse.flatten, rest)
@@ -69,9 +69,9 @@ trait HeaderReaders extends Readers.Indexed[String, List[List[Byte]]] { self: Pa
       }
     }
   }
-  
+
   case object HeaderNotFound extends FailReason
   case object DuplicatedHeader extends FailReason
   case object MalformedHeader extends FailReason
-  
+
 }

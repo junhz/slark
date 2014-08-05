@@ -6,22 +6,22 @@ import slark.http._
 package object myhttp {
 
   val acsiiParsers = new Parsers with slark.uri.CharReaders
-  val byteParsers = new Parsers with OctetReaders with ImportChars[acsiiParsers.type] {
-      protected[this] override def _charParsers = acsiiParsers
-    }
+  val byteParsers = new { val charParsers: acsiiParsers.type = acsiiParsers } with Parsers with OctetReaders with ImportChars[acsiiParsers.type]
+  val httpUriSymbols = new { 
+    val parsers: acsiiParsers.type = acsiiParsers
+    val schemeName = "http"
+    val defaultPort = 80
+  } with slark.uri.UriSymbols[acsiiParsers.type] {
+    override def formatPath(path: List[String]) = path
+  }
   
-  val symbols = new HttpSymbols[acsiiParsers.type, byteParsers.type] with DateTime { self =>
-    protected[this] override def _parsers = byteParsers
-    protected[this] override def _uriSymbols = new slark.uri.UriSymbols[parsers.charParsers.type] {
-      protected[this] override def _parsers = self.parsers.charParsers
-      protected[this] override def _name = "http"
-      override def _port = 80
-      protected[this] override def formatPath(path: List[String]) = path
-    }
-    protected[this] override def _options = new Options {
+  val symbols = new {
+    val parsers: byteParsers.type = byteParsers
+    val uriSymbols = httpUriSymbols
+    val options = new Options {
       override def rejectBWSAfterStartLine = true
       override def rejectBWSAfterHeaderFieldName = true
     }
-  }
+  } with HttpSymbols[acsiiParsers.type, byteParsers.type] with DateTime
 
 }

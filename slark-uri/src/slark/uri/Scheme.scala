@@ -7,19 +7,18 @@ import java.net.InetSocketAddress
 
 trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddress with Path =>
 
-  protected[this] def _name: String
+  val schemeName: String
 
-  def _port: Int
+  val defaultPort: Int
 
-  protected[this] def formatPath(path: List[String]): List[String]
+  def formatPath(path: List[String]): List[String]
 
   import parsers._
 
   val scheme: Parser[String] = {
-    val name = _name
-    (alpha ^ (alpha | digit | '+' | '-' | '.').*) parse name match {
-      case Succ(_, n) if (n.atEnd) => name.toLowerCase.ignoreCase
-      case _ => throw new IllegalArgumentException(s"invalid scheme name ${name}")
+    (alpha ^ (alpha | digit | '+' | '-' | '.').*) parse schemeName match {
+      case Succ(_, n) if (n.atEnd) => schemeName.toLowerCase.ignoreCase
+      case _ => throw new IllegalArgumentException(s"invalid scheme name ${schemeName}")
     }
   }
 
@@ -61,7 +60,7 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
 
   val userinfo = (unreserved | pct_encoded | sub_delims | ':').* -> (_.mkString)
 
-  val port = digit(1, `>`) -> { case Natural0(i) => i } | succ(_port)
+  val port = digit(1, `>`) -> { case Natural0(i) => i } | succ(defaultPort)
 
   trait Authority {
 
@@ -77,11 +76,10 @@ trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddr
   }
 
   val authority = {
-    val p = _port
     ((userinfo ^: "@").? ^ host ^ (":" :^ port).?) -> {
-      case None ^ host ^ None => Authority.annoymous(host, p)
+      case None ^ host ^ None => Authority.annoymous(host, defaultPort)
       case None ^ host ^ Some(port) => Authority.annoymous(host, port)
-      case Some(userinfo) ^ host ^ None => Authority.as(userinfo, host, p)
+      case Some(userinfo) ^ host ^ None => Authority.as(userinfo, host, defaultPort)
       case Some(userinfo) ^ host ^ Some(port) => Authority.as(userinfo, host, port)
     }
   }

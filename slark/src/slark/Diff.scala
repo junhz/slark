@@ -4,7 +4,7 @@ import scala.collection.immutable.Traversable
 
 object Diff {
   type Scripts = List[Script]
-  
+
   trait Algorithm {
     def apply[T](source: Traversable[T], modified: Traversable[T])(isSame: (T, T) => Boolean): Scripts
   }

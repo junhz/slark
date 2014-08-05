@@ -113,7 +113,7 @@ trait Sqls {
   }
 
   implicit def listIdentitySql[T](s: Sql[T]): List[Sql[T]] = List(s)
-  
+
 }
 
 object Sqls {

@@ -106,15 +106,15 @@ trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
 
     override val toString = f"%%x$start%02X-$end%02X"
   }
-  
+
   case class NotStartWith(str: String, caseIgnored: Boolean) extends FailReason {
-    override def toString = s"input not start with $str${if (caseIgnored) "(case ignored)" else "" }"
+    override def toString = s"input not start with $str${if (caseIgnored) "(case ignored)" else ""}"
   }
-  
+
   case class NotMatch(expected: Int, found: Byte) extends FailReason {
     override def toString = f"%%$expected%02x expected but %%$found%02x found"
   }
-  
+
   case class NotInRange(start: Int, end: Int, found: Byte) extends FailReason {
     override def toString = f"%%($start%02x, $end%02x) wanted but %%$found%02x found"
   }

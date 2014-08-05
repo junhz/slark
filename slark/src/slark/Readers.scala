@@ -29,15 +29,15 @@ object Readers {
 
     val isSame: (T, T) => Boolean = (f1, f2) => f1.equals(f2)
   }
-  
+
   trait Indexed[K, V] {
-    
+
     type Input = Reader
-    
+
     trait Reader {
       def get(key: K): Option[(V, Reader)]
     }
-    
+
   }
 
 }
