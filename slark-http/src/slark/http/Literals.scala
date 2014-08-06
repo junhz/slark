@@ -3,7 +3,10 @@ package http
 
 import combinator.parser._
 
-trait Literals { self: Symbols[Parsers with OctetReaders] =>
+trait Literals {
+  
+  type P <: Parsers with OctetReaders
+  val parsers: P
   import parsers._
 
   val upalpha = letter('A', 'Z') | fail(InvalidCharacter("upper case alpha"))

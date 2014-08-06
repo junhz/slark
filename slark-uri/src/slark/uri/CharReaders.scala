@@ -3,8 +3,10 @@ package uri
 
 import combinator.parser._
 
-trait CharReaders extends Readers.Linear[Char] { self: Parsers =>
+trait CharReaders extends Readers.Linear { self: Parsers =>
 
+  type T = Char
+  
   final class StringCharReader(str: String, index: Int) extends Reader {
     override def head = if (atEnd) ??? else str.charAt(index)
     override lazy val tail = if (atEnd) ??? else new StringCharReader(str, index + 1)

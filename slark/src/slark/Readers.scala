@@ -2,8 +2,9 @@ package slark
 
 object Readers {
 
-  trait Linear[T] {
+  trait Linear {
 
+    type T
     type Input = Reader
 
     trait Reader {
@@ -27,15 +28,17 @@ object Readers {
       }
     }
 
-    val isSame: (T, T) => Boolean = (f1, f2) => f1.equals(f2)
+    def isSame(t1: T, t2: T): Boolean = t1.equals(t2)
   }
 
-  trait Indexed[K, V] {
+  trait Indexed {
 
+    type Key
+    type Value
     type Input = Reader
 
     trait Reader {
-      def get(key: K): Option[(V, Reader)]
+      def get(key: Key): Option[(Value, Reader)]
     }
 
   }

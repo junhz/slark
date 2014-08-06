@@ -3,8 +3,8 @@ package uri
 
 import combinator.parser._
 
-trait Path { self: Symbols[Parsers with CharReaders] with Literals =>
-
+trait Path { self: Literals =>
+  
   import parsers._
 
   // ../a = a since top folder's top is itself

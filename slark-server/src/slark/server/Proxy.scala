@@ -26,24 +26,27 @@ object Proxy {
     val acsiiParsers = new Parsers with CharReaders
 
     val httpUriSymbols = new { 
+      type P = acsiiParsers.type
       val parsers: acsiiParsers.type = acsiiParsers
       val schemeName = "http"
       val defaultPort = 80
-    } with UriSymbols[acsiiParsers.type] {
+    } with UriSymbols {
       override def formatPath(path: List[String]): List[String] = path
     }
 
-    val byteParsers = new { val charParsers: acsiiParsers.type = acsiiParsers } with Parsers with OctetReaders with ImportChars[acsiiParsers.type]
+    val byteParsers = new Parsers with OctetReaders
 
     val httpSymbols = 
       new { 
-        val parsers: byteParsers.type = byteParsers 
-        val uriSymbols = httpUriSymbols
+        type P = byteParsers.type
+        val parsers: byteParsers.type = byteParsers
+        type UriSymbols = httpUriSymbols.type
+        val uriSymbols: httpUriSymbols.type = httpUriSymbols
         val options = new Options {
           override def rejectBWSAfterStartLine = true
           override def rejectBWSAfterHeaderFieldName = true
         }
-      } with HttpSymbols[acsiiParsers.type, byteParsers.type]
+      } with HttpSymbols
     val hs = httpSymbols
     
     val headerCollectors = new Parsers with HeaderReaders {
@@ -56,6 +59,7 @@ object Proxy {
     import headerCollectors.{ Ops, mapReader }
     import httpSymbols._
     import parsers._
+    import encoder.encode
     import httpSymbols.uriSymbols.{ Host, host => uri_host, Part, Authority, defaultPort }
     
     val content_length = "Content-Length" `: ` (digit(1, `>`) -> { _ match { case Natural0(i) => i }})

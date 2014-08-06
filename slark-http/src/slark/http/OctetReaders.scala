@@ -3,8 +3,10 @@ package http
 
 import combinator.parser._
 
-trait OctetReaders extends Readers.Linear[Byte] { self: Parsers =>
+trait OctetReaders extends Readers.Linear { self: Parsers =>
 
+  type T = Byte
+  
   final class StringOctetReader(str: String, index: Int) extends Reader {
     override def head = if (atEnd) ??? else {
       val cnt = str.charAt(index)

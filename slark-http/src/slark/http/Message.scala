@@ -3,12 +3,23 @@ package http
 
 import combinator.parser._
 
-trait Message { self: Symbols[_ <: Parsers with OctetReaders with ImportChars[_ <: Parsers with uri.CharReaders]] with Literals =>
-
-  val options: Options
-  import parsers._
-  val uriSymbols: Symbols[charParsers.type] with uri.Literals with uri.IPaddress with uri.Path with uri.Scheme
+trait Message { self: Literals =>
   
+  val options: Options
+  
+  type UriSymbols <: uri.Literals with uri.IPaddress with uri.Path with uri.Scheme
+  val uriSymbols: UriSymbols
+  
+  val encoder = new Encoder {
+    type CharParsers = uriSymbols.parsers.type
+    type ByteParsers = parsers.type
+    
+    val charParsers: uriSymbols.parsers.type = uriSymbols.parsers
+    val byteParsers: parsers.type = parsers
+  }
+  
+  import parsers._
+  import encoder._
   
   case class ResponseCode(code: Int, reason: String)
 

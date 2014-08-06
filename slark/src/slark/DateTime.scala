@@ -224,7 +224,7 @@ object DateTime {
       rec(height, 1, floors)
     }
     val (monthOrd, dayOrd) = jump(dayOfYear.toInt + 1, daysOfMonths(yearOfQuadYear, quadYearOfCentury, centuryOfQuadCentury))
-    return new DateTime(
+    new DateTime(
       year = 1 /*since 0001*/ + quadCenturies * 400 + centuryOfQuadCentury * 100 + quadYearOfCentury * 4 + yearOfQuadYear,
       month = Month.order(monthOrd),
       dayOfMonth = dayOrd,
@@ -279,7 +279,7 @@ object DateTime {
       case None => throw new IllegalArgumentException
       case Some(s) => s
     }
-    return new DateTime(
+    new DateTime(
       year = year,
       month = month,
       dayOfMonth = day,

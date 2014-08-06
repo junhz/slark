@@ -5,8 +5,8 @@ import combinator.parser._
 import FuncLib._
 import java.net.InetSocketAddress
 
-trait Scheme { self: Symbols[Parsers with CharReaders] with Literals with IPaddress with Path =>
-
+trait Scheme { self: Literals with IPaddress with Path =>
+  
   val schemeName: String
 
   val defaultPort: Int

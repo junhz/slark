@@ -3,8 +3,10 @@ package uri
 
 import combinator.parser._
 
-trait Literals { self: Symbols[Parsers with CharReaders] =>
+trait Literals {
 
+  type P <: Parsers with CharReaders
+  val parsers: P
   import parsers._
 
   val alpha = %(0x41, 0x5A) | %(0x61, 0x7A) | fail(InvalidCharacter("alpha"))

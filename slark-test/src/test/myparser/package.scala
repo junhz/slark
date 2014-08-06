@@ -6,8 +6,9 @@ import slark.FailReason
 
 package object myparser {
 
-  object parsers extends Parsers with Readers.Linear[Char] {
-
+  object parsers extends Parsers with Readers.Linear {
+    type T = Char
+    
     class StringReader(str: String, index: Int) extends Reader {
       override def atEnd = index >= str.length()
       override def head = if (atEnd) ??? else str.charAt(index)
