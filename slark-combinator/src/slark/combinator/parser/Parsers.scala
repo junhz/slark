@@ -5,11 +5,10 @@ import scala.annotation.tailrec
 import Trampolines._
 import scala.language.higherKinds
 
-trait Parsers { parsers =>
-
+trait ParsersApi {
   type Input
 
-  sealed trait ParseResult[+S]
+  trait ParseResult[+S]
   
   trait FailApi extends ParseResult[Nothing]{
     def msg: List[FailReason]
@@ -37,13 +36,92 @@ trait Parsers { parsers =>
   }
   
   val Succ: SuccExtractor
-
-  abstract class Parser[+S] { self =>
+  
+  trait ParserApi[+S] {
     type Result = ParseResult[S]
 
     def parse(input: Input): Result
 
-    private[parser] def combined: Parser[S] = CombinedParser { input => Done(this parse input) }
+    /** flatmap */
+    def >>[T](fn: S => Parser[T]): Parser[T]
+
+    def |>[T >: S](fn: List[FailReason] => Parser[T]): Parser[T]
+
+    /** plus */
+    def |[T >: S](that: Parser[T]): Parser[T]
+
+    /** map */
+    def ->[T](fn: S => T): Parser[T]
+
+    /** List */
+    def ^[T](that: Parser[T]): Parser[S ^ T]
+
+    /** guard */
+    def :^[T](that: Parser[T]): Parser[T]
+
+    /** guard */
+    def ^:[T](that: Parser[T]): Parser[T]
+
+    /** not */
+    def ! : Parser[Unit]
+
+    /** rep */
+    def * : Parser[List[S]]
+
+    /** rep */
+    def apply(time: Int): Parser[List[S]]
+
+    def apply(min: Int, max: Int): Parser[List[S]]
+
+    /** option */
+    def ? : Parser[Option[S]]
+  }
+  
+  type Parser[+S] <: ParserApi[S]
+
+  /** zero unit */
+  def fail(msg: FailReason): Parser[Nothing]
+
+  /** unit */
+  def succ[S](sym: S): Parser[S]
+
+  def parser[S](fun: Input => ParseResult[S]): Parser[S]
+
+  def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S]
+
+  /** max **/
+  def `>`: Int
+  /** min **/
+  def `<`: Int
+  
+  def eof: Fail
+
+  def EOF: FailReason
+  
+  def MissingExpectedFailure: FailReason
+}
+
+abstract class Parsers extends ParsersApi { parsers =>
+  
+  final class Fail(val msg: List[FailReason]) extends FailApi
+  
+  val Fail = new FailExtractor {
+    def apply(msg: FailReason*) = new Fail(List(msg:_*))
+    def unapply(f: Fail) = Some(f.msg)
+  }
+  
+  final class Succ[+S](val result: S, val next: Input) extends SuccApi[S]
+  
+  val Succ = new SuccExtractor {
+    def apply[S](result: S, next: Input) = new Succ(result, next)
+    def unapply[S](s: Succ[S]) = Some((s.result, s.next))
+  }
+
+  abstract class Parser[+S] extends ParserApi[S] { self =>
+
+    def parse(input: Input): Result
+
+    private[parser] def combined: Parser[S] = new CombinedParser(input => Done(this parse input))
 
     private[parser] def onSucc[T](fn: S => Parser[T]): Parser[T] = combined onSucc fn
 
@@ -52,47 +130,47 @@ trait Parsers { parsers =>
     private[parser] def not: Parser[Unit] = combined.not
 
     /** flatmap */
-    final def >>[T](fn: S => Parser[T]): Parser[T] = this onSucc fn
+    def >>[T](fn: S => Parser[T]): Parser[T] = this onSucc fn
 
-    final def |>[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = this onFail fn
+    def |>[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = this onFail fn
 
     /** plus */
-    final def |[T >: S](that: Parser[T]): Parser[T] = this onFail { x => that }
+    def |[T >: S](that: Parser[T]): Parser[T] = this onFail { x => that }
 
     /** map */
-    final def ->[T](fn: S => T): Parser[T] = self >> Cache(Parsers.this) { x => succ(fn(x)) }
+    def ->[T](fn: S => T): Parser[T] = self >> Cache(Parsers.this) { x => succ(fn(x)) }
 
     /** List */
-    final def ^[T](that: Parser[T]): Parser[S ^ T] = self >> { x => that -> { y => (x, y) } }
+    def ^[T](that: Parser[T]): Parser[S ^ T] = self >> { x => that -> { y => (x, y) } }
 
     /** guard */
-    final def :^[T](that: Parser[T]): Parser[T] = self >> { _ => that }
+    def :^[T](that: Parser[T]): Parser[T] = self >> { _ => that }
 
     /** guard */
-    final def ^:[T](that: Parser[T]): Parser[T] = that >> { x => self -> { _ => x } }
+    def ^:[T](that: Parser[T]): Parser[T] = that >> { x => self -> { _ => x } }
 
     /** not */
-    final def ! : Parser[Unit] = this.not
+    def ! : Parser[Unit] = this.not
 
     /** rep */
-    final def * : Parser[List[S]] = (self >> { x => self.* -> { xs => x :: xs } }) | succ(Nil)
+    def * : Parser[List[S]] = (self >> { x => self.* -> { xs => x :: xs } }) | succ(Nil)
 
     /** rep */
-    final def apply(time: Int): Parser[List[S]] =
+    def apply(time: Int): Parser[List[S]] =
       if (time > 0) self >> { x => self { time - 1 } -> { xs => x :: xs } }
       else succ(Nil)
 
-    final def apply(min: Int, max: Int): Parser[List[S]] =
+    def apply(min: Int, max: Int): Parser[List[S]] =
       if (min > 0) self >> { x => self(min - 1, max - 1) -> { xs => x :: xs } } | fail(EOF)
       else if (max > 0) self >> { x => self(0, max - 1) -> { xs => x :: xs } } | succ(Nil)
       else succ(Nil)
 
     /** option */
-    final def ? : Parser[Option[S]] = (self -> { x => Some(x) }) | succ(None)
+    def ? : Parser[Option[S]] = (self -> { x => Some(x) }) | succ(None)
   }
 
   /** zero unit */
-  final def fail(msg: FailReason): Parser[Nothing] = new Parser[Nothing] {
+  def fail(msg: FailReason): Parser[Nothing] = new Parser[Nothing] {
     override def parse(input: Input) = Fail(msg)
     override def onSucc[T](fn: Nothing => Parser[T]) = this
     override def onFail[T >: Nothing](fn: List[FailReason] => Parser[T]) = fn(msg :: Nil)
@@ -101,7 +179,7 @@ trait Parsers { parsers =>
   }
 
   /** unit */
-  final def succ[S](sym: S): Parser[S] = new Parser[S] {
+  def succ[S](sym: S): Parser[S] = new Parser[S] {
     override def parse(input: Input) = Succ(sym, input)
     override def onSucc[T](fn: S => Parser[T]) = fn(sym)
     override def onFail[T >: S](that: List[FailReason] => Parser[T]) = this
@@ -109,57 +187,57 @@ trait Parsers { parsers =>
     override def toString = s"succ($sym)"
   }
 
-  private[this] case class CombinedParser[S](fun: Input => Trampoline[ParseResult[S]]) extends Parser[S] {
+  private[this] final class CombinedParser[S](val fun: Input => Trampoline[ParseResult[S]]) extends Parser[S] {
     override def parse(input: Input) = fun(input).run
 
     override def onSucc[T](fn: S => Parser[T]): Parser[T] = {
       val associated = (_: ParseResult[S]) match {
         case Succ(r, n) => fn(r) match {
-          case CombinedParser(fun) => Next1(fun, n)
+          case cp: CombinedParser[T] => Next1(cp.fun, n)
           case p => Done(p parse n)
         }
         case f: Fail => Done(f)
       }
 
-      Cache(fun)(CombinedParser { input => FlatMap(fun(input), associated) })
+      Cache(fun)(new CombinedParser(input => FlatMap(fun(input), associated)))
     }
 
     override def onFail[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = Cache(fun) {
-      CombinedParser { input =>
+      new CombinedParser(input =>
         Cache(fn) {
           val associated = (_: ParseResult[S]) match {
             case s: Succ[S] => Done(s)
             case Fail(msg) => fn(msg) match {
-              case CombinedParser(f) => Next1(f, input)
+              case cp: CombinedParser[T] => Next1(cp.fun, input)
               case p => Done(p parse input)
             }
           }
           FlatMap(fun(input), associated)
-        }
-      }
+        })
     }
 
     override def not: Parser[Unit] = Cache(fun, Parsers.this) {
-      CombinedParser { input =>
+      new CombinedParser(input =>
         Cache(Parsers.this) {
           FlatMap(fun(input), (_: ParseResult[S]) match {
             case s: Succ[S] => Done(Fail(MissingExpectedFailure))
             case _ => Done(Succ((), input))
           })
-        }
-
-      }
+        })
     }
   }
 
-  final def parser[S](fun: Input => ParseResult[S]): Parser[S] = CombinedParser { input => Done(fun(input)) }
+  def parser[S](fun: Input => ParseResult[S]): Parser[S] = new CombinedParser(input => Done(fun(input)))
 
-  final def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
+  def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
 
-  final def `>` = Int.MaxValue
-  final def `<` = 0
-  final def eof = Fail(EOF)
+  val `>` = Int.MaxValue
+  
+  val `<` = 0
+  
+  val eof = Fail(EOF)
 
-  val EOF: FailReason
-  val MissingExpectedFailure: FailReason
+  val EOF: FailReason = new FailReason {}
+  
+  val MissingExpectedFailure: FailReason = new FailReason {}
 }
