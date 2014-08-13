@@ -33,13 +33,13 @@ trait HeaderReaders extends Readers.Indexed { self: Parsers =>
       new Parser[T] {
         override def parse(src: Input): Result = {
           src.get(name) match {
-            case None => Fail(HeaderNotFound :: Nil)
+            case None => Fail(HeaderNotFound)
             case Some((hs, rest)) => hs match {
               case h :: Nil => p.parse(h) match {
                 case parsers.Succ(r, n) if (n.atEnd) => Succ(r, rest)
-                case _ => Fail(MalformedHeader :: Nil)
+                case _ => Fail(MalformedHeader)
               }
-              case _ => Fail(DuplicatedHeader :: Nil)
+              case _ => Fail(DuplicatedHeader)
             }
           }
         }
@@ -52,14 +52,14 @@ trait HeaderReaders extends Readers.Indexed { self: Parsers =>
       new Parser[List[T]] {
         override def parse(src: Input): Result = {
           src.get(name) match {
-            case None => Fail(HeaderNotFound :: Nil)
+            case None => Fail(HeaderNotFound)
             case Some((hs, rest)) => {
               @tailrec
               def rec(headers: List[List[Byte]], collected: List[List[T]]): Result = {
                 if (headers.isEmpty) Succ(collected.reverse.flatten, rest)
                 else all parse headers.head match {
                   case parsers.Succ(r, n) if (n.atEnd) => rec(headers.tail, r :: collected)
-                  case _ => Fail(DuplicatedHeader :: Nil)
+                  case _ => Fail(DuplicatedHeader)
                 }
               }
               rec(hs, Nil)

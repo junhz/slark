@@ -3,17 +3,40 @@ package combinator.parser
 
 import scala.annotation.tailrec
 import Trampolines._
+import scala.language.higherKinds
 
 trait Parsers { parsers =>
 
   type Input
 
-  sealed trait ParseResult[+S] {
+  sealed trait ParseResult[+S]
+  
+  trait FailApi extends ParseResult[Nothing]{
+    def msg: List[FailReason]
   }
-
-  case class Fail(msg: List[FailReason]) extends ParseResult[Nothing]
-
-  case class Succ[+S](result: S, next: Input) extends ParseResult[S]
+  
+  type Fail <: FailApi
+  
+  trait FailExtractor {
+    def apply(msg: FailReason*): Fail
+    def unapply(f: Fail): Option[List[FailReason]]
+  }
+  
+  val Fail: FailExtractor
+  
+  trait SuccApi[+S] extends ParseResult[S] {
+    def result: S
+    def next: Input
+  }
+  
+  type Succ[+S] <: SuccApi[S]
+  
+  trait SuccExtractor {
+    def apply[S](result: S, next: Input): Succ[S]
+    def unapply[S](s: Succ[S]): Option[(S, Input)]
+  }
+  
+  val Succ: SuccExtractor
 
   abstract class Parser[+S] { self =>
     type Result = ParseResult[S]
@@ -31,7 +54,7 @@ trait Parsers { parsers =>
     /** flatmap */
     final def >>[T](fn: S => Parser[T]): Parser[T] = this onSucc fn
 
-    final def |>[T >: S](fn: Any => Parser[T]): Parser[T] = this onFail fn
+    final def |>[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = this onFail fn
 
     /** plus */
     final def |[T >: S](that: Parser[T]): Parser[T] = this onFail { x => that }
@@ -39,7 +62,7 @@ trait Parsers { parsers =>
     /** map */
     final def ->[T](fn: S => T): Parser[T] = self >> Cache(Parsers.this) { x => succ(fn(x)) }
 
-    /** seq */
+    /** List */
     final def ^[T](that: Parser[T]): Parser[S ^ T] = self >> { x => that -> { y => (x, y) } }
 
     /** guard */
@@ -70,7 +93,7 @@ trait Parsers { parsers =>
 
   /** zero unit */
   final def fail(msg: FailReason): Parser[Nothing] = new Parser[Nothing] {
-    override def parse(input: Input) = Fail(msg :: Nil)
+    override def parse(input: Input) = Fail(msg)
     override def onSucc[T](fn: Nothing => Parser[T]) = this
     override def onFail[T >: Nothing](fn: List[FailReason] => Parser[T]) = fn(msg :: Nil)
     override def not = succ(())
@@ -120,7 +143,7 @@ trait Parsers { parsers =>
       CombinedParser { input =>
         Cache(Parsers.this) {
           FlatMap(fun(input), (_: ParseResult[S]) match {
-            case s: Succ[S] => Done(Fail(MissingExpectedFailure :: Nil))
+            case s: Succ[S] => Done(Fail(MissingExpectedFailure))
             case _ => Done(Succ((), input))
           })
         }
@@ -131,12 +154,12 @@ trait Parsers { parsers =>
 
   final def parser[S](fun: Input => ParseResult[S]): Parser[S] = CombinedParser { input => Done(fun(input)) }
 
-  def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
+  final def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S] = fn(self)
 
-  val `>` = Int.MaxValue
-  val `<` = 0
-  val eof = Fail(EOF :: Nil)
+  final def `>` = Int.MaxValue
+  final def `<` = 0
+  final def eof = Fail(EOF)
 
-  case object EOF extends FailReason
-  case object MissingExpectedFailure extends FailReason
+  val EOF: FailReason
+  val MissingExpectedFailure: FailReason
 }

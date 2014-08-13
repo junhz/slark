@@ -21,7 +21,7 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
 
     override def parse(input: Input) = {
       input.startWith(pattern) match {
-        case None => Fail(NotStartWith(str, false) :: Nil)
+        case None => Fail(NotStartWith(str, false))
         case Some(n) => Succ(str, n)
       }
     }
@@ -48,7 +48,7 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
 
         rec(pattern, input) match {
           case Some(n) => Succ(str, n)
-          case _ => Fail(NotStartWith(str, true) :: Nil)
+          case _ => Fail(NotStartWith(str, true))
         }
       }
 
@@ -66,7 +66,7 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt == c) Succ(c, input.tail)
-      else Fail(NotMatch(c, cnt) :: Nil)
+      else Fail(NotMatch(c, cnt))
     }
 
     override def toString = s"'$c'"
@@ -77,10 +77,10 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
   def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
     require(start >= 0 && end > start)
 
-    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF) else {
       val cnt = input.head
       if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
-      else Fail(NotInRange(start.toChar, end.toChar, cnt) :: Nil)
+      else Fail(NotInRange(start.toChar, end.toChar, cnt))
     }
 
     override def toString = f"%%($start%02x, $end%02x)"

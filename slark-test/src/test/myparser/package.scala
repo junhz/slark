@@ -30,7 +30,7 @@ package object myparser {
     class SParser(str: String) extends Parser[String] {
       override def parse(input: Input) = {
         input.startWith(str) match {
-          case None => Fail(NotStartWith(str) :: Nil)
+          case None => Fail(NotStartWith(str))
           case Some(n) => Succ(str, n)
         }
       }
