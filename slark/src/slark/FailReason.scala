@@ -40,5 +40,9 @@ object FailReason {
     }
     rec(0, stack.length - depth, Nil)
   }
+  
+  def apply(msg: String): FailReason = new FailReason {
+    override def toString = msg
+  }
 
 }
