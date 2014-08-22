@@ -141,7 +141,7 @@ abstract class Parsers extends ParsersApi { parsers =>
   
   val eof = Fail(EOF)
 
-  val EOF: FailReason = FailReason("EOF")
+  val EOF: FailReason = FailReason("end of input")
   
-  val MissingExpectedFailure: FailReason = FailReason("MissingExpectedFailure")
+  val MissingExpectedFailure: FailReason = FailReason("missing an expected failure")
 }

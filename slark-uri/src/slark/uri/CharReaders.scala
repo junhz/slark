@@ -3,6 +3,138 @@ package uri
 
 import combinator.parser._
 
+trait AsciiReadersApi extends Readers.Linear { self: ParsersApi =>
+
+  type T = Char
+  
+  implicit val stringToCharReader: String => Input
+  
+  trait CaseIgnorable { self: Parser[String] =>
+    def ignoreCase: Parser[String]
+  }
+
+  implicit val stringToParser: String => Parser[String] with CaseIgnorable
+  
+  implicit val charToParser: Char => Parser[Char]
+  
+  def %(start: Byte, end: Byte): Parser[Char]
+  
+  trait NumericParserContextApi {
+    def hex(digits: Parser[Char]*): Parser[Int]
+    def dec(digits: Parser[Char]*): Parser[Int]
+  }
+  
+  implicit val NumericParserContext: StringContext => NumericParserContextApi
+}
+
+abstract class AsciiParser extends Parsers with AsciiReadersApi {
+  
+  final class CharReaderFromString(str: String, index: Int) extends Reader {
+    override def head = if (atEnd) ??? else str.charAt(index)
+    override lazy val tail = if (atEnd) ??? else new CharReaderFromString(str, index + 1)
+    override def atEnd = index >= str.length()
+    override def toString = "\""+str.substring(index)+"\""
+  }
+
+  implicit val stringToCharReader: String => Input = new CharReaderFromString(_, 0)
+
+  final class ParserFromString(str: String) extends Parser[String] with CaseIgnorable {
+    lazy val pattern = stringToCharReader(str)
+
+    override def parse(input: Input) = {
+      input.startWith(pattern) match {
+        case None => Fail(NotStartWith(str, false))
+        case Some(n) => Succ(str, n)
+      }
+    }
+
+    /**
+     * case insensitive:
+     * pct-encode uppercase
+     * scheme lowercase
+     * host lowercase (ipfuture 'v' header)
+     *
+     * The other generic syntax components are assumed to be case-sensitive unless specifically defined otherwise by the scheme
+     */
+    def ignoreCase: Parser[String] = new Parser[String] {
+      override def parse(input: Input) = {
+        @tailrec
+        def rec(lhs: Input, rhs: Input): Option[Input] = {
+          if (lhs.atEnd) Some(rhs)
+          else if (rhs.atEnd) None
+          else {
+            if (Character.toUpperCase(lhs.head).equals(Character.toUpperCase(rhs.head))) rec(lhs.tail, rhs.tail)
+            else None
+          }
+        }
+
+        rec(pattern, input) match {
+          case Some(n) => Succ(str, n)
+          case _ => Fail(NotStartWith(str, true))
+        }
+      }
+
+      override def toString = "\""+str+"\".ignoreCase"
+    }
+
+    override def toString = "\""+str+"\""
+  }
+
+  implicit val stringToParser: String => Parser[String] with CaseIgnorable = new ParserFromString(_)
+
+  final class ParserFromChar(c: Char) extends Parser[Char] {
+    require(c >= 0 && c <= 127)
+
+    override def parse(input: Input) = if (input.atEnd) eof else {
+      val cnt = input.head
+      if (cnt == c) Succ(c, input.tail)
+      else Fail(NotMatch(c, cnt))
+    }
+
+    override def toString = s"'$c'"
+  }
+
+  implicit val charToParser: Char => Parser[Char] = new ParserFromChar(_)
+
+  def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
+    require(start >= 0 && end > start)
+
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF) else {
+      val cnt = input.head
+      if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
+      else Fail(NotInRange(start.toChar, end.toChar, cnt))
+    }
+
+    override def toString = f"%%($start%02x, $end%02x)"
+  }
+  
+  implicit val NumericParserContext: StringContext => NumericParserContextApi = context => new NumericParserContextApi {
+    def hex(digits: Parser[Char]*): Parser[Int] = {
+      make(context.parts, digits) -> { cs => context.s(cs: _*) match { case Natural0.Hex(i) => i } }
+    }
+    def dec(digits: Parser[Char]*): Parser[Int] = {
+      make(context.parts, digits) -> { cs => context.s(cs: _*) match { case Natural0(i) => i } }
+    }
+    
+    private[this] def make(parts: Seq[String], args: Seq[Parser[Char]]): Parser[List[Char]] =
+      if (args.isEmpty) parts.head -> { _ => Nil }
+      else (parts.head :^ args.head) >> { c => make(parts.tail, args.tail) -> { cs => c :: cs } }
+  }
+
+  case class NotStartWith(str: String, caseIgnored: Boolean) extends FailReason {
+    override def toString = s"input not start with $str${if (caseIgnored) "(case ignored)" else ""}"
+  }
+
+  case class NotMatch(expected: Char, found: Char) extends FailReason {
+    override def toString = s"$expected expected but $found found"
+  }
+
+  case class NotInRange(start: Char, end: Char, found: Char) extends FailReason {
+    override def toString = s"$found not in range($start, $end)"
+  }
+}
+
+
 trait CharReaders extends Readers.Linear { self: Parsers =>
 
   type T = Char

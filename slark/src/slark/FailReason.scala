@@ -20,6 +20,17 @@ object FailReason {
   }
 
   def causedBy(e: Throwable): List[FailReason] = {
+    
+    def toList[T](array: Array[T], dropRight: Int): List[T] = {
+      @tailrec
+      def rec(off: Int, end: Int, pre: List[T]): List[T] = {
+        if (off < end) {
+          rec(off + 1, end, array(off) :: pre)
+        } else pre.reverse
+      }
+      rec(0, array.length - dropRight, Nil)
+    }
+    
     @tailrec
     def rec(e: Throwable, pre: List[FailReason], depth: Int): List[FailReason] = {
       val cnt = Exception(if (e.getMessage() == null) None else Some(e.getMessage()), e.getClass(), toList(e.getStackTrace(), depth))
@@ -30,19 +41,9 @@ object FailReason {
     }
     rec(e, Nil, 0)
   }
-
-  private[this] def toList(stack: Array[StackTraceElement], depth: Int): List[StackTraceElement] = {
-    @tailrec
-    def rec(off: Int, end: Int, pre: List[StackTraceElement]): List[StackTraceElement] = {
-      if (off < end) {
-        rec(off + 1, end, stack(off) :: pre)
-      } else pre.reverse
-    }
-    rec(0, stack.length - depth, Nil)
-  }
   
   def apply(msg: String): FailReason = new FailReason {
     override def toString = msg
   }
-
+  
 }

@@ -1,0 +1,4 @@
+<plugin>
+  <name>unique</name>
+  <classname>slark.unique.UniquePlugin</classname>
+</plugin>
