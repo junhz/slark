@@ -25,8 +25,31 @@ final class UniquePluginComponent(val global: Global) extends {
   final class UniquePhase(prev: Phase) extends StdPhase(prev) {
     def apply(unit: CompilationUnit): Unit = {
       unit.body.foreach {
-        case t if t.hasSymbol && !t.symbol.annotations.isEmpty => {
-          unit.warning(t.pos, t.symbol.annotationsString)
+        case DefDef(_, _, _, vparamss, _, rhs) => {
+          vparamss.foreach {
+            case ps => {
+              ps.foreach {
+                case p if p.hasSymbol && !p.symbol.annotations.isEmpty => unit.warning(p.pos, p.symbol.annotationsString)
+                case _ => {}
+              }
+            }
+          }
+          
+          rhs.foreach {
+            case ValDef(_, _, _, t) if (t.hasSymbol && !t.symbol.annotations.isEmpty) => {
+              unit.warning(t.pos, "assign")
+            }
+            case Apply(fun, ts) => {
+              ts.foreach {
+                case t if t.hasSymbol && !t.symbol.annotations.isEmpty => unit.warning(t.pos, "apply")
+                case _ => {}
+              }
+            }
+            case Select(p, _) if p.hasSymbol && !p.symbol.annotations.isEmpty => unit.warning(p.pos, "call")
+            case _ => {}
+          }
+          
+          unit.warning(rhs.pos, rhs.toString)
         }
         case _ => {}
       }
