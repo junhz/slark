@@ -34,24 +34,40 @@ final class PatMatOpt(val global: Global) extends {
         }
       }
     }*/
+    
+    private[this] final def isCaseClassCase(caseDef: CaseDef): Boolean = {
+      caseDef match {
+        case CaseDef(Apply(fun1: TypeTree, args1), EmptyTree, Apply(fun2, args2)) => {
+          if (fun1.tpe =:= fun2.tpe) {
+            fun1.tpe match {
+              case MethodType(_, resultType) => {
+                val caseClassSym = resultType.dealias.typeSymbol
+                if (caseClassSym.isCaseClass) {
+                  val caseModuleSym = caseClassSym.companionSymbol
+                  true
+                } else false
+              }
+              case _ => false
+            }
+          } else false
+        }
+        case _ => false
+      }
+    }
+    
     override def transform(tree: Tree): Tree = {
       tree match {
         case Match(selector, CaseDef(Apply(fun: TypeTree, args1), EmptyTree, Apply(fun2, args2)) :: Nil) => {
-          fun.tpe match {
-            case MethodType(params, resultType) => {
-              for (param <- params) {
-                unit.warning(tree.pos, param.toString)
-              }
-              unit.warning(tree.pos, resultType.dealias.typeSymbol.isCaseClass.toString)
-            }
-          }
+          unit.warning(tree.pos, (fun.tpe =:= fun2.tpe).toString)
           for (arg <- args1) {
             unit.warning(tree.pos, arg.getClass().toString() + ": " + arg.toString)
           }
-          unit.warning(tree.pos, fun2.getClass().toString() + ": " + fun2.toString)
           for (arg <- args2) {
             unit.warning(tree.pos, arg.getClass().toString() + ": " + arg.toString)
           }
+        }
+        case m@Match(_, CaseDef(_, EmptyTree, _) :: Nil) => {
+          unit.warning(m.pos, m.toString)
         }
         case _ => 
       }

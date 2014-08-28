@@ -7,6 +7,8 @@ object Main {
   
   @unique class A
   type UniqueUnit = Unit @unique
+  
+  case class B[K, V](k: K, v: V)
 
   def f(a: String @unique): (String, String @unique) = {
     def g(a: String @unique)(b: String): (String @unique, String) = {
@@ -16,6 +18,15 @@ object Main {
     a.charAt(0)
     val (b1, b2) = g(a)(a)
     (b2, b1)
+  }
+  
+  def h: Unit = {
+    val b = B(1, 2)
+    
+    b match {
+      case B(v, k) => B(v, 1)
+    }
+    ()
   }
   
   def refresh[@unique T](t: T): T = {
