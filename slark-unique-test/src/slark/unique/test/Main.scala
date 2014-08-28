@@ -9,12 +9,12 @@ object Main {
   type UniqueUnit = Unit @unique
 
   def f(a: String @unique): (String, String @unique) = {
-    def g(b: String @unique): (String @unique, String) = {
-      (b, b)
+    def g(a: String @unique)(b: String): (String @unique, String) = {
+      (b, a)
     }
     val b = a
     a.charAt(0)
-    val (b1, b2) = g(a)
+    val (b1, b2) = g(a)(a)
     (b2, b1)
   }
   
