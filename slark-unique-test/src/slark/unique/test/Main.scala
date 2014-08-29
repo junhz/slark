@@ -20,13 +20,13 @@ object Main {
     (b2, b1)
   }
   
-  def h: Unit = {
-    val b = B(1, 2)
+  def h = {
+    val i: Int @unique = 1
+    val b = B(i, 2)
     
-    b match {
-      case B(v, k) => B(v, 1)
-    }
-    ()
+    Some(b match {
+      case B(v, k) => B(v, k)
+    })
   }
   
   def refresh[@unique T](t: T): T = {

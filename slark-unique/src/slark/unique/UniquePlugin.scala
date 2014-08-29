@@ -13,73 +13,114 @@ import scala.tools.nsc.transform.TypingTransformers
 final class UniquePlugin(val global: Global) extends {
   val name = "unique"
   val description = "compiler plugin for unique parameter reference"
-  val components = new PatMatOpt(global) /*:: new UniqueTypePluginCompoment(global)*/ :: Nil
+  val components = new PatMatOpt(global) :: new UniqueTypePluginCompoment(global) :: Nil
 } with Plugin
 
 final class PatMatOpt(val global: Global) extends {
-  val phaseName = "optimized pattern match"
+  val phaseName = "opt-patmat"
   val runsAfter = "parser" :: Nil
+  override val runsBefore = "patmat" :: Nil
 } with PluginComponent with TypingTransformers with Transform { component =>
   import global._
-  
+
   def newTransformer(unit: CompilationUnit): Transformer = new PatMatTransformer(unit)
-  
+
   final class PatMatTransformer(unit: CompilationUnit) extends TypingTransformer(unit) {
-    /*unit.warning(unit.body.pos, unit.body.toString)
-    override def transformValDef(tree: ValDef): ValDef = {
-      tree.rhs match {
-        case t => {
-          unit.warning(tree.pos, tree.toString)
-          super.transformValDef(tree)
-        }
-      }
-    }*/
-    
-    private[this] final def isCaseClassCase(caseDef: CaseDef): Boolean = {
-      caseDef match {
-        case CaseDef(Apply(fun1: TypeTree, args1), EmptyTree, Apply(fun2, args2)) => {
-          if (fun1.tpe =:= fun2.tpe) {
-            fun1.tpe match {
-              case MethodType(_, resultType) => {
-                val caseClassSym = resultType.dealias.typeSymbol
-                if (caseClassSym.isCaseClass) {
-                  val caseModuleSym = caseClassSym.companionSymbol
-                  true
-                } else false
-              }
-              case _ => false
-            }
-          } else false
-        }
-        case _ => false
-      }
-    }
-    
+
     override def transform(tree: Tree): Tree = {
       tree match {
-        case Match(selector, CaseDef(Apply(fun: TypeTree, args1), EmptyTree, Apply(fun2, args2)) :: Nil) => {
-          unit.warning(tree.pos, (fun.tpe =:= fun2.tpe).toString)
-          for (arg <- args1) {
-            unit.warning(tree.pos, arg.getClass().toString() + ": " + arg.toString)
+        case Match(selector, CaseDef(Apply(fun1: TypeTree, args1), EmptyTree, Apply(fun2, args2)) :: Nil) => {
+          def sameSignature(fun1: Tree, fun2: Tree): Boolean = fun1.tpe =:= fun2.tpe
+          def isMethodType(tpe: Type): Boolean = tpe match {
+            case MethodType(_, _) => true
+            case _ => false
           }
-          for (arg <- args2) {
-            unit.warning(tree.pos, arg.getClass().toString() + ": " + arg.toString)
+          def isCaseClass(tpe: Type): Boolean = tpe.dealias.typeSymbol.isCaseClass
+          def canReturn(mt: MethodType, tpe: Type) = mt.resultType <:< tpe
+          def isCaseApply(fun: Tree): Boolean = {
+            fun match {
+              case TypeApply(Select(qualifier, name), _) => isCaseApplySelect(qualifier, name)
+              case Select(qualifier, name) => isCaseApplySelect(qualifier, name)
+              case _ => { unit.warning(fun.pos, fun.toString); false }
+            }
+          }
+          def isCaseApplySelect(qualifier: Tree, name: Name): Boolean = {
+            qualifier.symbol.isStable && qualifier.tpe.dealias.typeSymbol.companionClass.isCaseClass && (name.toString == "apply" || name.toString == "applySeq")
+          }
+          @tailrec
+          def isRebuild(binds: List[Tree], params: List[Tree]): Boolean = {
+            if (binds.isEmpty && params.isEmpty) true
+            else if (!binds.isEmpty && !params.isEmpty) {
+              val bind = binds.head
+              val param = params.head
+              bind match {
+                case Bind(sym, Ident(nme.WILDCARD)) => param match {
+                  case Ident(name) if sym == name => isRebuild(binds.tail, params.tail)
+                  case _ => false
+                }
+                case _ => false
+              }
+            } else false
+          }
+          if (isCaseClass(selector.tpe) &&
+            sameSignature(fun1, fun2) &&
+            isMethodType(fun1.tpe) &&
+            canReturn(fun1.tpe.asInstanceOf[MethodType], selector.tpe) &&
+            isCaseApply(fun2) &&
+            isRebuild(args1, args2)) {
+            unit.warning(selector.pos, "optimized")
+            selector
+          } else {
+            unit.warning(tree.pos, tree.toString)
+            super.transform(tree)
           }
         }
-        case m@Match(_, CaseDef(_, EmptyTree, _) :: Nil) => {
-          unit.warning(m.pos, m.toString)
+        case ValDef(mods, name, tpt: TypeTree, rhs) if tpt.original == null => {
+          val newRhs = transform(rhs)
+          val newTree = treeCopy.ValDef(tree, mods, name, TypeTree(newRhs.tpe), newRhs)
+          newTree.symbol.setTypeSignature(newRhs.tpe)
+          unit.warning(tree.pos, newRhs.tpe.toString)
+          newTree
         }
-        case _ => 
+        case DefDef(mods, name, tparams, vparamss, tpt: TypeTree, rhs) if (tpt.original == null && !tree.symbol.isConstructor) => {
+          val newRhs = transform(rhs)
+          val newResultType = newRhs.tpe.underlying.dealias
+          val newTree = treeCopy.DefDef(tree, mods, name, tparams, vparamss, TypeTree(newResultType), newRhs)
+          val newTpe = tree.symbol.tpe match {
+            case MethodType(params, resultType) => MethodType(params, newResultType)
+            case NullaryMethodType(resultType) => NullaryMethodType(newResultType)
+            case PolyType(typeParams, resultType) => PolyType(typeParams, newResultType)
+            case t => {
+              unit.warning(tree.pos, s"unknown type ${t.kind}: $t")
+              t
+            }
+          }
+          newTree.symbol.setTypeSignature(newTpe)
+          newTree
+        }
+        case _ => super.transform(tree)
       }
-      super.transform(tree)
+    }
+
+    override def transformUnit(unit: CompilationUnit) {
+      val tree = try transform(unit.body)
+      catch {
+        case ex: Exception =>
+          unit.warning(unit.body.pos, FailReason.causedBy(ex).mkString("\r\nCaused By: "))
+          unit.body
+      }
+
+      if (tree ne unit.body) {
+        unit.body = tree
+      }
     }
   }
-  
+
 }
 
 final class UniqueTypePluginCompoment(val global: Global) extends {
   val phaseName = "unique-type"
-  val runsAfter = "refchecks" :: Nil
+  val runsAfter = "opt-patmat" :: "refchecks" :: Nil
 } with PluginComponent { component =>
   import global._
 
@@ -114,7 +155,7 @@ final class UniqueTypePluginCompoment(val global: Global) extends {
 
         rec((tpeTree.tpe :: Nil) :: Nil, Nil) foreach mark _
       }
-      
+
       def uniqueParams(vparamss: List[List[ValDef]]): List[List[Symbol]] = {
         @tailrec
         def rec(vparamss: List[List[ValDef]], syms: List[List[Symbol]]): List[List[Symbol]] = {
@@ -131,11 +172,11 @@ final class UniqueTypePluginCompoment(val global: Global) extends {
         }
         rec(vparamss, Nil)
       }
-      
+
       def compatible(lhs: Type, rhs: Type): Boolean = {
         lhs <:< rhs
       }
-      
+
       def multiApply(app: Apply): (Tree, List[List[Tree]]) = {
         @tailrec
         def rec(fun: Tree, sym: Symbol, paramss: List[List[Tree]]): (Tree, List[List[Tree]]) = {
@@ -144,10 +185,10 @@ final class UniqueTypePluginCompoment(val global: Global) extends {
             case _ => (fun, paramss)
           }
         }
-        
+
         rec(app.fun, app.fun.symbol, app.args :: Nil)
       }
-      
+
       @tailrec
       def rec(trees: List[List[Tree]], uniqueSyms: List[List[List[Symbol]]]): Unit = {
         if (trees.isEmpty) {}
@@ -155,19 +196,19 @@ final class UniqueTypePluginCompoment(val global: Global) extends {
         else {
           val tree = trees.head.head
           tree match {
-            case pd@PackageDef(pid, stats) => {
+            case pd @ PackageDef(pid, stats) => {
               unit.warning(pd.pos, s"enter package $pid")
               rec(stats :: Nil, Nil :: Nil)
             }
-            case md@ModuleDef(_, name, impl) => {
+            case md @ ModuleDef(_, name, impl) => {
               unit.warning(md.pos, s"enter class $name")
               rec(impl.body :: trees.head.tail :: trees.tail, Nil :: uniqueSyms)
             }
-            case cd@ClassDef(_, name, _, impl) => {
+            case cd @ ClassDef(_, name, _, impl) => {
               unit.warning(cd.pos, s"enter class $name")
               rec(impl.body :: trees.head.tail :: trees.tail, Nil :: uniqueSyms)
             }
-            case dd@DefDef(_, name, _, vparamss, tpt: TypeTree, rhs) => {
+            case dd @ DefDef(_, name, _, vparamss, tpt: TypeTree, rhs) => {
               unit.warning(dd.pos, s"enter method $name")
               if (!dd.symbol.isConstructor && !compatible(rhs.tpe, tpt.tpe)) {
                 unit.warning(dd.pos, "not compatible")
@@ -178,11 +219,11 @@ final class UniqueTypePluginCompoment(val global: Global) extends {
                 rec((rhs :: Nil) :: trees.head.tail :: trees.tail, uniqueParameters :: uniqueSyms)
               }
             }
-            case b@Block(stats, expr) => {
+            case b @ Block(stats, expr) => {
               unit.warning(b.pos, "enter block")
               rec((stats ::: expr :: Nil) :: trees.head.tail :: trees.tail, uniqueSyms.head :: uniqueSyms)
             }
-            case app@Apply(_, _) => {
+            case app @ Apply(_, _) => {
               val (fun, paramss) = multiApply(app)
               @tailrec
               def compareAll(symss: List[List[Symbol]], paramss: List[List[Tree]]): Unit = {
@@ -201,12 +242,12 @@ final class UniqueTypePluginCompoment(val global: Global) extends {
                 }
               }
               compareAll(fun.symbol.paramss, paramss)
-              rec((fun :: paramss.flatten)  :: trees.head.tail :: trees.tail, uniqueSyms.head :: uniqueSyms)
+              rec((fun :: paramss.flatten) :: trees.head.tail :: trees.tail, uniqueSyms.head :: uniqueSyms)
             }
             case Select(_, _) => rec(trees.head.tail :: trees.tail, uniqueSyms)
             case Literal(_) => rec(trees.head.tail :: trees.tail, uniqueSyms)
             case Ident(_) => rec(trees.head.tail :: trees.tail, uniqueSyms)
-            case vd@ValDef(_, name, tpt, rhs) => {
+            case vd @ ValDef(_, name, tpt, rhs) => {
               unit.warning(vd.pos, s"enter val $name")
               if (!compatible(rhs.tpe, tpt.tpe)) {
                 unit.warning(vd.pos, "not compatible")
@@ -218,7 +259,7 @@ final class UniqueTypePluginCompoment(val global: Global) extends {
             case TypeApply(_, _) => rec(trees.head.tail :: trees.tail, uniqueSyms)
             case Typed(expr, tpt) => rec(trees.head.tail :: trees.tail, uniqueSyms)
             case Import(_, _) => rec(trees.head.tail :: trees.tail, uniqueSyms)
-            case td@TypeDef(_, _, _, _) => rec(trees.head.tail :: trees.tail, uniqueSyms)
+            case td @ TypeDef(_, _, _, _) => rec(trees.head.tail :: trees.tail, uniqueSyms)
             case t => { unit.warning(t.pos, t.getClass().toString()) }
           }
         }
