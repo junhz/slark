@@ -22,11 +22,9 @@ object Main {
   
   def h = {
     val i: Int @unique = 1
-    val b = B(i, 2)
+    val b = B(i, B(1, 2))
     
-    Some(b match {
-      case B(v, k) => B(v, k)
-    })
+    val B(b1, B(b2, b3)) = b
   }
   
   def refresh[@unique T](t: T): T = {

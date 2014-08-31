@@ -13,7 +13,7 @@ import scala.tools.nsc.transform.TypingTransformers
 final class UniquePlugin(val global: Global) extends {
   val name = "unique"
   val description = "compiler plugin for unique parameter reference"
-  val components = new PatMatOpt(global) :: new UniqueTypePluginCompoment(global) :: Nil
+  val components = new PatMatOpt(global) /*:: new UniqueTypePluginCompoment(global)*/ :: Nil
 } with Plugin
 
 final class PatMatOpt(val global: Global) extends {
@@ -48,14 +48,14 @@ final class PatMatOpt(val global: Global) extends {
             qualifier.symbol.isStable && qualifier.tpe.dealias.typeSymbol.companionClass.isCaseClass && (name.toString == "apply" || name.toString == "applySeq")
           }
           @tailrec
-          def isRebuild(binds: List[Tree], params: List[Tree]): Boolean = {
+          def isClone(binds: List[Tree], params: List[Tree]): Boolean = {
             if (binds.isEmpty && params.isEmpty) true
             else if (!binds.isEmpty && !params.isEmpty) {
               val bind = binds.head
               val param = params.head
               bind match {
                 case Bind(sym, Ident(nme.WILDCARD)) => param match {
-                  case Ident(name) if sym == name => isRebuild(binds.tail, params.tail)
+                  case Ident(name) if sym == name => isClone(binds.tail, params.tail)
                   case _ => false
                 }
                 case _ => false
@@ -67,7 +67,7 @@ final class PatMatOpt(val global: Global) extends {
             isMethodType(fun1.tpe) &&
             canReturn(fun1.tpe.asInstanceOf[MethodType], selector.tpe) &&
             isCaseApply(fun2) &&
-            isRebuild(args1, args2)) {
+            isClone(args1, args2)) {
             unit.warning(selector.pos, "optimized")
             selector
           } else {
@@ -75,11 +75,10 @@ final class PatMatOpt(val global: Global) extends {
             super.transform(tree)
           }
         }
-        case ValDef(mods, name, tpt: TypeTree, rhs) if tpt.original == null => {
+        case ValDef(mods, name, tpt: TypeTree, rhs) if (tpt.original == null) => {
           val newRhs = transform(rhs)
           val newTree = treeCopy.ValDef(tree, mods, name, TypeTree(newRhs.tpe), newRhs)
           newTree.symbol.setTypeSignature(newRhs.tpe)
-          unit.warning(tree.pos, newRhs.tpe.toString)
           newTree
         }
         case DefDef(mods, name, tparams, vparamss, tpt: TypeTree, rhs) if (tpt.original == null && !tree.symbol.isConstructor) => {
