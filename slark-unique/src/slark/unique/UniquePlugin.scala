@@ -75,34 +75,21 @@ final class PatMatOpt(val global: Global) extends {
             super.transform(tree)
           }
         }
-        case ValDef(mods, name, tpt: TypeTree, rhs) if (tpt.original == null) => {
-          val newRhs = transform(rhs)
-          val newTree = treeCopy.ValDef(tree, mods, name, TypeTree(newRhs.tpe), newRhs)
-          newTree.symbol.setTypeSignature(newRhs.tpe)
-          newTree
-        }
-        case DefDef(mods, name, tparams, vparamss, tpt: TypeTree, rhs) if (tpt.original == null && !tree.symbol.isConstructor) => {
-          val newRhs = transform(rhs)
-          val newResultType = newRhs.tpe.underlying.dealias
-          val newTree = treeCopy.DefDef(tree, mods, name, tparams, vparamss, TypeTree(newResultType), newRhs)
-          val newTpe = tree.symbol.tpe match {
-            case MethodType(params, resultType) => MethodType(params, newResultType)
-            case NullaryMethodType(resultType) => NullaryMethodType(newResultType)
-            case PolyType(typeParams, resultType) => PolyType(typeParams, newResultType)
-            case t => {
-              unit.warning(tree.pos, s"unknown type ${t.kind}: $t")
-              t
+        case PackageDef(_, _) => {
+          this.getClass().getSuperclass().getSuperclass().getSuperclass().getDeclaredFields().foreach(f => {
+            if (f.getName() == "currentOwner") {
+              f.setAccessible(true)
+              unit.warning(tree.pos, f.get(this).toString())
             }
-          }
-          newTree.symbol.setTypeSignature(newTpe)
-          newTree
+          })
+          super.transform(tree)
         }
         case _ => super.transform(tree)
       }
     }
 
     override def transformUnit(unit: CompilationUnit) {
-      val tree = try transform(unit.body)
+      val tree = try transform(unit.body.duplicate)
       catch {
         case ex: Exception =>
           unit.warning(unit.body.pos, FailReason.causedBy(ex).mkString("\r\nCaused By: "))
@@ -110,7 +97,18 @@ final class PatMatOpt(val global: Global) extends {
       }
 
       if (tree ne unit.body) {
-        unit.body = tree
+        
+        def escape(t: Tree): Boolean = {
+          t match {
+            case _: RefTree => true
+            case _ => false
+          }
+        }
+        
+        unit.body = resetLocalAttrs(tree, escape)
+        unit.body match {
+          case PackageDef(ref, _) => unit.warning(ref.pos, s"${ref.symbol.owner}")
+        }
       }
     }
   }

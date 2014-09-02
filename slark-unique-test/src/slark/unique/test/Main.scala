@@ -8,9 +8,9 @@ object Main {
   @unique class A
   type UniqueUnit = Unit @unique
   
-  case class B[K, V](k: K, v: V)
+  //case class B[K, V](k: K, v: V)
 
-  def f(a: String @unique): (String, String @unique) = {
+  /*def f(a: String @unique): (String, String @unique) = {
     def g(a: String @unique)(b: String): (String @unique, String) = {
       (b, a)
     }
@@ -18,14 +18,14 @@ object Main {
     a.charAt(0)
     val (b1, b2) = g(a)(a)
     (b2, b1)
-  }
+  }*/
   
-  def h = {
+  /*def h = {
     val i: Int @unique = 1
     val b = B(i, B(1, 2))
     
     val B(b1, B(b2, b3)) = b
-  }
+  }*/
   
   def refresh[@unique T](t: T): T = {
     t
@@ -47,8 +47,8 @@ object Main {
     y
   }
   
-  def refer[T1, @unique T2](t1: T1, t2: T2, s: String @unique, a: A): UniqueUnit = {
+  /*def refer[T1, @unique T2](t1: T1, t2: T2, s: String @unique, a: A): UniqueUnit = {
     
-  }
+  }*/
   
 }
