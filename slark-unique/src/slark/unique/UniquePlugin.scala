@@ -18,17 +18,15 @@ final class UniquePlugin(val global: Global) extends {
 
 final class PatMatOpt(val global: Global) extends {
   val phaseName = "opt-patmat"
-  val runsAfter = "parser" :: Nil
+  val runsAfter = "typer" :: Nil
   override val runsBefore = "patmat" :: Nil
-} with PluginComponent with TypingTransformers with Transform { component =>
+} with PluginComponent with TypingTransformers { component =>
   import global._
-
-  def newTransformer(unit: CompilationUnit): Transformer = new PatMatTransformer(unit)
 
   final class PatMatTransformer(unit: CompilationUnit) extends TypingTransformer(unit) {
 
     override def transform(tree: Tree): Tree = {
-      tree match {
+      val newTree = tree match {
         case Match(selector, CaseDef(Apply(fun1: TypeTree, args1), EmptyTree, Apply(fun2, args2)) :: Nil) => {
           def sameSignature(fun1: Tree, fun2: Tree): Boolean = fun1.tpe =:= fun2.tpe
           def isMethodType(tpe: Type): Boolean = tpe match {
@@ -75,17 +73,10 @@ final class PatMatOpt(val global: Global) extends {
             super.transform(tree)
           }
         }
-        case PackageDef(_, _) => {
-          this.getClass().getSuperclass().getSuperclass().getSuperclass().getDeclaredFields().foreach(f => {
-            if (f.getName() == "currentOwner") {
-              f.setAccessible(true)
-              unit.warning(tree.pos, f.get(this).toString())
-            }
-          })
-          super.transform(tree)
-        }
-        case _ => super.transform(tree)
+        case _ => tree
       }
+
+      super.transform(tree)
     }
 
     override def transformUnit(unit: CompilationUnit) {
@@ -97,18 +88,27 @@ final class PatMatOpt(val global: Global) extends {
       }
 
       if (tree ne unit.body) {
-        
+
         def escape(t: Tree): Boolean = {
           t match {
-            case _: RefTree => true
             case _ => false
           }
         }
         
-        unit.body = resetLocalAttrs(tree, escape)
-        unit.body match {
-          case PackageDef(ref, _) => unit.warning(ref.pos, s"${ref.symbol.owner}")
-        }
+        this.localTyper.context.retyping = true
+        unit.warning(unit.body.pos, s"pt = ${typeOf[(String, String)] <:< WildcardType}")
+        val f = global.analyzer.getClass().getDeclaredField("scala$tools$nsc$typechecker$AnalyzerPlugins$$analyzerPlugins")
+        f.setAccessible(true)
+        unit.warning(unit.body.pos, s"ap = ${f.get(global.analyzer)}")
+        unit.body = this.localTyper.typed(tree)
+      }
+    }
+  }
+
+  def newPhase(prev: Phase): Phase = {
+    new StdPhase(prev) {
+      def apply(unit: CompilationUnit): Unit = {
+        new PatMatTransformer(unit).transformUnit(unit)
       }
     }
   }
@@ -133,7 +133,7 @@ final class UniqueTypePluginCompoment(val global: Global) extends {
       }
       def findUnique(tpeTree: TypeTree): Unit = {
         def mark(tpe: Type): Unit = {
-          unit.warning(tpeTree.pos, tpe.toString+" is annotated with unique")
+          unit.warning(tpeTree.pos, tpe.toString + " is annotated with unique")
         }
         @tailrec
         def rec(tpes: List[List[Type]], found: List[Type]): List[Type] = {
