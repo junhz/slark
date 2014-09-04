@@ -96,10 +96,13 @@ final class PatMatOpt(val global: Global) extends {
         }
         
         this.localTyper.context.retyping = true
+        val f1 = global.getClass().getSuperclass().getSuperclass().getSuperclass().getSuperclass().getDeclaredField("scala$reflect$internal$AnnotationCheckers$$annotationCheckers")
+        f1.setAccessible(true)
+        unit.warning(unit.body.pos, s"ap = ${f1.get(global)}")
         unit.warning(unit.body.pos, s"pt = ${typeOf[(String, String)] <:< WildcardType}")
-        val f = global.analyzer.getClass().getDeclaredField("scala$tools$nsc$typechecker$AnalyzerPlugins$$analyzerPlugins")
-        f.setAccessible(true)
-        unit.warning(unit.body.pos, s"ap = ${f.get(global.analyzer)}")
+        val f2 = global.analyzer.getClass().getDeclaredField("scala$tools$nsc$typechecker$AnalyzerPlugins$$analyzerPlugins")
+        f2.setAccessible(true)
+        unit.warning(unit.body.pos, s"ap = ${f2.get(global.analyzer)}")
         unit.body = this.localTyper.typed(tree)
       }
     }
