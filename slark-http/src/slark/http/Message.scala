@@ -104,14 +104,14 @@ trait Message { self: Literals =>
   case class HttpResponseDef(ver: HttpVersion, code: Int, reason: String, headers: List[(String, List[Byte])]) extends HttpMessageDef
   
   val request = {
-    val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail(BadWhiteSpace) else succ() }
+    val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail(BadWhiteSpace) else succ(()) }
     ((request_line ^ bws :^ (header_field ^: crlf).*) ^: crlf) -> {
       case method ^ tar ^ ver ^ headers => HttpRequestDef(method, tar, ver, headers)
     }
   }
 
   val response = {
-    val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail(BadWhiteSpace) else succ() }
+    val bws = ows -> { ws => if(options.rejectBWSAfterStartLine || ws.isEmpty) fail(BadWhiteSpace) else succ(()) }
     ((status_line ^ bws :^ (header_field ^: crlf).*) ^: crlf) -> {
       case ver ^ code ^ reason ^ headers => HttpResponseDef(ver, code, reason, headers)
     }

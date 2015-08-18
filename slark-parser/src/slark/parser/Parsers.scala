@@ -8,8 +8,7 @@ trait Parsers {
   sealed trait ParseResult[+S]
 
   trait Parser[+S] {
-    type Result = ParseResult[S]
-    def parse(input: Input): Result
+    def parse(input: Input): ParseResult[S]
   }
 
   type Builder[T, S] = T => Parser[S]

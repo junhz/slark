@@ -36,9 +36,8 @@ trait ParsersApi {
   val Succ: SuccExtractor
   
   trait ParserApi[+S] {
-    type Result = ParseResult[S]
 
-    def parse(input: Input): Result
+    def parse(input: Input): ParseResult[S]
 
     /** flatmap */
     def >>[T](fn: S => Parser[T]): Parser[T]

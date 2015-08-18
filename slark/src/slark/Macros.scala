@@ -2,7 +2,7 @@ package slark
 
 object Macros {
 
-  import scala.reflect.macros.Context
+  import scala.reflect.macros.blackbox.Context
 
   def searchForDef(c: Context)(root: c.universe.Tree, target: c.universe.Tree): List[c.universe.Tree] = {
     import c.universe._

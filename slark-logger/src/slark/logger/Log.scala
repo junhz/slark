@@ -26,7 +26,7 @@ object Log {
       import scala.reflect.runtime.universe
       val runtime = universe.runtimeMirror(getClass.getClassLoader)
       val configs = runtime.staticModule("configs.package")
-      val log = configs.typeSignature.declaration(universe.newTermName("log")).asTerm
+      val log = configs.typeSignature.decl(universe.TermName("log")).asTerm
       runtime.reflect(runtime.reflectModule(configs).instance).reflectField(log).get.asInstanceOf[Factory]
     } catch {
       case e: Throwable => {
@@ -38,7 +38,7 @@ object Log {
 }
 
 object LogMacros {
-  import scala.reflect.macros.Context
+  import scala.reflect.macros.blackbox.Context
   def log(c: Context)(args: c.Expr[Any]*): c.Expr[Logger.Record] = {
     import c.universe._
 
@@ -47,11 +47,11 @@ object LogMacros {
       def rec(path: List[Tree], names: List[String]): List[String] = {
         if (path.isEmpty) names
         else path.head match {
-          case PackageDef(ref, _) => rec(path.tail, ref.name.decoded :: names)
-          case ModuleDef(_, moduleName, _) => rec(path.tail, moduleName.decoded :: names)
-          case ClassDef(_, className, _, _) => rec(path.tail, className.decoded :: names)
-          case DefDef(_, methodName, _, _, _, _) => (methodName.decoded :: names)
-          case ValDef(_, valName, _, _) => (valName.decoded :: names)
+          case PackageDef(ref, _) => rec(path.tail, ref.name.encodedName.toString :: names)
+          case ModuleDef(_, moduleName, _) => rec(path.tail, moduleName.encodedName.toString :: names)
+          case ClassDef(_, className, _, _) => rec(path.tail, className.encodedName.toString :: names)
+          case DefDef(_, methodName, _, _, _, _) => (methodName.encodedName.toString :: names)
+          case ValDef(_, valName, _, _) => (valName.encodedName.toString :: names)
           case _ => rec(path.tail, names)
         }
       }
@@ -69,14 +69,14 @@ object LogMacros {
     val line = c.enclosingPosition.line
 
     val level = c.macroApplication match {
-      case Apply(Select(_, func), _) => func.decoded
+      case Apply(Select(_, func), _) => func.encodedName.toString
     }
 
     /**
      * new A(...)
      */
     def construct[T: TypeTag](args: Tree*): Tree = {
-      Apply(Select(New(TypeTree(typeOf[T])), nme.CONSTRUCTOR), args.toList)
+      Apply(Select(New(TypeTree(typeOf[T])), termNames.CONSTRUCTOR), args.toList)
     }
 
     /**
@@ -86,13 +86,13 @@ object LogMacros {
      * }
      */
     def build[T: WeakTypeTag](args: Tree*): Tree = {
-      Apply(Select(Ident(weakTypeOf[T].typeSymbol.companionSymbol), newTermName("apply")), args.toList)
+      Apply(Select(Ident(weakTypeOf[T].typeSymbol.companion), TermName("apply")), args.toList)
     }
 
     c.Expr(construct[Logger.Record](
       Literal(Constant(s"$source($file:$line)")),
-      Select(Ident(typeOf[Level].typeSymbol.companionSymbol), newTermName(level)),
-      Select(c.prefix.tree, newTermName("context")),
+      Select(Ident(typeOf[Level].typeSymbol.companion), TermName(level)),
+      Select(c.prefix.tree, TermName("context")),
       build[List[Any]](args.map(_.tree): _*)))
   }
 }

@@ -25,28 +25,26 @@ object Proxy {
 
     val acsiiParsers = new Parsers with CharReaders
 
-    val httpUriSymbols = new { 
+    val httpUriSymbols = new UriSymbols {
       type P = acsiiParsers.type
       val parsers: acsiiParsers.type = acsiiParsers
       val schemeName = "http"
       val defaultPort = 80
-    } with UriSymbols {
       override def formatPath(path: List[String]): List[String] = path
     }
 
     val byteParsers = new Parsers with OctetReaders
 
-    val httpSymbols = 
-      new { 
-        type P = byteParsers.type
-        val parsers: byteParsers.type = byteParsers
-        type UriSymbols = httpUriSymbols.type
-        val uriSymbols: httpUriSymbols.type = httpUriSymbols
-        val options = new Options {
-          override def rejectBWSAfterStartLine = true
-          override def rejectBWSAfterHeaderFieldName = true
-        }
-      } with HttpSymbols
+    val httpSymbols = new HttpSymbols {
+      type P = byteParsers.type
+      val parsers: byteParsers.type = byteParsers
+      type UriSymbols = httpUriSymbols.type
+      val uriSymbols: httpUriSymbols.type = httpUriSymbols
+      val options = new Options {
+        override def rejectBWSAfterStartLine = true
+        override def rejectBWSAfterHeaderFieldName = true
+      }
+    }
     val hs = httpSymbols
     
     val headerCollectors = new Parsers with HeaderReaders {

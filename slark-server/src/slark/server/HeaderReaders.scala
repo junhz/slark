@@ -31,7 +31,7 @@ trait HeaderReaders extends Readers.Indexed { self: Parsers =>
   implicit class Ops(name: String) {
     def `: `[T](p: parsers.Parser[T]): Parser[T] =
       new Parser[T] {
-        override def parse(src: Input): Result = {
+        override def parse(src: Input): ParseResult[T] = {
           src.get(name) match {
             case None => Fail(HeaderNotFound)
             case Some((hs, rest)) => hs match {
@@ -50,12 +50,12 @@ trait HeaderReaders extends Readers.Indexed { self: Parsers =>
       val tail = (ows ^ "," ^ ows) :^ p
       val all = leading >> { x => (tail.*) -> { xs => x :: xs } }
       new Parser[List[T]] {
-        override def parse(src: Input): Result = {
+        override def parse(src: Input): ParseResult[List[T]] = {
           src.get(name) match {
             case None => Fail(HeaderNotFound)
             case Some((hs, rest)) => {
               @tailrec
-              def rec(headers: List[List[Byte]], collected: List[List[T]]): Result = {
+              def rec(headers: List[List[Byte]], collected: List[List[T]]): ParseResult[List[T]] = {
                 if (headers.isEmpty) Succ(collected.reverse.flatten, rest)
                 else all parse headers.head match {
                   case parsers.Succ(r, n) if (n.atEnd) => rec(headers.tail, r :: collected)

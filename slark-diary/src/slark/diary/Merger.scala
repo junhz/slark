@@ -46,7 +46,7 @@ object Merger {
 
   def conform(msg: String): Boolean = {
     println(msg)
-    readBoolean
+    io.StdIn.readBoolean()
   }
 
 }

@@ -23,7 +23,7 @@ abstract class Parsers extends ParsersApi { parsers =>
 
   abstract class Parser[+S] extends ParserApi[S] { self =>
 
-    def parse(input: Input): Result
+    def parse(input: Input): ParseResult[S]
 
     def combined: Parser[S] = new CombinedParser(input => Done(this parse input))
 
@@ -103,15 +103,15 @@ abstract class Parsers extends ParsersApi { parsers =>
         case f: Fail => Done(f)
       }
 
-      Cache(fun)(new CombinedParser(input => FlatMap(fun(input), associated)))
+      Cache(fun) (new CombinedParser(input => FlatMap(fun(input), associated)))
     }
 
-    override def onFail[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = Cache(fun) {
+    override def onFail[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = Cache(fn) {
       new CombinedParser(input =>
         Cache(fn) {
           val associated = (_: ParseResult[S]) match {
             case s: Succ[S] => Done(s)
-            case Fail(msg) => fn(msg) match {
+            case f: Fail/* TODO: Fail(msg) will cause compile error*/ => fn.apply(f.msg) match {
               case cp: CombinedParser[T] => Next1(cp.fun, input)
               case p => Done(p parse input)
             }
@@ -138,10 +138,10 @@ abstract class Parsers extends ParsersApi { parsers =>
   val `>` = Int.MaxValue
   
   val `<` = 0
-  
-  val eof = Fail(EOF)
 
   val EOF: FailReason = FailReason("end of input")
+  
+  val eof = Fail(EOF)
   
   val MissingExpectedFailure: FailReason = FailReason("missing an expected failure")
 }

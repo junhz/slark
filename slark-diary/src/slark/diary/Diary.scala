@@ -34,7 +34,7 @@ object Diary {
       import scala.reflect.runtime.universe
       val runtime = universe.runtimeMirror(getClass.getClassLoader)
       val configs = runtime.staticModule("configs.package")
-      val diary = configs.typeSignature.declaration(universe.newTermName("diary")).asTerm
+      val diary = configs.typeSignature.decl(universe.TermName("diary")).asTerm
       runtime.reflect(runtime.reflectModule(configs).instance).reflectField(diary).get.asInstanceOf[Paths]
     } catch {
       case e: Throwable => {

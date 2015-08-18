@@ -8,5 +8,5 @@ object ForDiary extends Diary {
     )
       yield j
   } :: 
-  Source(Source()) :: Nil
+  Source(Source(())) :: Nil
 }

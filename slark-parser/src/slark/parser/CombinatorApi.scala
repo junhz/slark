@@ -26,10 +26,10 @@ trait CombinatorApi { self: Parsers =>
     override def parse(input: Input) = {
 
       @tailrec
-      def rec(rss: List[List[ParseResult[Any]]], opss: List[List[Operation]]): Result = {
+      def rec(rss: List[List[ParseResult[Any]]], opss: List[List[Operation]]): ParseResult[S] = {
         if (opss.isEmpty) {
           assert(rss.tail.isEmpty && rss.head.tail.isEmpty)
-          rss.head.head.asInstanceOf[Result]
+          rss.head.head.asInstanceOf[ParseResult[S]]
         } else if (opss.head.isEmpty) {
           rec((rss.head.head :: rss.tail.head) :: rss.tail.tail, opss.tail)
         } else {
