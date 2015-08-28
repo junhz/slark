@@ -60,7 +60,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
   final class letterParser(char: Char) extends Parser[Byte] {
     require(char >= 0 && char <= 127)
 
-    override def parse(input: Input) = if (input.atEnd) eof else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt - char == 0) Succ(cnt, input.tail)
       else Fail(NotMatch(char, cnt) :: Nil)
@@ -80,7 +80,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
   def letter(startChar: Char, endChar: Char): Parser[Byte] = new Parser[Byte] {
     require(startChar >= 0 && endChar > startChar && endChar <= 127)
 
-    override def parse(input: Input) = if (input.atEnd) eof else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt >= startChar && cnt <= endChar) Succ(cnt, input.tail)
       else Fail(NotInRange(startChar, endChar, cnt) :: Nil)
@@ -90,7 +90,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
   def acsii(byte: Byte): Parser[Byte] = new Parser[Byte] {
     require(byte >= 0 && byte <= 127)
 
-    override def parse(input: Input) = if (input.atEnd) eof else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt == byte) Succ(cnt, input.tail)
       else Fail(NotMatch(byte, cnt) :: Nil)
@@ -100,7 +100,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
   def %(start: Int, end: Int): Parser[Byte] = new Parser[Byte] {
     require((start & (1 << 31)) == 0 && end > start && ((end & 0xffffff00) == 0))
 
-    override def parse(input: Input) = if (input.atEnd) eof else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt >= start && (cnt & 0xff) <= end) Succ(cnt, input.tail)
       else Fail(NotInRange(start, end, cnt) :: Nil)

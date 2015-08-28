@@ -86,8 +86,6 @@ trait ParsersApi {
   def `>`: Int
   /** min **/
   def `<`: Int
-  
-  def eof: Fail
 
   val EOF: FailReason
   

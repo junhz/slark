@@ -85,7 +85,7 @@ abstract class AsciiParser extends Parsers with AsciiReadersApi {
   final class ParserFromChar(c: Char) extends Parser[Char] {
     require(c >= 0 && c <= 127)
 
-    override def parse(input: Input) = if (input.atEnd) eof else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt == c) Succ(c, input.tail)
       else Fail(NotMatch(c, cnt) :: Nil)
@@ -99,7 +99,7 @@ abstract class AsciiParser extends Parsers with AsciiReadersApi {
   def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
     require(start >= 0 && end > start)
 
-    override def parse(input: Input) = if (input.atEnd) eof else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
       else Fail(NotInRange(start.toChar, end.toChar, cnt) :: Nil)
@@ -195,7 +195,7 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
   class CharParser(c: Char) extends Parser[Char] {
     require(c >= 0 && c <= 127)
 
-    override def parse(input: Input) = if (input.atEnd) eof else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt == c) Succ(c, input.tail)
       else Fail(NotMatch(c, cnt) :: Nil)
@@ -209,7 +209,7 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
   def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
     require(start >= 0 && end > start)
 
-    override def parse(input: Input) = if (input.atEnd) eof else {
+    override def parse(input: Input) = if (input.atEnd) Fail(EOF :: Nil) else {
       val cnt = input.head
       if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
       else Fail(NotInRange(start.toChar, end.toChar, cnt) :: Nil)

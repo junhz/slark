@@ -33,7 +33,7 @@ abstract class Parsers extends ParsersApi { parsers =>
 
     def not: Parser[Unit] = Combinate(self, Cache(parsers) ((r: ParseResult[S], i: Input) => {
       r match {
-        case _: Succ[S] => (fail(MissingExpectedFailure :: Nil), i)
+        case _: Succ[S] => (fail(MissingExpectedFailure), i)
         case f: Fail  => (succ(()), i)
       }
     }))
@@ -70,7 +70,7 @@ abstract class Parsers extends ParsersApi { parsers =>
       else succ(Nil)
 
     def apply(min: Int, max: Int): Parser[List[S]] =
-      if (min > 0) self >> { x => self(min - 1, max - 1) -> { xs => x :: xs } } | fail(EOF :: Nil)
+      if (min > 0) self >> { x => self(min - 1, max - 1) -> { xs => x :: xs } } | fail(EOF)
       else if (max > 0) self >> { x => self(0, max - 1) -> { xs => x :: xs } } | succ(Nil)
       else succ(Nil)
 
@@ -86,13 +86,15 @@ abstract class Parsers extends ParsersApi { parsers =>
     override def not = succ(())
     override def toString = s"fail($msg)"
   }
+  
+  def fail(msg: FailReason): Parser[Nothing] = fail(msg :: Nil)
 
   /** unit */
   def succ[S](sym: S): Parser[S] = new Parser[S] {
     override def parse(input: Input) = Succ(sym, input)
     override def onSucc[T](fn: S => Parser[T]) = fn(sym)
     override def onFail[T >: S](that: List[FailReason] => Parser[T]) = this
-    override def not = fail(MissingExpectedFailure :: Nil)
+    override def not = fail(MissingExpectedFailure)
     override def toString = s"succ($sym)"
   }
 
@@ -133,8 +135,6 @@ abstract class Parsers extends ParsersApi { parsers =>
   val `<` = 0
 
   val EOF: FailReason = FailReason("end of input")
-  
-  val eof = Fail(EOF :: Nil)
   
   val MissingExpectedFailure: FailReason = FailReason("missing an expected failure")
 }
