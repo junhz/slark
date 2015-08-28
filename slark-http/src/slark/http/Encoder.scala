@@ -37,9 +37,9 @@ trait Encoder {
       charParser.parse(new EncodedReader(input)) match {
         case charParsers.Succ(r, n) => n match {
           case n: EncodedReader => byteParsers.Succ(r, n.input)
-          case _ => byteParsers.Fail(CreateInputInParser)
+          case _ => byteParsers.Fail(CreateInputInParser :: Nil)
         }
-        case charParsers.Fail(msg) => byteParsers.Fail(msg:_*)
+        case charParsers.Fail(msg) => byteParsers.Fail(msg)
       }
     }
   }

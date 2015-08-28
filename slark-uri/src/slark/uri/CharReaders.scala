@@ -43,7 +43,7 @@ abstract class AsciiParser extends Parsers with AsciiReadersApi {
 
     override def parse(input: Input) = {
       input.startWith(pattern) match {
-        case None => Fail(NotStartWith(str, false))
+        case None => Fail(NotStartWith(str, false) :: Nil)
         case Some(n) => Succ(str, n)
       }
     }
@@ -70,7 +70,7 @@ abstract class AsciiParser extends Parsers with AsciiReadersApi {
 
         rec(pattern, input) match {
           case Some(n) => Succ(str, n)
-          case _ => Fail(NotStartWith(str, true))
+          case _ => Fail(NotStartWith(str, true) :: Nil)
         }
       }
 
@@ -88,7 +88,7 @@ abstract class AsciiParser extends Parsers with AsciiReadersApi {
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt == c) Succ(c, input.tail)
-      else Fail(NotMatch(c, cnt))
+      else Fail(NotMatch(c, cnt) :: Nil)
     }
 
     override def toString = s"'$c'"
@@ -99,10 +99,10 @@ abstract class AsciiParser extends Parsers with AsciiReadersApi {
   def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
     require(start >= 0 && end > start)
 
-    override def parse(input: Input) = if (input.atEnd) Fail(EOF) else {
+    override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
-      else Fail(NotInRange(start.toChar, end.toChar, cnt))
+      else Fail(NotInRange(start.toChar, end.toChar, cnt) :: Nil)
     }
 
     override def toString = f"%%($start%02x, $end%02x)"
@@ -153,7 +153,7 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
 
     override def parse(input: Input) = {
       input.startWith(pattern) match {
-        case None => Fail(NotStartWith(str, false))
+        case None => Fail(NotStartWith(str, false) :: Nil)
         case Some(n) => Succ(str, n)
       }
     }
@@ -180,7 +180,7 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
 
         rec(pattern, input) match {
           case Some(n) => Succ(str, n)
-          case _ => Fail(NotStartWith(str, true))
+          case _ => Fail(NotStartWith(str, true) :: Nil)
         }
       }
 
@@ -198,7 +198,7 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt == c) Succ(c, input.tail)
-      else Fail(NotMatch(c, cnt))
+      else Fail(NotMatch(c, cnt) :: Nil)
     }
 
     override def toString = s"'$c'"
@@ -209,10 +209,10 @@ trait CharReaders extends Readers.Linear { self: Parsers =>
   def %(start: Byte, end: Byte): Parser[Char] = new Parser[Char] {
     require(start >= 0 && end > start)
 
-    override def parse(input: Input) = if (input.atEnd) Fail(EOF) else {
+    override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt >= start && cnt <= end) Succ(cnt, input.tail)
-      else Fail(NotInRange(start.toChar, end.toChar, cnt))
+      else Fail(NotInRange(start.toChar, end.toChar, cnt) :: Nil)
     }
 
     override def toString = f"%%($start%02x, $end%02x)"

@@ -9,15 +9,15 @@ trait Literals {
   val parsers: P
   import parsers._
 
-  val upalpha = letter('A', 'Z') | fail(InvalidCharacter("upper case alpha"))
+  val upalpha = letter('A', 'Z') | fail(InvalidCharacter("upper case alpha") :: Nil)
 
-  val loalpha = letter('a', 'z') | fail(InvalidCharacter("lower case alpha"))
+  val loalpha = letter('a', 'z') | fail(InvalidCharacter("lower case alpha") :: Nil)
 
-  val alpha = upalpha | loalpha | fail(InvalidCharacter("alhpa"))
+  val alpha = upalpha | loalpha | fail(InvalidCharacter("alhpa") :: Nil)
 
-  val digit = letter('0', '9') | fail(InvalidCharacter("digit"))
+  val digit = letter('0', '9') | fail(InvalidCharacter("digit") :: Nil)
 
-  val hex = digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | fail(InvalidCharacter("hex"))
+  val hex = digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | fail(InvalidCharacter("hex") :: Nil)
 
   val del = acsii(127)
 
@@ -39,24 +39,24 @@ trait Literals {
 
   val rws = (sp | ht)(1, `>`)
 
-  val tchar = p('!') | '#' | '$' | '%' | '&' | ''' | '*' | '+' | '-' | '.' | '^' | '_' | '`' | '|' | '~' | digit |alpha | fail(InvalidCharacter("tchar"))
+  val tchar = ('!': Parser[Byte]) | '#' | '$' | '%' | '&' | ''' | '*' | '+' | '-' | '.' | '^' | '_' | '`' | '|' | '~' | digit |alpha | fail(InvalidCharacter("tchar") :: Nil)
   
   val token = tchar(1, `>`) -> (_.foldLeft(new StringBuilder)((sb, b) => { sb.append(b.toChar); sb }).toString)
 
   // \a = a \\ = \ \" = " \( = ( ") = )
   val quoted_pair = "\\" :^ (ht | sp | vchar | obs_text)
 
-  val ctext = ht | sp | %(0x21, 0x27) | %(0x2A, 0x5B) | %(0x5D, 0x7E)  | obs_text | fail(InvalidCharacter("ctext"))
+  val ctext = ht | sp | %(0x21, 0x27) | %(0x2A, 0x5B) | %(0x5D, 0x7E)  | obs_text | fail(InvalidCharacter("ctext") :: Nil)
 
   // '\' is not allowed in quoted-text to live with quoted-pair
-  val qdtext = ht | sp | '!' | %(0x23, 0x5B) | %(0x5D, 0x7E)  | obs_text | fail(InvalidCharacter("qdtext"))
+  val qdtext = ht | sp | '!' | %(0x23, 0x5B) | %(0x5D, 0x7E)  | obs_text | fail(InvalidCharacter("qdtext") :: Nil)
 
   // don't allow nested comment
   val comment = '(' :^ ctext.* ^: ')'
 
   val quoted_string = '"' :^ qdtext.* ^: '"'
   
-  def send(code: Int, reason: String): Parser[Nothing] = fail(HttpFailReason(code, reason))
+  def send(code: Int, reason: String): Parser[Nothing] = fail(HttpFailReason(code, reason) :: Nil)
   
   case class InvalidCharacter(category: String) extends FailReason {
     override def toString = s"$category wanted"

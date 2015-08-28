@@ -12,8 +12,8 @@ trait IPaddress { self: Literals =>
    * return Int from 0 - 255(0xfe)
    */
   val dec_octet = {
-    val `0` = p('0')
-    val `1` = p('1')
+    val `0`: Parser[Char] = '0'
+    val `1`: Parser[Char] = '1'
     (dec"25${`0` | '1' | '2' | '3' | '4' | '5'}" |
       dec"2${`0` | '1' | '2' | '3' | '4'}$digit" |
       dec"1$digit$digit" |

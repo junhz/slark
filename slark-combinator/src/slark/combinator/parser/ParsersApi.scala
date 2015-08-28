@@ -15,7 +15,7 @@ trait ParsersApi {
   type Fail <: FailApi
   
   trait FailExtractor {
-    def apply(msg: FailReason*): Fail
+    def apply(msg: List[FailReason]): Fail
     def unapply(f: Fail): Option[List[FailReason]]
   }
   
@@ -77,14 +77,10 @@ trait ParsersApi {
   type Parser[+S] <: ParserApi[S]
 
   /** zero unit */
-  def fail(msg: FailReason): Parser[Nothing]
+  def fail(msg: List[FailReason]): Parser[Nothing]
 
   /** unit */
   def succ[S](sym: S): Parser[S]
-
-  def parser[S](fun: Input => ParseResult[S]): Parser[S]
-
-  def p[T, S](self: T)(implicit fn: T => Parser[S]): Parser[S]
 
   /** max **/
   def `>`: Int

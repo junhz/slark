@@ -39,7 +39,7 @@ trait DateTime { self: Literals =>
     override def toString: String = f"${d.dayOfWeek.shortName}, ${d.dayOfMonth}%02d ${d.month.shortName} ${d.year}%04d ${d.hour}%02d:${d.minute}%02d:${d.second}%02d GMT"
   }
 
-  val http_date = rfc1123_date | rfc850_date | asctime_date | fail(InvalidDate)
+  val http_date = rfc1123_date | rfc850_date | asctime_date | fail(InvalidDate :: Nil)
   val delta_seconds = digit(1, `>`)
 
   case object InvalidDate extends FailReason

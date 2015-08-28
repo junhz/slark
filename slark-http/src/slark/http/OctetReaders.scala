@@ -26,7 +26,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
 
     override def parse(input: Input) = {
       input.startWith(pattern) match {
-        case None => Fail(NotStartWith(str, false))
+        case None => Fail(NotStartWith(str, false) :: Nil)
         case Some(n) => Succ(str, n)
       }
     }
@@ -45,7 +45,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
 
         rec(pattern, input) match {
           case Some(n) => Succ(str, n)
-          case _ => Fail(NotStartWith(str, true))
+          case _ => Fail(NotStartWith(str, true) :: Nil)
         }
       }
 
@@ -63,7 +63,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt - char == 0) Succ(cnt, input.tail)
-      else Fail(NotMatch(char, cnt))
+      else Fail(NotMatch(char, cnt) :: Nil)
     }
   }
 
@@ -83,7 +83,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt >= startChar && cnt <= endChar) Succ(cnt, input.tail)
-      else Fail(NotInRange(startChar, endChar, cnt))
+      else Fail(NotInRange(startChar, endChar, cnt) :: Nil)
     }
   }
 
@@ -93,7 +93,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt == byte) Succ(cnt, input.tail)
-      else Fail(NotMatch(byte, cnt))
+      else Fail(NotMatch(byte, cnt) :: Nil)
     }
   }
 
@@ -103,7 +103,7 @@ trait OctetReaders extends Readers.Linear { self: Parsers =>
     override def parse(input: Input) = if (input.atEnd) eof else {
       val cnt = input.head
       if (cnt >= start && (cnt & 0xff) <= end) Succ(cnt, input.tail)
-      else Fail(NotInRange(start, end, cnt))
+      else Fail(NotInRange(start, end, cnt) :: Nil)
     }
 
     override val toString = f"%%x$start%02X-$end%02X"
