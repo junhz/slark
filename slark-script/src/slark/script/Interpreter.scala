@@ -96,18 +96,3 @@ object Interpreter {
   }
   
 }
-
-class Read extends Script {
-  override def apply(args: String*) = {
-    def read(r: BufferedReader): Stream[String] = {
-      val line = r.readLine()
-      if (line eq null) {
-        r.close()
-        Stream.Empty
-      } else {
-        line #:: read(r)
-      }
-    }
-    _.flatMap { f => read(new BufferedReader(new InputStreamReader(new FileInputStream(f)))) }
-  }
-}

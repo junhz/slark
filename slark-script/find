@@ -1,0 +1,21 @@
+import java.io.File
+
+val files = new File(args(0)) :: Nil
+val pattern = args(1).r
+def found(files: List[File]): Stream[String] = {
+  if (files.isEmpty) {
+    Stream.Empty
+  } else {
+    val file = files.head
+    if (file.isDirectory()) {
+      found(file.listFiles().toList ::: files.tail)
+    } else {
+      if (pattern.findFirstIn(file.getName).isEmpty) {
+        found(files.tail)
+      } else {
+        file.getAbsolutePath #:: found(files.tail)
+      }
+    }
+  }
+}
+_ => found(files)
