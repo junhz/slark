@@ -6,6 +6,10 @@ import scala.tools.reflect.ToolBox
 import java.util.concurrent.ConcurrentHashMap
 import java.io.FileInputStream
 import java.util.Arrays
+import java.io.InputStream
+import java.io.BufferedReader
+import java.io.InputStreamReader
+
 
 object Interpreter {
   
@@ -16,7 +20,17 @@ object Interpreter {
   val tb = runtime.universe.runtimeMirror(getClass.getClassLoader).mkToolBox()
   
   def main(args: Array[String]): Unit = {
-    println(load(args(0))(args.tail:_*))
+    val script = load(args(0))
+    val params = args.tail
+    def input: Stream[String] = {
+      val line = io.StdIn.readLine()
+      if (line eq null) {
+        Stream.Empty
+      } else {
+        line #:: input
+      }
+    }
+    script(params:_*)(input) foreach println
   }
   
   def load(name: String): Script = {
@@ -25,25 +39,38 @@ object Interpreter {
     if (script == null) {
       
       val scriptLoc = new File(scriptHome, name)
-      script = tb.eval(tb.parse(wrapCode(new String(readAll(scriptLoc))))).asInstanceOf[Script]
-      loadedScripts.putIfAbsent(name, script)
+      if (scriptLoc.exists()) {
+        script = tb.eval(tb.parse(wrapCode(new String(readAll(new FileInputStream(scriptLoc)))))).asInstanceOf[Script]
+        loadedScripts.putIfAbsent(name, script)
+      } else {
+        val in = classOf[Script].getClassLoader.getResourceAsStream(name)
+        if (in ne null) {
+          script = tb.eval(tb.parse(wrapCode(new String(readAll(in))))).asInstanceOf[Script]
+          loadedScripts.putIfAbsent(name, script)
+        } else {
+          throw new IllegalArgumentException(s"script not found: $name")
+        }
+      }
+      
     }
-    
+    if (System.console() ne null) {
+      System.console().writer().println(s"$name loaded")
+    }
     loadedScripts.get(name)
   }
   
   def wrapCode(code: String): String = {
     s"""new slark.script.Script {
        |  import slark.script.Interpreter.load
-       |  def apply(args: String*) = {
+       |  import slark.script.Script._
+       |  def apply(args: String*): (=>Stream[String]) => Stream[String] = {
        |    $code
        |  }
        |}""".stripMargin
   }
   
-  def readAll(f: File): Array[Byte] = {
+  def readAll(in: InputStream): Array[Byte] = {
     
-    val in = new FileInputStream(f);
     val buffer = new Array[Byte](1024)
     var size = in.read(buffer)
     var len = 0
@@ -68,4 +95,19 @@ object Interpreter {
     bytes
   }
   
+}
+
+class Read extends Script {
+  override def apply(args: String*) = {
+    def read(r: BufferedReader): Stream[String] = {
+      val line = r.readLine()
+      if (line eq null) {
+        r.close()
+        Stream.Empty
+      } else {
+        line #:: read(r)
+      }
+    }
+    _.flatMap { f => read(new BufferedReader(new InputStreamReader(new FileInputStream(f)))) }
+  }
 }

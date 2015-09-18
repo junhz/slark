@@ -1,7 +1,15 @@
 package slark.script
 
-trait Script {
+import java.util.NoSuchElementException
 
-  def apply(args: String*): Any
+abstract class Script {
   
+  def apply(args: String*): (=>Stream[String]) => Stream[String]
+
+}
+
+object Script {
+  implicit final class Combinator(val self: (=>Stream[String]) => Stream[String]) extends AnyVal {
+    def | (that: (=>Stream[String]) => Stream[String]) = self.andThen { that.apply(_) }
+  }
 }

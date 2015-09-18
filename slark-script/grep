@@ -1,0 +1,5 @@
+val pattern = args(0).r
+_.filter {
+  case pattern() => true
+  case line => false
+}

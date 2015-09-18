@@ -1,0 +1,15 @@
+import java.io.InputStream
+import java.io.BufferedReader
+import java.io.FileInputStream
+import java.io.InputStreamReader
+
+def read(r: BufferedReader): Stream[String] = {
+  val line = r.readLine()
+  if (line eq null) {
+    r.close()
+    Stream.Empty
+  } else {
+    line #:: read(r)
+  }
+}
+_.flatMap { f => read(new BufferedReader(new InputStreamReader(new FileInputStream(f)))) }
