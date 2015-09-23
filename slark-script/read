@@ -12,4 +12,4 @@ def read(r: BufferedReader): Stream[String] = {
     line #:: read(r)
   }
 }
-_.flatMap { f => read(new BufferedReader(new InputStreamReader(new FileInputStream(f)))) }
+_ flatMap { f => read(new BufferedReader(new InputStreamReader(new FileInputStream(f)))) }

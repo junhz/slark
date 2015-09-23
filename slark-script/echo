@@ -1,1 +1,1 @@
-_ => args(0) #:: Stream.Empty
+_ => args(0) :: Nil

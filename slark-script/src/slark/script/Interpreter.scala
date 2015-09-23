@@ -9,6 +9,7 @@ import java.util.Arrays
 import java.io.InputStream
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import scala.annotation.tailrec
 
 
 object Interpreter {
@@ -30,7 +31,11 @@ object Interpreter {
         line #:: input
       }
     }
-    script(params:_*)(input) foreach println
+    var seq = script(params:_*)(input)
+    while (!seq.isEmpty) {
+      println(seq.head)
+      seq = seq.tail
+    }
   }
   
   def load(name: String): Script = {
@@ -51,11 +56,11 @@ object Interpreter {
           throw new IllegalArgumentException(s"script not found: $name")
         }
       }
-      
+      if (System.console() ne null) {
+        System.console().writer().println(s"$name loaded")
+      }
     }
-    if (System.console() ne null) {
-      System.console().writer().println(s"$name loaded")
-    }
+    
     loadedScripts.get(name)
   }
   
@@ -63,7 +68,7 @@ object Interpreter {
     s"""new slark.script.Script {
        |  import slark.script.Interpreter.load
        |  import slark.script.Script._
-       |  def apply(args: String*): (=>Stream[String]) => Stream[String] = {
+       |  def apply(args: String*): (=>Seq[String]) => Seq[String] = {
        |    $code
        |  }
        |}""".stripMargin
@@ -95,4 +100,13 @@ object Interpreter {
     bytes
   }
   
+}
+
+object Test extends Script {
+  import slark.script.Interpreter.load
+  override def apply(args: String*) = {
+val `grep-out` = load("grep-out")(args(0))
+val script = load(args(1))(args.tail.tail:_*)
+_ groupBy { line => `grep-out`(line :: Nil).headOption } to List.canBuildFrom flatMap { group => script(group._2) map (line => s"${group._1}\t${line}") }
+  }
 }

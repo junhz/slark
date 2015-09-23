@@ -1,0 +1,15 @@
+val pattern = args(0).r.pattern
+def extract(line: String): List[String] = {
+  val matcher = pattern.matcher(line)
+  @annotation.tailrec
+  def rec(start: Int, result: List[String]): List[String] = {
+    if (start < line.length() && matcher.find(start)) {
+      val found = (1 to matcher.groupCount()) map (matcher.group(_)) mkString "\t"
+      rec(matcher.end() + 1, found :: result)
+    } else {
+      result.reverse
+    }
+  }
+  rec(0, Nil)
+}
+_ flatMap extract
