@@ -1,0 +1,1 @@
+_.takeRight(args(0).toInt)

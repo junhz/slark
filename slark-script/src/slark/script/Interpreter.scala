@@ -104,9 +104,9 @@ object Interpreter {
 
 object Test extends Script {
   import slark.script.Interpreter.load
+  import slark.script.Script._
   override def apply(args: String*) = {
-val `grep-out` = load("grep-out")(args(0))
-val script = load(args(1))(args.tail.tail:_*)
-_ groupBy { line => `grep-out`(line :: Nil).headOption } to List.canBuildFrom flatMap { group => script(group._2) map (line => s"${group._1}\t${line}") }
+_ map { line => "done"}
+
   }
 }

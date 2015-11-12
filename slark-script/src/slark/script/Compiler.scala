@@ -10,7 +10,14 @@ import java.util.Arrays
 object Compiler {
   
   def main(args: Array[String]): Unit = {
-    args.foreach { Interpreter.load }
+    args.foreach { arg => {
+      try {
+        Interpreter.load(arg)
+        println(s"compile arg done.")
+      } catch {
+        case e: Throwable => println(s"compile arg failed."); e.printStackTrace() 
+      }
+    }}
   }
   
 }
