@@ -17,26 +17,32 @@ abstract class Parsers extends ParsersApi { parsers =>
 
     def parse(input: Input): ParseResult[S]
 
-    def onSucc[T](fn: S => Parser[T]): Parser[T] = Combinate(self, Cache(parsers) ((r: ParseResult[S], i: Input) => {
-      r match {
-        case s: Succ[S] => (fn(s.result), s.next)
-        case f: Fail  => (fail(f.msg), i)
-      }
-    }))
+    def onSucc[T](fn: S => Parser[T]): Parser[T] = Cache(parsers) { 
+      Combinate(self,  (r: ParseResult[S], i: Input) => {
+        r match {
+          case s: Succ[S] => (fn(s.result), s.next)
+          case f: Fail  => (fail(f.msg), i)
+        }
+      })
+    }
 
-    def onFail[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = Combinate(self, Cache(parsers) ((r: ParseResult[S], i: Input) => {
-      r match {
-        case s: Succ[S] => (succ(s.result: T), s.next)
-        case f: Fail  => (fn(f.msg), i)
-      }
-    }))
+    def onFail[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = Cache(parsers) {
+      Combinate(self, (r: ParseResult[S], i: Input) => {
+        r match {
+          case s: Succ[S] => (succ(s.result: T), s.next)
+          case f: Fail  => (fn(f.msg), i)
+        }
+      })
+    }
 
-    def not: Parser[Unit] = Combinate(self, Cache(parsers) ((r: ParseResult[S], i: Input) => {
-      r match {
-        case _: Succ[S] => (fail(MissingExpectedFailure), i)
-        case f: Fail  => (succ(()), i)
-      }
-    }))
+    def not: Parser[Unit] = Cache(parsers) {
+      Combinate(self, (r: ParseResult[S], i: Input) => {
+        r match {
+          case _: Succ[S] => (fail(MissingExpectedFailure), i)
+          case f: Fail  => (succ(()), i)
+        }
+      })
+    }
 
     /** flatmap */
     def >>[T](fn: S => Parser[T]): Parser[T] = this onSucc fn
