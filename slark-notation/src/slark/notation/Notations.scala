@@ -1,16 +1,18 @@
 package slark
 package notation
 
-import combinator.parser.ParsersApi
+import combinator.parser._
 import scala.language.experimental.macros
 
 /**
  * @author a554114
  */
 trait Notations {
-  trait Notation
+  trait Notation {
+    def apply(c: scala.reflect.macros.blackbox.Context)(params: List[c.Tree]): (c.Tree, List[c.Tree])
+  }
   
-  
+  val grammer: Notation
 }
 
 object Notations {
@@ -34,7 +36,7 @@ object Notations {
             parts.foreach { part => c.warning(part._1, part._2) }
             c.warning(pTree.pos, pTree.toString())
             c.warning(nTree.pos, notations.toString())
-            c.universe.reify(???).tree
+            notations.grammer.apply(c)(partTrees)._1
           }
           case _ => c.abort(nTree.pos, s"$notationsName is not an object or missing at compile time")
         }

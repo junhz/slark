@@ -10,12 +10,12 @@ import java.util.Arrays
 object Compiler {
   
   def main(args: Array[String]): Unit = {
-    args.foreach { arg => {
+    args foreach { arg => {
       try {
         Interpreter.load(arg)
-        println(s"compile arg done.")
+        println(s"compile $arg done.")
       } catch {
-        case e: Throwable => println(s"compile arg failed."); e.printStackTrace() 
+        case e: Throwable => println(s"compile $arg failed."); e.printStackTrace() 
       }
     }}
   }
