@@ -7,9 +7,9 @@ import combinator.parser._
  * @author a554114
  */
 object BnfNotations extends Notations {
-  val grammer = new Notation {
-    def apply(c: scala.reflect.macros.blackbox.Context)(params: List[c.Tree]): (c.Tree, List[c.Tree]) = {
-      (c.universe.reify(???).tree, Nil)
+  def grammer(c: scala.reflect.macros.blackbox.Context) = new Notation[c.Tree] {
+    def apply(params: Input): Result[c.Tree] = {
+      Succ(c.universe.reify(???).tree, Nil)
     }
   }
 }

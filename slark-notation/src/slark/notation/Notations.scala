@@ -7,12 +7,21 @@ import scala.language.experimental.macros
 /**
  * @author a554114
  */
-trait Notations {
-  trait Notation {
-    def apply(c: scala.reflect.macros.blackbox.Context)(params: List[c.Tree]): (c.Tree, List[c.Tree])
+
+trait Notations extends ResultsApi {
+  type Input = List[scala.reflect.macros.blackbox.Context#Tree]
+  
+  case class Fail(val msg: List[FailReason]) extends FailApi
+  object Fail extends FailExtractor
+  
+  case class Succ[+S](val result: S, val next: Input) extends SuccApi[S]
+  object Succ extends SuccExtractor
+  
+  trait Notation[S] {
+    def apply(input: Input): Result[S]
   }
   
-  val grammer: Notation
+  def grammer(c: scala.reflect.macros.blackbox.Context): Notation[c.Tree]
 }
 
 object Notations {
@@ -36,7 +45,10 @@ object Notations {
             parts.foreach { part => c.warning(part._1, part._2) }
             c.warning(pTree.pos, pTree.toString())
             c.warning(nTree.pos, notations.toString())
-            notations.grammer.apply(c)(partTrees)._1
+            notations.grammer(c).apply(partTrees) match {
+              case notations.Succ(r, n) => r
+              case _ => c.abort(c.macroApplication.pos, s"failed to apply notation")
+            }
           }
           case _ => c.abort(nTree.pos, s"$notationsName is not an object or missing at compile time")
         }

@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import Trampolines._
 import scala.language.higherKinds
 
-abstract class Parsers extends ParsersApi { parsers =>
+abstract class Parsers extends ResultsApi with ParsersApi { parsers =>
   
   case class Fail(val msg: List[FailReason]) extends FailApi
   object Fail extends FailExtractor
@@ -15,10 +15,10 @@ abstract class Parsers extends ParsersApi { parsers =>
 
   abstract class Parser[+S] extends ParserApi[S] { self =>
 
-    def parse(input: Input): ParseResult[S]
+    def parse(input: Input): Result[S]
 
     def onSucc[T](fn: S => Parser[T]): Parser[T] = Cache(parsers) { 
-      Combinate(self,  (r: ParseResult[S], i: Input) => {
+      Combinate(self,  (r: Result[S], i: Input) => {
         r match {
           case s: Succ[S] => (fn(s.result), s.next)
           case f: Fail  => (fail(f.msg), i)
@@ -27,7 +27,7 @@ abstract class Parsers extends ParsersApi { parsers =>
     }
 
     def onFail[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = Cache(parsers) {
-      Combinate(self, (r: ParseResult[S], i: Input) => {
+      Combinate(self, (r: Result[S], i: Input) => {
         r match {
           case s: Succ[S] => (succ(s.result: T), s.next)
           case f: Fail  => (fn(f.msg), i)
@@ -36,7 +36,7 @@ abstract class Parsers extends ParsersApi { parsers =>
     }
 
     def not: Parser[Unit] = Cache(parsers) {
-      Combinate(self, (r: ParseResult[S], i: Input) => {
+      Combinate(self, (r: Result[S], i: Input) => {
         r match {
           case _: Succ[S] => (fail(MissingExpectedFailure), i)
           case f: Fail  => (succ(()), i)
@@ -104,7 +104,7 @@ abstract class Parsers extends ParsersApi { parsers =>
     override def toString = s"succ($sym)"
   }
 
-  case class Combinate[S, T](p: Parser[S], fn: (ParseResult[S], Input) => (Parser[T], Input)) extends Parser[T] { combinate =>
+  case class Combinate[S, T](p: Parser[S], fn: (Result[S], Input) => (Parser[T], Input)) extends Parser[T] { combinate =>
     override def parse(input: Input) = {
       val (p, i) = parserAndInputIsTrampoline.run((combinate, input))
       p parse i
@@ -127,9 +127,9 @@ abstract class Parsers extends ParsersApi { parsers =>
       }
     }
 
-    def associate[A, B, C](fn1: (ParseResult[A], Input) => (Parser[B], Input),
-                           fn2: (ParseResult[B], Input) => (Parser[C], Input)): (ParseResult[A], Input) => (Parser[C], Input) = {
-      (r: ParseResult[A], i: Input) => {
+    def associate[A, B, C](fn1: (Result[A], Input) => (Parser[B], Input),
+                           fn2: (Result[B], Input) => (Parser[C], Input)): (Result[A], Input) => (Parser[C], Input) = {
+      (r: Result[A], i: Input) => {
           val (p, n) = fn1(r, i)
           (Combinate(p, fn2), n)
         }

@@ -3,41 +3,12 @@ package combinator.parser
 
 import scala.language.higherKinds
 
-trait ParsersApi {
+trait ParsersApi { self: ResultsApi =>
   type Input
-
-  trait ParseResult[+S]
-  
-  trait FailApi extends ParseResult[Nothing]{
-    def msg: List[FailReason]
-  }
-  
-  type Fail <: FailApi
-  
-  trait FailExtractor {
-    def apply(msg: List[FailReason]): Fail
-    def unapply(f: Fail): Option[List[FailReason]]
-  }
-  
-  val Fail: FailExtractor
-  
-  trait SuccApi[+S] extends ParseResult[S] {
-    def result: S
-    def next: Input
-  }
-  
-  type Succ[+S] <: SuccApi[S]
-  
-  trait SuccExtractor {
-    def apply[S](result: S, next: Input): Succ[S]
-    def unapply[S](s: Succ[S]): Option[(S, Input)]
-  }
-  
-  val Succ: SuccExtractor
   
   trait ParserApi[+S] {
 
-    def parse(input: Input): ParseResult[S]
+    def parse(input: Input): Result[S]
 
     /** flatmap */
     def >>[T](fn: S => Parser[T]): Parser[T]
