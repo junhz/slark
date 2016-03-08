@@ -8,6 +8,14 @@ import scala.language.experimental.macros
  * @author a554114
  */
 
+trait Parameters {
+  type Context <: scala.reflect.macros.blackbox.Context
+  val c: Context
+  type Tree = c.Tree
+  
+  def get: List[Tree] = Nil
+}
+
 trait Notations extends ResultsApi {
   type Input = List[scala.reflect.macros.blackbox.Context#Tree]
   
@@ -32,6 +40,11 @@ object Notations {
   
   def compile[T: c.WeakTypeTag](c: scala.reflect.macros.blackbox.Context)(args: c.Tree*): c.Tree = {
     import c.universe._
+    val context: c.type = c
+    val ps: List[c.Tree] = (new Parameters {
+      type Context = context.type
+      val c: Context = context
+    }).get ::: args.toList
     c.prefix.tree match {
       case Apply(Apply(_, Apply(_, partTrees) :: Nil), pTree :: nTree :: Nil) => {
         val parts = partTrees.map {
