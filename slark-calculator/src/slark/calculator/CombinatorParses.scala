@@ -18,7 +18,7 @@ class CombinatorParses { parsers =>
     def parse(input: Input): Result[S]
 
     def onSucc[T](fn: S => Parser[T]): Parser[T] = Cache(parsers) {
-      Combinate(self,  (r: Result[S], i: Input) => {
+      Combinate(self,  (i: Input) => (r: Result[S]) => {
         println("onSucc")
         r match {
           case s: Succ[S] => (fn(s.result), s.next)
@@ -28,7 +28,7 @@ class CombinatorParses { parsers =>
     }
 
     def onFail[T >: S](fn: List[FailReason] => Parser[T]): Parser[T] = Cache(parsers) {
-      Combinate(self, (r: Result[S], i: Input) => {
+      Combinate(self, (i: Input) => (r: Result[S]) => {
         println("onFail")
         r match {
           case s: Succ[S] => (succ(s.result: T), s.next)
@@ -38,7 +38,7 @@ class CombinatorParses { parsers =>
     }
 
     def not: Parser[Unit] = Cache(parsers) {
-      Combinate(self, (r: Result[S], i: Input) => {
+      Combinate(self, (i: Input) => (r: Result[S]) => {
         println("not")
         r match {
           case _: Succ[S] => (fail(MissingExpectedFailure), i)
@@ -107,7 +107,7 @@ class CombinatorParses { parsers =>
     override def toString = s"succ($sym)"
   }
 
-  case class Combinate[S, T](p: Parser[S], fn: (Result[S], Input) => (Parser[T], Input)) extends Parser[T] { combinate =>
+  case class Combinate[S, T](p: Parser[S], fn: Input => Result[S] => (Parser[T], Input)) extends Parser[T] { combinate =>
     override def parse(input: Input) = {
       val (p, i) = parserAndInputIsTrampoline.run((combinate, input))
       p parse i
@@ -124,17 +124,17 @@ class CombinatorParses { parsers =>
       case Combinate(p, fn1) => p match {
         case Combinate(p, fn2) => (Combinate(p, associate(fn2, fn1)), t._2)
         case _ => (p parse t._2) match {
-          case x @ Succ(r, n) => fn1(x, t._2)
-          case x @ Fail(msg)  => fn1(x, t._2)
+          case x @ Succ(r, n) => fn1(t._2)(x)
+          case x @ Fail(msg)  => fn1(t._2)(x)
         }
       }
     }}
 
-    def associate[A, B, C](fn1: (Result[A], Input) => (Parser[B], Input),
-                           fn2: (Result[B], Input) => (Parser[C], Input)): (Result[A], Input) => (Parser[C], Input) = {
-      (r: Result[A], i: Input) => {
-          val (p, n) = fn1(r, i)
-          (Combinate(p, fn2), n)
+    def associate[A, B, C](fn1: Input => Result[A] => (Parser[B], Input),
+                           fn2: Input => Result[B] => (Parser[C], Input)): Input => Result[A] => (Parser[C], Input) = {
+      (i: Input) => (r: Result[A]) => {
+          val (p, n) = fn1(i)(r)
+          (Combinate(p, (input: Input) => fn2(i)), n)
         }
     }
   }
@@ -155,7 +155,7 @@ class CombinatorParses { parsers =>
     }
   }
   
-  def ref[T](parser: => Parser[T]): Parser[T] = Combinate(succ(()), (unit: Result[Unit], input: Input) => (parser, input))
+  def ref[T](parser: => Parser[T]): Parser[T] = Combinate(succ(()), (input: Input) => (unit: Result[Unit]) => (parser, input))
   
   def eval(op: List[(Int, Char)], term: Int): Int = {
     @tailrec
@@ -182,7 +182,7 @@ class CombinatorParses { parsers =>
   val expr: Parser[Int] = ((ws :^ ref(factor) ^ (ws :^ ('*': Parser[Char]) | '/' )).* ^ ws :^ ref(factor)) -> (t => eval(t._1, t._2))
   
   val `1`: Parser[Char] = '1'
-  val test = (`1` ^ `1`).*
+  val test = (`1`.!).*
   
   val calculator = (ws :^ expr) ^: ws
 }
