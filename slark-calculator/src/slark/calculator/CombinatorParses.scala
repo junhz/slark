@@ -124,16 +124,16 @@ class CombinatorParses { parsers =>
       //println(t)
       t._1 match {
         case Combinate(p, fn1) => p match {
-          case Combinate(p, fn2) => (Combinate(p, associate(fn2, fn1)), t._2)
+          case Combinate(p, fn2) => (Combinate(p, _ => associate(fn2(t._2), fn1(t._2))), t._2)
           case _ => fn1(t._2)(p parse t._2)
         }
       }}
 
-    def associate[A, B, C](fn1: Input => Result[A] => (Parser[B], Input),
-                           fn2: Input => Result[B] => (Parser[C], Input)): Input => Result[A] => (Parser[C], Input) = {
-      (i: Input) => (r: Result[A]) => {
-          val (p, n) = fn1(i)(r)
-          (Combinate(p, (input: Input) => fn2(i)), n)
+    def associate[A, B, C](fn1: Result[A] => (Parser[B], Input),
+                           fn2: Result[B] => (Parser[C], Input)): Result[A] => (Parser[C], Input) = {
+      (r: Result[A]) => {
+          val (p, n) = fn1(r)
+          (Combinate(p, _ => fn2), n)
         }
     }
   }
