@@ -1,0 +1,5 @@
+val pattern = args(0).r
+val groups = args.tail.map(_.toInt)
+_ flatten (line => pattern.findAllMatchIn(line).map(m => groups map {
+  g => if (m.group(g) eq null) "" else m.group(g)
+}).flatten)

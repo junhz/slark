@@ -71,6 +71,10 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
           val (s, e, ms) = format(sql, exp)
           (ms ::: m :: Nil, exp.updated(m, Knowledge.Query(s)))
         }
+        case k@Knowledge.Block(sql) => {
+          val (s, e, ms) = format(sql, exp)
+          (ms ::: m :: Nil, exp.updated(m, Knowledge.Block(s)))
+        }
         case k@Traveler.ChildObject(owner, parent, name) => {
           exp.collectFirst {
             case (m@Mirage.Package(_, name), k: Knowledge.Package) if name == parent => (m, k)
@@ -139,6 +143,15 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
             case e: SQLException => stat.close(); (fixSqlException(sql, e, to.getMetaData.getUserName.toUpperCase()) ::: m :: Nil, exp)
           }
         }
+        case Knowledge.Block(sql) => {
+          val stat = to.createStatement()
+          try {
+            val rs = stat.execute(sql)
+            (Nil, exp)
+          } catch {
+            case e: SQLException => stat.close(); (fixPlSqlException(sql, e, to.getMetaData.getUserName.toUpperCase()) ::: m :: Nil, exp)
+          }
+        }
         case Knowledge.Package(owner, name, order, visible, hidden) => {
           val definition = order.map(visible.get(_)).flatten
           ddl((s"create or replace package $name IS\r\n" :: definition.map(_._1) ::: "end;" :: Nil).mkString("\r\n"))
@@ -192,7 +205,6 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
         tableContent.executeBatch()
         tableContent.clearBatch()
         cnt = 0
-        to.commit()
       } else {
         // do nothing
       }
@@ -204,8 +216,8 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
       println(s"tail batching row: $row")
       tableContent.executeBatch()
       tableContent.clearBatch()
-      to.commit()
     }
+    to.commit()
     tableContent.close()
     rs.close()
     stat.close()
@@ -238,6 +250,7 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
     val invalidIndentfierPattern = """"([a-zA-Z0-9_]+)": invalid identifier""".r
     val invalidChildIdentifierPattern = """"([a-zA-Z0-9_]+)"\."([a-zA-Z0-9_]+)": invalid identifier""".r
     val undeclaredIdentifierPattern = """identifier '([a-zA-Z0-9_]+)' must be declared""".r
+    val undeclaredChildIdentifierPattern = """identifier '([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)' must be declared""".r
     val undeclaredComponentPattern = """component '([a-zA-Z0-9_]+)' must be declared""".r
     val tableOrViewPattern = """table or view does not exist""".r
     val columnDisallowPattern = """column not allowed here""".r
@@ -279,7 +292,10 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
                     case None => None
                     case Some(n) => Mirage.ObjectType(owner, n.group(1).toUpperCase()).wander(from).ref
                   }
-                  case _ => None
+                  case _ => undeclaredChildIdentifierPattern.findFirstMatchIn(error) match {
+                    case Some(m) => Some(Traveler.ChildObject(owner, m.group(1).toUpperCase(), m.group(2).toUpperCase()))
+                    case _ => None
+                  }
                 }
               }
             }
@@ -305,6 +321,23 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
     val pattern = """line (\d+), column (\d+):\s+(.*)""".r
     val s = source.split('\n')
     pattern.findAllMatchIn(error).map(m => analyse(owner, None, m.group(3), m.group(2).toInt, s(m.group(1).toInt - 1))).toList.flatten
+  }
+  
+  def fixPlSqlException(source: String, e: SQLException, owner: String): List[Mirage] = {
+    val pattern = """line (\d+), column (\d+):""".r
+    var ms: List[Mirage] = Nil
+    var ex = e
+    while (ex ne null) {
+      val msg = ex.getMessage.split("\\n")
+      pattern.findFirstMatchIn(msg(0)) match {
+        case Some(m) => {
+          ms = analyse(owner, None, msg(1), m.group(2).toInt, source.split("\\n")(m.group(1).toInt - 1)).toList ::: ms
+        }
+        case _ => ()
+      }
+      ex = ex.getNextException
+    }
+    ms.reverse
   }
   
   def fixDbError(owner: String, parent: Boolean, name: String): List[Mirage] = {

@@ -1,0 +1,9 @@
+val script = load(args(0))(args.tail: _*)
+def rec(s: Seq[String]): Stream[String] = {
+  if (s.isEmpty) Stream.Empty
+  else {
+    val next = script(s)
+    next.toStream #::: rec(next)
+  }
+}
+rec(_)

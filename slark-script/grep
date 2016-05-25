@@ -1,2 +1,2 @@
-val pattern = args(0).r.pattern
-_ filter { line => pattern.matcher(line).find() }
+val pattern = args(0).r
+_ filter { line => pattern.findFirstIn(line).isEmpty }

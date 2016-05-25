@@ -1,28 +1,22 @@
-implicit val ord = new Ordering[Option[List[String]]] {
-  override def compare(x: Option[List[String]], y: Option[List[String]]) = {
-    if (x.isEmpty) {
-      if (y.isEmpty) 0 else -1
-    } else if (y.isEmpty) {
-      1
-    } else {
-      @annotation.tailrec
-      def rec(l: List[String], r: List[String]): Int = {
-        if (l.isEmpty) {
-          if (r.isEmpty) 0 else -1
-        } else if (r.isEmpty) {
-          1
+implicit val ord = new Ordering[Seq[String]] {
+  override def compare(x: Seq[String], y: Seq[String]) = {
+    @annotation.tailrec
+    def rec(l: Seq[String], r: Seq[String]): Int = {
+      if (l.isEmpty) {
+        if (r.isEmpty) 0 else -1
+      } else if (r.isEmpty) {
+        1
+      } else {
+        val v = l.head.compareTo(r.head)
+        if (v == 0) {
+          rec(l.tail, r.tail)
         } else {
-          val v = l.head.compareTo(r.head)
-          if (v == 0) {
-            rec(l.tail, r.tail)
-          } else {
-            v
-          }
+          v
         }
       }
-      rec(x.get, y.get)
     }
+    rec(x, y)
   }
 }
-val `grep-out` = load("grep-out")(args(0))
-_ sortBy { line => `grep-out`(line :: Nil).headOption }
+val script = load(args(0))(args.tail: _*)
+_ sortBy { line => script(line :: Nil) }

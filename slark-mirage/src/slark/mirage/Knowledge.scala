@@ -31,4 +31,6 @@ object Knowledge {
   case class `Type`(owner: String, name: String, source: String) extends Knowledge
   
   case class Sequence(owner: String, name: String, start: Long, ordered: Boolean) extends Knowledge
+  
+  case class Block(sql: String) extends Knowledge
 }

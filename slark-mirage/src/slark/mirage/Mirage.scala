@@ -424,4 +424,8 @@ object Mirage {
       Knowledge.Sequence(owner, name, start, ordered)
     }
   }
+  
+  case class Block(sql: String) extends Mirage {
+    def wander(conn: Connection): Knowledge.Block = Knowledge.Block(sql)
+  }
 }

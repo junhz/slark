@@ -10,6 +10,7 @@ import java.io.InputStream
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import scala.annotation.tailrec
+import java.text.SimpleDateFormat
 
 
 object Interpreter {
@@ -106,7 +107,35 @@ object Test extends Script {
   import slark.script.Interpreter.load
   import slark.script.Script._
   override def apply(args: String*) = {
-_ map { line => "done"}
+val `cat` = load("cat")()
+val df = new java.text.SimpleDateFormat("dd MMM yyyy HH:mm:ss,SSS")
+val start = `cat`(s"${args(0)}/${args(1)}_start" :: Nil).grouped(2).map(s => (s(1), df.parse(s(0)).getTime)).toList
+val end = `cat`(s"${args(0)}/${args(1)}_end" :: Nil).grouped(2).map(s => (s(1), df.parse(s(0)).getTime)).toList
+def merge(start: List[(String, Long)], 
+          end: List[(String, Long)],
+          merged: List[(String, Long)]): List[String] = {
+  if (end.isEmpty) merged.reverse.flatten(t => t._1 :: t._2.toString() :: Nil)
+  else {
+    val head = end.head
+    find(head._2, start, Nil) match {
+      case Some(s) => merge(s.tail, end.tail, (head._1, head._2 - s.head._2) :: merged)
+      case _ => throw new IllegalArgumentException(s"can't find start of $head")
+    }
+  }
+}
+def find(end: Long, start: List[(String, Long)], pre: List[(String, Long)]): Option[List[(String, Long)]] = {
+  if (start.isEmpty) pre match {
+      case t :: ts => Some(t :: start)
+      case _ => println("end of start"); None
+  } else {
+    val head = start.head
+    if (head._2 > end) pre match {
+      case t :: ts => Some(t :: start)
+      case _ => println("end of end"); None
+    } else find(end, start.tail, head :: pre)
+  }
+}
+_ => merge(start, end, Nil)
 
   }
 }
