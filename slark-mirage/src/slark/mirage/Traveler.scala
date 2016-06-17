@@ -94,9 +94,9 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
             case _ => Mirage.ObjectType(owner, parent).wander(from).ref match {
               case None => Mirage.ObjectType(owner, name).wander(from).ref match {
                 case None => println(s"unable to resolve $m"); (Nil, exp)
-                case Some(mirage) => (mirage :: Nil, exp.updated(m, k))
+                case Some(mirage) => (mirage :: m :: Nil, exp)
               }
-              case Some(mirage) => (mirage :: Nil, exp.updated(m, k))
+              case Some(mirage) => (mirage :: m :: Nil, exp)
             }
           }
         }

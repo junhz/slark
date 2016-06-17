@@ -277,7 +277,7 @@ object Mirage {
     }
 
     def loadDefinitions(conn: Connection): Map[String, String] = {
-      val namePattern = """\s*([a-zA-Z0-9_]+)""".r
+      val namePattern = """^\s+([a-zA-Z0-9_]+)""".r
       val keyWords = """(?i)[^a-zA-Z0-9_](procedure|function|begin|end|if|case|loop)[^a-zA-Z0-9_]""".r
       val stat = conn.prepareStatement("""
       SELECT text
@@ -299,37 +299,37 @@ object Mirage {
       def rec(code: String, terms: List[String], text: List[String], items: Map[String, String]): Map[String, String] = {
         keyWords.findFirstMatchIn(code) match {
           case Some(m) => m.group(1).toUpperCase() match {
-            case "PROCEDURE" | "FUNCTION" => namePattern.findFirstMatchIn(code.substring(m.end)) match {
+            case "PROCEDURE" | "FUNCTION" => namePattern.findFirstMatchIn(code.substring(m.end(1))) match {
               case Some(n) => terms match {
-                case Nil => rec(code.substring(m.end + n.end), n.group(1) :: terms, code.substring(m.start, m.end + n.end) :: text, items)
-                case _   => rec(code.substring(m.end + n.end), n.group(1) :: terms, code.substring(0, m.end + n.end) :: text, items)
+                case Nil => rec(code.substring(m.end(1) + n.end), n.group(1) :: terms, code.substring(m.start, m.end(1) + n.end) :: text, items)
+                case _   => rec(code.substring(m.end(1) + n.end), n.group(1) :: terms, code.substring(0, m.end(1) + n.end) :: text, items)
               }
               case _ => throw new IllegalArgumentException("incomplete procedure or function signature")
             }
-            case s @ ("IF" | "CASE" | "LOOP" | "BEGIN") => rec(code.substring(m.end), s :: terms, code.substring(0, m.end) :: text, items)
+            case s @ ("IF" | "CASE" | "LOOP" | "BEGIN") => rec(code.substring(m.end(1)), s :: terms, code.substring(0, m.end(1)) :: text, items)
             case "END" => terms match {
               case Nil => items
               case t :: ts => t match {
-                case s @ ("LOOP" | "IF") => namePattern.findFirstMatchIn(code.substring(m.end)) match {
-                  case Some(n) if n.group(1).toUpperCase() == s => rec(code.substring(m.end + n.end), ts, code.substring(0, m.end + n.end) :: text, items)
+                case s @ ("LOOP" | "IF") => namePattern.findFirstMatchIn(code.substring(m.end(1))) match {
+                  case Some(n) if n.group(1).toUpperCase() == s => rec(code.substring(m.end(1) + n.end), ts, code.substring(0, m.end(1) + n.end) :: text, items)
                   case _                                        => throw new IllegalArgumentException(s"unclosed $s")
                 }
-                case "CASE" => namePattern.findFirstMatchIn(code.substring(m.end)) match {
-                  case Some(n) if n.group(1).toUpperCase() == "CASE" => rec(code.substring(m.end + n.end), ts, code.substring(0, m.end + n.end) :: text, items)
-                  case _ => rec(code.substring(m.end), ts, code.substring(0, m.end) :: text, items)
+                case "CASE" => namePattern.findFirstMatchIn(code.substring(m.end(1))) match {
+                  case Some(n) if n.group(1).toUpperCase() == "CASE" => rec(code.substring(m.end(1) + n.end), ts, code.substring(0, m.end(1) + n.end) :: text, items)
+                  case _ => rec(code.substring(m.end(1)), ts, code.substring(0, m.end(1)) :: text, items)
                 }
                 case "BEGIN" => ts match {
                   case Nil => throw new IllegalArgumentException("anonymous block")
                   case t :: ts => t match {
-                    case s @ ("IF" | "CASE" | "LOOP" | "BEGIN") => rec(code.substring(m.end), t :: ts, code.substring(0, m.end) :: text, items)
-                    case _ => namePattern.findFirstMatchIn(code.substring(m.end)) match {
+                    case s @ ("IF" | "CASE" | "LOOP" | "BEGIN") => rec(code.substring(m.end(1)), t :: ts, code.substring(0, m.end(1)) :: text, items)
+                    case _ => namePattern.findFirstMatchIn(code.substring(m.end(1))) match {
                       case Some(n) if n.group(1).toUpperCase() == t => ts match {
-                        case Nil => rec(code.substring(m.end + n.end), Nil, Nil, items + (t.toUpperCase() -> (code.substring(0, m.end + n.end) :: text).reverse.mkString))
-                        case _   => rec(code.substring(m.end + n.end), ts, code.substring(0, m.end + n.end) :: text, items)
+                        case Nil => rec(code.substring(m.end(1) + n.end), Nil, Nil, items + (t.toUpperCase() -> (code.substring(0, m.end(1) + n.end) :: text).reverse.mkString))
+                        case _   => rec(code.substring(m.end(1) + n.end), ts, code.substring(0, m.end(1) + n.end) :: text, items)
                       }
                       case _ => ts match {
-                        case Nil => rec(code.substring(m.end), Nil, Nil, items + (t.toUpperCase() -> (code.substring(0, m.end(1)) :: text).reverse.mkString))
-                        case _   => rec(code.substring(m.end), ts, code.substring(0, m.end) :: text, items)
+                        case Nil => rec(code.substring(m.end(1)), Nil, Nil, items + (t.toUpperCase() -> (code.substring(0, m.end(1)) :: text).reverse.mkString))
+                        case _   => rec(code.substring(m.end(1)), ts, code.substring(0, m.end(1)) :: text, items)
                       }
                     }
                   }
