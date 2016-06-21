@@ -13,13 +13,13 @@ object Gomory extends CuttingPlane {
         (row, col)
       }
     } some {
-      case (row, col) => !problem.b(row).isInteger
+      case (row, col) => !(problem.b(row)).isInteger
     }
     val it = cuttable.iterator
     var p = problem
     while (it.hasNext) {
       val (row, col) = it.next()
-      p = p.withConstraint(i => f(p.a(row)(i)), f(p.b(row)))
+      p = p.strict(i => f(p.a(row)(i)), f(p.b(row)))
     }
     p
   }

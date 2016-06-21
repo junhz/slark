@@ -45,7 +45,7 @@ object Primal extends Simplex { self =>
               View.Array(problem.a).indexed.map({
                 case (i, arr) => problem.b(i) +: arr ++: Array.fill(1)(Rational.one.negate)
               }).toArray
-          show(tableau)
+          //show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1
             def leaveStart: Int = 2
@@ -82,7 +82,7 @@ object Primal extends Simplex { self =>
             View.Array(problem.a).indexed.map({
               case (i, arr) => problem.b(i) +: arr
             }).toArray
-          show(tableau)
+          //show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1
             def leaveStart: Int = 1
@@ -94,11 +94,32 @@ object Primal extends Simplex { self =>
             selected = selector(tableau)
           }
           selected match {
-            case (-1, -1) => Optimized(StandardForm(tableau.tail.map(_.tail),
-                                                    View.Cols(tableau)(0).toArray.tail,
-                                                    tableau(0).tail,
-                                                    tableau(0)(0),
-                                                    problem.originalSize))
+            case (-1, -1) => {
+              var col = 1
+              while (col < tableau(0).length) {
+                if (tableau(0)(col).isZero) {
+                  var row = 1
+                  while (row < tableau.length) {
+                    var factor = tableau(row)(col)
+                    if (factor.isZero) ()
+                    else {
+                      var i = 0
+                      while (i < tableau(0).length) {
+                        tableau(row)(i) /= factor
+                        i += 1
+                      }
+                    }
+                    row += 1
+                  }
+                } else ()
+                col += 1
+              }
+              Optimized(StandardForm(tableau.tail.map(_.tail),
+                                     View.Cols(tableau)(0).toArray.tail,
+                                     tableau(0).tail,
+                                     tableau(0)(0),
+                                     problem.originalSize))
+            }
             case _ => Unbounded
           }
         }

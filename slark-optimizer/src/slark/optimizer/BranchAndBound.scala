@@ -3,17 +3,13 @@ package slark.optimizer
 import scala.collection.mutable.PriorityQueue
 import java.math.BigInteger
 
-/**
- * @author a554114
- */
-object BranchAndBound {
+trait BranchAndBound { self =>
+  import BranchAndBound._
+  def cuttingPlanes: List[CuttingPlane]
   
-  trait SolveResult
-  case class Optimized(z: Rational, xs: Array[Rational]) extends SolveResult {
-    override def toString = s"$z <- (${xs.mkString(",")})"
+  def and(cp: CuttingPlane) = new BranchAndBound {
+    val cuttingPlanes = cp :: self.cuttingPlanes
   }
-  case object Infeasible extends SolveResult
-  case object Unbounded extends SolveResult
   
   def solve(originProblem: Simplex.StandardForm): SolveResult = {
     Primal.solve(originProblem) match {
@@ -31,7 +27,7 @@ object BranchAndBound {
         while (!queue.isEmpty) {
           val problem = queue.dequeue()
           lowerBound = if (isActive(problem)) {
-            Dual.solve(problem) match {
+            Dual.solve(cuttingPlanes.foldLeft(problem)((p, cp) => cp(p))) match {
               case Simplex.Optimized(p) if (isActive(p)) => {
                 val xs = View.Array(p.c).indexed.range(0, originProblem.originalSize).map {
                   case (col, c) => c.isZero match {
@@ -44,8 +40,8 @@ object BranchAndBound {
                 }.toArray
                 View.Array(xs).indexed.some(!_._2.isInteger).minBy(x => (x._2.decimal - Rational(1, 2)).abs()) match {
                   case Some((col, x)) => {
-                    queue.enqueue(p.withConstraint(i => if (i == col) Rational.one else Rational.zero, x.floor),
-                                  p.withConstraint(i => if (i == col) Rational.one.negate else Rational.zero, x.ceil.negate))
+                    queue.enqueue(p.strict(i => if (i == col) Rational.one else Rational.zero, x.floor),
+                                  p.strict(i => if (i == col) Rational.one.negate else Rational.zero, x.ceil.negate))
                     lowerBound
                   }
                   case None => Optimized(p.z, xs)
@@ -63,6 +59,23 @@ object BranchAndBound {
       case Simplex.Infeasible => Infeasible
       case Simplex.Unbounded => Unbounded
     }
+  }
+}
+
+/**
+ * @author a554114
+ */
+object BranchAndBound {
+  
+  trait SolveResult
+  case class Optimized(z: Rational, xs: Array[Rational]) extends SolveResult {
+    override def toString = s"$z <- (${xs.mkString(",")})"
+  }
+  case object Infeasible extends SolveResult
+  case object Unbounded extends SolveResult
+  
+  def apply() = new BranchAndBound {
+    val cuttingPlanes = Nil
   }
   
 }

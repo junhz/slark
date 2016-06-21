@@ -33,9 +33,13 @@ final class Rational private (val numerator: BigInteger, val denominator: BigInt
   
   def isInteger = denominator.compareTo(BigInteger.ONE) == 0
   
-  def ceil = if (isInteger) this else new Rational(numerator.divide(denominator).add(BigInteger.ONE), BigInteger.ONE)
+  def ceil = if (isInteger) this 
+             else if (isPositive) new Rational(numerator.divide(denominator).add(BigInteger.ONE), BigInteger.ONE) 
+                  else new Rational(numerator.divide(denominator), BigInteger.ONE)
   
-  def floor = if (isInteger) this else new Rational(numerator.divide(denominator), BigInteger.ONE)
+  def floor = if (isInteger) this 
+              else if (isPositive) new Rational(numerator.divide(denominator), BigInteger.ONE) 
+                  else new Rational(numerator.divide(denominator).add(BigInteger.ONE.negate()), BigInteger.ONE)
   
   override def toString = if (denominator.compareTo(BigInteger.ONE) == 0) s"$numerator" else s"$numerator/$denominator"
   

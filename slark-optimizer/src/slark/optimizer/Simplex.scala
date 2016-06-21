@@ -1,5 +1,7 @@
 package slark.optimizer
 
+import java.math.BigInteger
+
 /**
  * @author a554114
  */
@@ -10,7 +12,7 @@ trait Simplex {
 
 object Simplex {
   case class StandardForm(a: Array[Array[Rational]], b: Array[Rational], c: Array[Rational], z: Rational, originalSize: Int) {
-    def withConstraint(ai: Int => Rational, bi: Rational) = {
+    def strict(ai: Int => Rational, bi: Rational) = {
       val nai = Array.fill(c.length + 1)(Rational.zero)
       var nbi = bi
       var col = 0
@@ -28,8 +30,7 @@ object Simplex {
         } else nai(col) += factor
         col += 1
       }
-      // TODO: use GCD here to make slack a integer
-      nai(c.length) = Rational.one
+      nai(c.length) = Rational.one//Rational(BigInteger.ONE, nai.foldLeft(BigInteger.ONE)((o, i) => o.multiply(i.denominator).divide(i.denominator.gcd(o))))
       StandardForm(a.map(_ :+ Rational.zero) :+ nai, b :+ nbi, c :+ Rational.zero, z, originalSize)
     }
     
@@ -115,5 +116,55 @@ object Simplex {
   
   def withObject(c: Array[Rational]): StandardForm = {
     StandardForm(Array[Array[Rational]](), Array[Rational](), c, Rational.zero, c.length)
+  }
+  
+  def format(problem: LinearProgram): StandardForm = {
+    import LinearProgram._
+    val size = problem.obj.coefficients.length
+    val cLen = size + problem.consts.count(!_.isEquality)
+    val c = problem.obj match {
+      case Max(coe) => coe ++: Array.fill(cLen - size)(Rational.zero)
+      case Min(coe) => coe.map(_.negate) ++: Array.fill(cLen - size)(Rational.zero)
+    }
+    val b = problem.consts.map {
+      case _ ≤ bi => bi
+      case _ `=` bi => bi
+      case _ ≥ bi => bi.negate
+    }.toArray
+    var slackIdx = 0
+    val a = problem.consts.map {
+      case ai ≤ _ => {
+        val nai = Array.fill(cLen)(Rational.zero)
+        var i = 0
+        while (i < size) {
+          nai(i) = ai(i)
+          i += 1
+        }
+        nai(slackIdx + size) = Rational.one
+        slackIdx += 1
+        nai
+      }
+      case ai `=` _ => {
+        val nai = Array.fill(cLen)(Rational.zero)
+        var i = 0
+        while (i < size) {
+          nai(i) = ai(i)
+          i += 1
+        }
+        nai
+      }
+      case ai ≥ _ => {
+        val nai = Array.fill(cLen)(Rational.zero)
+        var i = 0
+        while (i < size) {
+          nai(i) = ai(i).negate
+          i += 1
+        }
+        nai(slackIdx + size) = Rational.one
+        slackIdx += 1
+        nai
+      }
+    }.toArray
+    StandardForm(a, b, c, Rational.zero, size)
   }
 }
