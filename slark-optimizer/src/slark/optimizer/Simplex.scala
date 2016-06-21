@@ -30,7 +30,7 @@ object Simplex {
         } else nai(col) += factor
         col += 1
       }
-      nai(c.length) = Rational.one//Rational(BigInteger.ONE, nai.foldLeft(BigInteger.ONE)((o, i) => o.multiply(i.denominator).divide(i.denominator.gcd(o))))
+      nai(c.length) = Rational.one
       StandardForm(a.map(_ :+ Rational.zero) :+ nai, b :+ nbi, c :+ Rational.zero, z, originalSize)
     }
     
@@ -62,7 +62,7 @@ object Simplex {
               if (j == 0) new String(Array.fill(ajMaxStrLen(j) - aStr(i)(j)._2.length())(' ')) + aStr(i)(j)._2
               else aStr(i)(j)._1 + new String(Array.fill(ajMaxStrLen(j) - aStr(i)(j)._2.length() + 1)(' ')) + aStr(i)(j)._2
             }
-          }.mkString(" ") + s" <= ${b(i)}"
+          }.mkString(" ") + s" = ${b(i)}"
         }.toArray
       } else Array[Array[String]]()
       
@@ -112,10 +112,6 @@ object Simplex {
   
   trait Selector {
     def apply(tableau: Array[Array[Rational]]): (Int, Int)
-  }
-  
-  def withObject(c: Array[Rational]): StandardForm = {
-    StandardForm(Array[Array[Rational]](), Array[Rational](), c, Rational.zero, c.length)
   }
   
   def format(problem: LinearProgram): StandardForm = {

@@ -21,9 +21,9 @@ case class LinearProgram(val obj: LinearProgram.Objection, val consts: Vector[Li
         val coeStr = View.Array(obj.coefficients).indexed.map {
           case (i, _) => {
             val r = const.coefficients(i)
-            if (r.isZero) "" else if (r.isPositive) s"+ ${r}x$i" else s"- ${r.negate}x$i"
+            if (r.isZero) "" else if (r.isPositive) s" + ${r}x$i" else s" - ${r.negate}x$i"
           }
-        }.mkString(" ")
+        }.mkString
         s"$coeStr ${const.name} ${const.constant}"
       }
     }
