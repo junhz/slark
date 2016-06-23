@@ -8,23 +8,21 @@ object Dual extends Simplex {
   
   val selector = new Selector {
     def apply(tableau: Array[Array[Rational]]): (Int, Int) = {
-      val leave = View.Cols(tableau)(0).indexed some {
-        case (row, c) => row > 0 && c.isNegative
+      val leave = View.Range(1, tableau.length) some {
+        row => tableau(row)(0).isNegative
       } minBy {
-        case (row, c) => c
+        row => tableau(row)(0)
       }
       leave match {
-        case Some((row, _)) => {
-          val enter = View.Rows(tableau)(0).indexed map {
-            case (col, b) => (col, b, tableau(row)(col))
-          } some {
-            case (row, b, a) => row > 0 && b.signum() * a.signum() > 0
+        case Some(row) => {
+          val enter = View.Range(1, tableau(0).length) some {
+            col => tableau(0)(col).signum() * tableau(row)(col).signum() > 0
           } minBy {
-            case (row, b, a) => b / a
+            col => tableau(0)(col) / tableau(row)(col)
           }
           enter match {
-            case Some((col, _, _)) => (row, col)
-            case None              => (row, -1)
+            case Some(col) => (row, col)
+            case None      => (row, -1)
           }
         }
         case None => (-1, -1)
@@ -38,9 +36,8 @@ object Dual extends Simplex {
         case true => {
           val tableau =
             ((problem.z +: problem.c) +:
-            problem.a.indexed.map({
-              case (i, arr) => problem.b(i) +: arr
-            })).map(_.toArray).toArray
+             View.Range(0, problem.constraintSize).map(row => problem.b(row) +: problem.a(row))
+            ).map(_.toArray).toArray
           //show(tableau)
           var selected = selector(tableau)
           while (selected._1 >= 0 && selected._2 >= 0) {

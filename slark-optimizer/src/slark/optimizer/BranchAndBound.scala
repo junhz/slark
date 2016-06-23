@@ -28,7 +28,7 @@ trait BranchAndBound { self =>
       case c => c
     }
     
-    solve(Simplex.format(LinearProgram(problem.obj, problem.coefficients, consts)))
+    solve(Simplex.format(LinearProgram(problem.obj, problem.coefficients, consts, problem.varSize)))
   }
   
   final def solve(originProblem: Simplex.StandardForm): SolveResult = {
@@ -50,7 +50,7 @@ trait BranchAndBound { self =>
             Dual.solve(cuttingPlanes.foldLeft(problem)((p, cp) => cp(p))) match {
               case Simplex.Optimized(p) if (isActive(p)) => {
                 val basicVars = p.basicVars().toList
-                View.List(basicVars).some(!_._2.isInteger).minBy(x => (x._2.decimal - Rational(1, 2)).abs()) match {
+                View.List(basicVars).some(!_._2.isInteger).minBy(x => (x._2.fraction - Rational(1, 2)).abs()) match {
                   case Some((col, bi, ai)) => {
                     queue.enqueue(p.strict(ai.map(_.negate).updated(col, Rational.zero), bi.floor - bi),
                                   p.strict(ai.updated(col, Rational.zero), bi - bi.ceil))

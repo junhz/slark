@@ -153,7 +153,6 @@ object View {
       }
     }
     
-    final def indexed = IndexedIndexed(self)
     final def range(from: Int, to: Int/*excluded*/) = IndexedRanged(self, from, to)
     final def toArray(implicit tag: reflect.ClassTag[A]): scala.Array[A] = {
       val len = length
@@ -332,7 +331,7 @@ object View {
     
     final def +:(a: A) = IndexedPrepended(self, a)
     
-    final def tail() = IndexedTailed(self)
+    final def tail() = IndexedRanged(self, 1, length)
     
     final override def toString = s"[${mkString(", ")}]"
   }
@@ -355,11 +354,6 @@ object View {
   case class IndexedMapped[A, B](underlying: Indexed[A], mapping: A => B) extends Indexed[B] {
     def length = underlying.length
     def apply(idx: Int) = mapping(underlying(idx))
-  }
-  
-  case class IndexedIndexed[A](underlying: Indexed[A]) extends Indexed[(Int, A)] {
-    def length = underlying.length
-    def apply(idx: Int) = (idx, underlying(idx))
   }
   
   case class IndexedRanged[A](underlying: Indexed[A], from: Int, to: Int/*excluded*/) extends Indexed[A] {
@@ -394,11 +388,6 @@ object View {
   case class IndexedPrepended[A](underlying: Indexed[A], value: A) extends Indexed[A] {
     def length = underlying.length + 1
     def apply(idx: Int) = if (idx == 0) value else underlying(idx - 1)
-  }
-  
-  case class IndexedTailed[A](underlying: Indexed[A]) extends Indexed[A] {
-    def length = underlying.length - 1
-    def apply(idx: Int) = underlying(idx + 1)
   }
   
   case class Cols[A](array: scala.Array[scala.Array[A]]) extends Indexed[Indexed[A]] {

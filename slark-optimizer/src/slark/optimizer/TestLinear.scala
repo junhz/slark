@@ -29,7 +29,7 @@ object TestLinear {
             case "MAX" => LinearProgram.Max
             case "MIN" => LinearProgram.Min
           }
-          problem = Some(Right(LinearProgram(kind, View.Array(coe), Vector.empty)))
+          problem = Some(Right(LinearProgram.ofGoal(kind, View.Array(coe))))
           println(problem.get.merge)
         }
         case subjectPattern(b, r, a) => {
@@ -50,7 +50,7 @@ object TestLinear {
                   case ">" => LinearProgram.<
                   case "<" => LinearProgram.>
                 }
-                Some(Right(p.withConstraint(LinearProgram.Constraint(View.Array(coe), kind, const))))
+                Some(Right(p.subjectTo(LinearProgram.Constraint(View.Array(coe), kind, const))))
               }
             }
           }

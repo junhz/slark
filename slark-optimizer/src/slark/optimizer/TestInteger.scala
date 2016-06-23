@@ -30,7 +30,7 @@ object TestInteger {
             case "MAX" => LinearProgram.Max
             case "MIN" => LinearProgram.Min
           }
-          problem = Some(LinearProgram(kind, View.Array(coe), Vector.empty))
+          problem = Some(LinearProgram.ofGoal(kind, View.Array(coe)))
           println(problem.get)
         }
         case subjectPattern(b, r, a) => {
@@ -46,7 +46,7 @@ object TestInteger {
                 case ">"  => LinearProgram.<
                 case "<"  => LinearProgram.>
               }
-              problem = Some(p.withConstraint(LinearProgram.Constraint(View.Array(coe), kind, const)))
+              problem = Some(p.subjectTo(LinearProgram.Constraint(View.Array(coe), kind, const)))
             }
           }
           println(problem.get)

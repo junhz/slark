@@ -67,35 +67,37 @@ object Simplex {
     
     override def toString = {
       def name(idx: Int) = if (idx < varSize) s"x$idx" else s"s${idx - varSize}"
-      val max = s"max $z ${c.indexed.map({ case (i, ci) =>
-        if (ci.isZero) "" else { if(ci.isPositive) s"+ $ci${name(i)}" else s"- ${ci.negate}${name(i)}" }
-      }).mkString(" ")}"
+      val max = {
+        val coeStr = View.Range(0, varSize + slackSize).map(i => {
+          val ci = c(i)
+          if (ci.isZero) "" else { if(ci.isPositive) s"+ $ci${name(i)}" else s"- ${ci.negate}${name(i)}" }
+        }).mkString(" ")
+        s"max $z $coeStr"
+      }
+      
       val subjectTo = if (constraintSize > 0) {
-        val aStr = a.map(ai => {
-          var first = true
-          ai.indexed.map {
-            case (j, aij) => {
-              if (aij.isZero) (' ', "")
-              else {
-                if (first) {
-                  first = false
-                  if (j == 0) (' ', s"$aij${name(j)}")
-                  else if (aij.isPositive) (' ', s"$aij${name(j)}") else ('-', s"${aij.negate}${name(j)}")
-                } else if (aij.isPositive) ('+', s"$aij${name(j)}") else ('-', s"${aij.negate}${name(j)}")
-              }
-            }
-          }.toArray
-        }).toArray
-        val ajMaxStrLen = View.Cols(aStr).map(_.map(_._2.length).max).toArray
-        a.indexed.map {
-          case (i, ai) => ai.indexed.map {
-            case (j, aij) => {
-              if (j == 0) new String(Array.fill(ajMaxStrLen(j) - aStr(i)(j)._2.length())(' ')) + aStr(i)(j)._2
-              else aStr(i)(j)._1 + new String(Array.fill(ajMaxStrLen(j) - aStr(i)(j)._2.length() + 1)(' ')) + aStr(i)(j)._2
-            }
-          }.mkString(" ") + s" = ${b(i)}"
-        }.toArray
-      } else Array[Array[String]]()
+        val firstIdx = Array.fill(constraintSize)(-1)
+        View.Range(0, constraintSize).foreach(row => View.Range(0, varSize + slackSize).foreach(col => {
+          if(firstIdx(row) < 0 && a(row)(col).isZero) firstIdx(row) = col
+          else ()
+        }))
+        val aStr = View.Range(0, constraintSize).map(row => View.Range(0, varSize + slackSize).map(col => {
+          val aij = a(row)(col)
+          if (aij.isZero) ""
+          else {
+            val n = name(col)
+            if (col == firstIdx(row)) {
+              if (col == 0) s"$aij$n"
+              else if (aij.isPositive) s"  $aij$n" else s"- ${aij.negate}$n"
+            } else if (aij.isPositive) s"+ $aij$n" else s"- ${aij.negate}$n"
+          }
+        })).map(_.toArray).toArray
+        val ajMaxStrLen = View.Cols(aStr).map(_.map(_.length).max).toArray
+        View.Rows(aStr).map(arr => View.Range(0, varSize + slackSize).map(col => {
+          val s = arr(col)
+          new String(Array.fill(ajMaxStrLen(col) - s.length())(' ')) + s
+        }).mkString(" "))
+      } else View.empty[String]()
       
       (max +: subjectTo).mkString("\r\n")
     }
@@ -134,10 +136,12 @@ object Simplex {
     }
 
     final def show(matrix: Array[Array[Rational]]): Unit = {
-      val textLen = View.Cols(matrix).indexed.map({ case (col, arr) => arr.map(_.toString().length()).max }).toArray
-      View.Rows(matrix).foreach(arr => println(arr.map(_.toString()).indexed.map({
-        case (col, s) => new String(Array.fill(textLen(col) - s.length)(' ')) + s
-      }).mkString(" ")))
+      val textLen = View.Cols(matrix).map(arr => arr.map(_.toString().length()).max).toArray
+      val s = View.Rows(matrix).map(arr => View.Range(0, textLen.length).map(col => {
+        val s = arr(col).toString()
+        new String(Array.fill(textLen(col) - s.length)(' ')) + s
+      }).mkString(" "))
+      println(s.mkString("\r\n"))
     }
   }
   
@@ -147,7 +151,7 @@ object Simplex {
   
   def format(problem: LinearProgram): StandardForm = {
     import LinearProgram._
-    val varSize = problem.coefficients.length
+    val varSize = problem.varSize
     val constraintSize = problem.consts.size
     val slackIdx = new Array[Int](constraintSize)
     var slackSize = 0

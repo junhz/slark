@@ -11,23 +11,21 @@ object Primal extends Simplex { self =>
     def leaveStart: Int
 
     final def apply(tableau: Array[Array[Rational]]): (Int, Int) = {
-      val enter = View.Rows(tableau)(0).indexed some {
-        case (col, c) => col >= enterStart && c.isPositive
+      val enter = View.Range(enterStart, tableau(0).length) some {
+        col => tableau(0)(col).isPositive
       } maxBy {
-        case (col, c) => c
+        col => tableau(0)(col)
       }
       enter match {
-        case Some((col, c)) => {
-          val leave = View.Cols(tableau)(0).indexed map {
-            case (row, b) => (row, b, tableau(row)(col))
-          } some {
-            case (row, b, a) => row >= leaveStart && b.signum() * a.signum() == 1
+        case Some(col) => {
+          val leave = View.Range(leaveStart, tableau.length) some {
+            row => tableau(row)(0).signum() * tableau(row)(col).signum() > 0
           } minBy {
-            case (row, b, a) => b / a
+            row => tableau(row)(0) / tableau(row)(col)
           }
           leave match {
-            case Some((row, _, _)) => (row, col)
-            case None => (-1, col)
+            case Some(row) => (row, col)
+            case None      => (-1, col)
           }
         }
         case None => (-1, -1)
@@ -37,15 +35,15 @@ object Primal extends Simplex { self =>
   
   val phase1 = new Phase {
     def solve(problem: StandardForm): SolveResult = {
-      problem.b.indexed.some(t => t._2.isNegative).minBy(_._2) match {
-        case Some((row, _)) => {
+      View.Range(0, problem.constraintSize).some(row => problem.b(row).isNegative)
+                                           .minBy(row => problem.b(row)) match {
+        case Some(row) => {
           val colSize = problem.varSize + problem.slackSize + 2
           val tableau =
             ((View.empty[Rational]().fill(colSize, Rational.zero).updated(colSize - 1, Rational.one.negate)) +:
               ((problem.z +: problem.c) :+ Rational.zero) +:
-              problem.a.indexed.map({
-                case (i, arr) => (problem.b(i) +: arr) :+ Rational.one.negate
-              })).map(_.toArray).toArray
+               View.Range(0, problem.constraintSize).map(row => (problem.b(row) +: problem.a(row)) :+ Rational.one.negate)
+              ).map(_.toArray).toArray
           //show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1
@@ -82,9 +80,8 @@ object Primal extends Simplex { self =>
         case true => {
           val tableau =
             ((problem.z +: problem.c) +:
-            problem.a.indexed.map({
-              case (i, arr) => problem.b(i) +: arr
-            })).map(_.toArray).toArray
+             View.Range(0, problem.constraintSize).map(row => problem.b(row) +: problem.a(row))
+            ).map(_.toArray).toArray
           //show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1

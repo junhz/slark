@@ -22,14 +22,14 @@ final class Rational private (val numerator: BigInteger, val denominator: BigInt
   def signum(): Int = numerator.signum()
   
   def /(that: Rational): Rational = {
-    if (that.numerator.signum() == 0) throw new ArithmeticException("divide by zero")
+    if (that.isZero) throw new ArithmeticException("divide by zero")
     else {
-      if (that.numerator.signum() > 0) apply(this.numerator * that.denominator, this.denominator * that.numerator)
+      if (that.isPositive) apply(this.numerator * that.denominator, this.denominator * that.numerator)
       else apply(this.numerator * that.denominator.negate(), this.denominator * that.numerator.negate())
     }
   }
   
-  def decimal = new Rational(numerator.mod(denominator), denominator)
+  def fraction = new Rational(numerator.mod(denominator), denominator)
   
   def isInteger = denominator.compareTo(BigInteger.ONE) == 0
   
@@ -39,9 +39,14 @@ final class Rational private (val numerator: BigInteger, val denominator: BigInt
   
   def floor = if (isInteger) this 
               else if (isPositive) new Rational(numerator.divide(denominator), BigInteger.ONE) 
-                  else new Rational(numerator.divide(denominator).add(BigInteger.ONE.negate()), BigInteger.ONE)
+                   else new Rational(numerator.divide(denominator).add(BigInteger.ONE.negate()), BigInteger.ONE)
   
   override def toString = if (denominator.compareTo(BigInteger.ONE) == 0) s"$numerator" else s"$numerator/$denominator"
+  
+  override def equals(that: Any) = that match {
+    case r: Rational => (this eq r) || (this.compare(r) == 0)
+    case _ => false
+  }
   
   def isPositive = numerator.signum() > 0
   def isZero = numerator.signum() == 0

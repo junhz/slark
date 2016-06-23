@@ -27,7 +27,7 @@ trait CuttingPlane {
       case c => c
     }
     
-    solve(Simplex.format(LinearProgram(problem.obj, problem.coefficients, consts)))
+    solve(Simplex.format(LinearProgram(problem.obj, problem.coefficients, consts, problem.varSize)))
   }
   
   final def solve(originProblem: Simplex.StandardForm): SolveResult = {
