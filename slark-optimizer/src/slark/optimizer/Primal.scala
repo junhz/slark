@@ -37,20 +37,21 @@ object Primal extends Simplex { self =>
   
   val phase1 = new Phase {
     def solve(problem: StandardForm): SolveResult = {
-      View.Array(problem.b).indexed.some(t => t._2.isNegative).minBy(_._2) match {
+      problem.b.indexed.some(t => t._2.isNegative).minBy(_._2) match {
         case Some((row, _)) => {
+          val colSize = problem.varSize + problem.slackSize + 2
           val tableau =
-            (Array.fill(problem.c.length + 2)(Rational.zero).updated(problem.c.length + 1, Rational.one.negate)) +:
-              (problem.z.negate +: problem.c ++: Array.fill(1)(Rational.zero)) +:
-              View.Array(problem.a).indexed.map({
-                case (i, arr) => problem.b(i) +: arr ++: Array.fill(1)(Rational.one.negate)
-              }).toArray
+            ((View.empty[Rational]().fill(colSize, Rational.zero).updated(colSize - 1, Rational.one.negate)) +:
+              ((problem.z +: problem.c) :+ Rational.zero) +:
+              problem.a.indexed.map({
+                case (i, arr) => (problem.b(i) +: arr) :+ Rational.one.negate
+              })).map(_.toArray).toArray
           //show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1
             def leaveStart: Int = 2
           }
-          var selected = (row + 2, problem.c.length + 1)
+          var selected = (row + 2, colSize - 1)
           while (selected._1 >= 0 && selected._2 >= 0) {
             val (row, col) = selected
             pivot(tableau, row, col)
@@ -58,11 +59,13 @@ object Primal extends Simplex { self =>
           }
           selected match {
             case (-1, -1) => tableau(0)(0).isZero match {
-              case true => Optimized(StandardForm(tableau.tail.tail.map(_.tail.dropRight(1)),
-                                                  View.Cols(tableau)(0).toArray.tail.tail,
-                                                  tableau(1).tail.dropRight(1),
+              case true => Optimized(StandardForm(View.Rows(tableau).tail.tail.map(_.range(1, colSize - 1)),
+                                                  View.Cols(tableau)(0).tail.tail,
+                                                  View.Rows(tableau)(1).range(1, colSize - 1),
                                                   tableau(1)(0),
-                                                  problem.originalSize))
+                                                  problem.varSize,
+                                                  problem.slackSize,
+                                                  problem.constraintSize))
               case false => Infeasible
             }
             case _ => Unbounded
@@ -78,10 +81,10 @@ object Primal extends Simplex { self =>
       problem.b.forall(!_.isNegative) match {
         case true => {
           val tableau =
-            (problem.z +: problem.c) +:
-            View.Array(problem.a).indexed.map({
+            ((problem.z +: problem.c) +:
+            problem.a.indexed.map({
               case (i, arr) => problem.b(i) +: arr
-            }).toArray
+            })).map(_.toArray).toArray
           //show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1
@@ -95,30 +98,13 @@ object Primal extends Simplex { self =>
           }
           selected match {
             case (-1, -1) => {
-              var col = 1
-              while (col < tableau(0).length) {
-                if (tableau(0)(col).isZero) {
-                  var row = 1
-                  while (row < tableau.length) {
-                    var factor = tableau(row)(col)
-                    if (factor.isZero) ()
-                    else {
-                      var i = 0
-                      while (i < tableau(0).length) {
-                        tableau(row)(i) /= factor
-                        i += 1
-                      }
-                    }
-                    row += 1
-                  }
-                } else ()
-                col += 1
-              }
-              Optimized(StandardForm(tableau.tail.map(_.tail),
-                                     View.Cols(tableau)(0).toArray.tail,
-                                     tableau(0).tail,
+              Optimized(StandardForm(View.Rows(tableau).tail.map(_.tail),
+                                     View.Cols(tableau)(0).tail,
+                                     View.Rows(tableau)(0).tail,
                                      tableau(0)(0),
-                                     problem.originalSize))
+                                     problem.varSize,
+                                     problem.slackSize,
+                                     problem.constraintSize))
             }
             case _ => Unbounded
           }

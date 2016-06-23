@@ -1,5 +1,7 @@
 package slark.optimizer
 
+import java.util.NoSuchElementException
+
 /**
  * @author a554114
  */
@@ -73,7 +75,34 @@ object View {
       }
       else None
     }
+    final def forall(f: A => Boolean): Boolean = {
+      val it = iterator
+      var r = true
+      while (it.hasNext) {
+        r &= f(it.next())
+      }
+      r
+    }
     final def some(cond: A => Boolean): Travesal[A] = TravesalTravesal(self, cond)
+    
+    final def toList: java.util.List[A] = {
+      val l = new java.util.LinkedList[A]()
+      val it = iterator
+      while (it.hasNext) {
+        l.add(it.next())
+      }
+      l
+    }
+  }
+  
+  case class List[A](list: java.util.List[A]) extends Travesal[A] {
+    def iterator = {
+      val it = list.iterator()
+      new Iterator[A] {
+        def hasNext = it.hasNext()
+        def next = it.next()
+      }
+    }
   }
   
   case class TravesalMapped[A, B](underlying: Travesal[A], mapping: A => B) extends Travesal[B] {
@@ -220,6 +249,32 @@ object View {
         sb.toString
       }
     }
+    final def count(f: A => Boolean): Int = {
+      val len = length
+      var count = 0
+      var idx = 0
+      while (idx < len) {
+        if (f(apply(idx))) count += 1
+        else ()
+        idx += 1
+      }
+      count
+    }
+    final def first(f: A => Boolean): A = {
+      val len = length
+      var found: Option[A] = None
+      var idx = 0
+      while (found.isEmpty && idx < len) {
+        val a = apply(idx)
+        if (f(a)) found = Some(a)
+        else ()
+        idx += 1
+      }
+      found match {
+        case Some(a) => a
+        case _ => throw new NoSuchElementException("no element matched")
+      }
+    }
     final def forall[U](f: A => Boolean): Boolean = {
       val len = length
       var idx = 0
@@ -235,7 +290,7 @@ object View {
       def iterator = new Iterator[A] {
         var last: Option[A] = None
         var cnt = 0
-        var len = self.length
+        val len = self.length
         def fill: Boolean = {
           var filled = false
           while (!filled && cnt < len) {
@@ -256,11 +311,45 @@ object View {
         }
       }
     }
+    final def updated(pos: Int, value: A): Indexed[A] = IndexedUpdated(self, pos, value)
+    
+    final def fill(length: Int, value: A): Indexed[A] = IndexedFilled(self, length, value)
+    
+    final def fold[B](b: B, f: (A, B) => B): B = {
+      var r = b
+      val len = length
+      var idx = 0
+      while (idx < len) {
+        r = f(apply(idx), r)
+        idx += 1
+      }
+      r
+    }
+    
+    final def :++(that: Indexed[A]): Indexed[A] = IndexedAppendedIndexed(self, that)
+    
+    final def :+(a: A): Indexed[A] = IndexedAppended(self, a)
+    
+    final def +:(a: A) = IndexedPrepended(self, a)
+    
+    final def tail() = IndexedTailed(self)
+    
+    final override def toString = s"[${mkString(", ")}]"
   }
   
   case class Array[A](array: scala.Array[A]) extends Indexed[A] {
     def length = array.length
     def apply(idx: Int) = array(idx)
+  }
+  
+  case class Range(start: Int, end: Int/*exclude*/) extends Indexed[Int] {
+    def length = end - start
+    def apply(idx: Int) = idx + start
+  }
+  
+  case class Vector[A](vector: scala.collection.immutable.Vector[A]) extends Indexed[A] {
+    def length = vector.length
+    def apply(idx: Int) = vector(idx)
   }
   
   case class IndexedMapped[A, B](underlying: Indexed[A], mapping: A => B) extends Indexed[B] {
@@ -278,6 +367,40 @@ object View {
     def apply(idx: Int) = underlying(idx + from)
   }
   
+  case class IndexedUpdated[A](underlying: Indexed[A], pos: Int, value: A) extends Indexed[A] {
+    def length = underlying.length
+    def apply(idx: Int) = if (idx == pos) value else underlying(idx)
+  }
+  
+  case class IndexedFilled[A](underlying: Indexed[A], length: Int, value: A) extends Indexed[A] {
+    val len = underlying.length
+    def apply(idx: Int) = if (idx < len) underlying(idx) else value
+  }
+  
+  case class IndexedAppended[A](underlying: Indexed[A], value: A) extends Indexed[A] {
+    val len = underlying.length
+    def length = len + 1
+    def apply(idx: Int) = if (idx < len) underlying(idx) else value
+  }
+  
+  case class IndexedAppendedIndexed[A](underlying: Indexed[A], appended: Indexed[A]) extends Indexed[A] {
+    val len = underlying.length
+    def length = len + appended.length
+    def apply(idx: Int) = {
+      if (idx < len) underlying(idx) else appended(idx - len)
+    }
+  }
+  
+  case class IndexedPrepended[A](underlying: Indexed[A], value: A) extends Indexed[A] {
+    def length = underlying.length + 1
+    def apply(idx: Int) = if (idx == 0) value else underlying(idx - 1)
+  }
+  
+  case class IndexedTailed[A](underlying: Indexed[A]) extends Indexed[A] {
+    def length = underlying.length - 1
+    def apply(idx: Int) = underlying(idx + 1)
+  }
+  
   case class Cols[A](array: scala.Array[scala.Array[A]]) extends Indexed[Indexed[A]] {
     def apply(col: Int) = new Indexed[A] {
       def apply(row: Int) = array(row)(col)
@@ -292,5 +415,10 @@ object View {
       def length: Int = colLen
     }
     def length: Int = array.length
+  }
+  
+  def empty[A](): Indexed[A] = new Indexed[A] {
+    def length = 0
+    def apply(idx: Int) = throw new NoSuchElementException(s"$idx of empty")
   }
 }

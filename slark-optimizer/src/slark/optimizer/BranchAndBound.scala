@@ -11,7 +11,27 @@ trait BranchAndBound { self =>
     val cuttingPlanes = cp :: self.cuttingPlanes
   }
   
-  def solve(originProblem: Simplex.StandardForm): SolveResult = {
+  final def solve(problem: LinearProgram): SolveResult = {
+    import LinearProgram._
+    
+    def lcm(arr: View.Indexed[Rational]) = arr.fold(BigInteger.ONE, (a, r: BigInteger) => a.denominator.multiply(r).divide(a.denominator.gcd(r)))
+    
+    val consts = problem.consts map {
+      case Constraint(ai, <, bi) => {
+        val factor = Rational(lcm(ai), BigInteger.ONE)
+        Constraint(ai, <=, ((bi * factor).ceil - Rational.one) / factor)
+      }
+      case Constraint(ai, >, bi) => {
+        val factor = Rational(lcm(ai), BigInteger.ONE)
+        Constraint(ai, >=, ((bi * factor).floor + Rational.one) / factor)
+      }
+      case c => c
+    }
+    
+    solve(Simplex.format(LinearProgram(problem.obj, problem.coefficients, consts)))
+  }
+  
+  final def solve(originProblem: Simplex.StandardForm): SolveResult = {
     Primal.solve(originProblem) match {
       case Simplex.Optimized(st) => {
         var lowerBound: SolveResult = Infeasible
@@ -29,22 +49,20 @@ trait BranchAndBound { self =>
           lowerBound = if (isActive(problem)) {
             Dual.solve(cuttingPlanes.foldLeft(problem)((p, cp) => cp(p))) match {
               case Simplex.Optimized(p) if (isActive(p)) => {
-                val xs = View.Array(p.c).indexed.range(0, originProblem.originalSize).map {
-                  case (col, c) => c.isZero match {
-                    case true => {
-                      val row = View.Cols(p.a)(col).indexed.maxBy(_._2)._1
-                      p.b(row)
-                    }
-                    case false => Rational.zero
-                  }
-                }.toArray
-                View.Array(xs).indexed.some(!_._2.isInteger).minBy(x => (x._2.decimal - Rational(1, 2)).abs()) match {
-                  case Some((col, x)) => {
-                    queue.enqueue(p.strict(i => if (i == col) Rational.one else Rational.zero, x.floor),
-                                  p.strict(i => if (i == col) Rational.one.negate else Rational.zero, x.ceil.negate))
+                val basicVars = p.basicVars().toList
+                View.List(basicVars).some(!_._2.isInteger).minBy(x => (x._2.decimal - Rational(1, 2)).abs()) match {
+                  case Some((col, bi, ai)) => {
+                    queue.enqueue(p.strict(ai.map(_.negate).updated(col, Rational.zero), bi.floor - bi),
+                                  p.strict(ai.updated(col, Rational.zero), bi - bi.ceil))
                     lowerBound
                   }
-                  case None => Optimized(p.z, xs)
+                  case None => {
+                    val xs = Array.fill(p.varSize)(Rational.zero)
+                    View.List(basicVars).foreach {
+                      case (col, bi, ai) => if (col < p.varSize) xs(col) = bi else ()
+                    }
+                    Optimized(p.z, xs)
+                  }
                 }
               }
               case _ => lowerBound

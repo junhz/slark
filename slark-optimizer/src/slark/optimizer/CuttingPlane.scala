@@ -1,5 +1,7 @@
 package slark.optimizer
 
+import java.math.BigInteger
+
 /**
  * @author a554114
  */
@@ -7,6 +9,26 @@ trait CuttingPlane {
   import CuttingPlane._
   
   def apply(problem: Simplex.StandardForm): Simplex.StandardForm
+  
+  final def solve(problem: LinearProgram): SolveResult = {
+    import LinearProgram._
+    
+    def lcm(arr: View.Indexed[Rational]) = arr.fold(BigInteger.ONE, (a, r: BigInteger) => a.denominator.multiply(r).divide(a.denominator.gcd(r)))
+    
+    val consts = problem.consts map {
+      case Constraint(ai, <, bi) => {
+        val factor = Rational(lcm(ai), BigInteger.ONE)
+        Constraint(ai, <=, ((bi * factor).ceil - Rational.one) / factor)
+      }
+      case Constraint(ai, >, bi) => {
+        val factor = Rational(lcm(ai), BigInteger.ONE)
+        Constraint(ai, >=, ((bi * factor).floor + Rational.one) / factor)
+      }
+      case c => c
+    }
+    
+    solve(Simplex.format(LinearProgram(problem.obj, problem.coefficients, consts)))
+  }
   
   final def solve(originProblem: Simplex.StandardForm): SolveResult = {
     Primal.solve(originProblem) match {
@@ -18,19 +40,17 @@ trait CuttingPlane {
           val cut = apply(problem)
           Dual.solve(cut) match {
             case Simplex.Optimized(p) => {
-              val xs = View.Array(p.c).indexed.range(0, originProblem.originalSize).map {
-                case (col, c) => c.isZero match {
-                  case true => {
-                    val row = View.Cols(p.a)(col).indexed.maxBy(_._2)._1
-                    p.b(row)
-                  }
-                  case false => Rational.zero
-                }
-              }.toArray
-              xs.forall(_.isInteger) match {
+              val basicVars = p.basicVars().toList
+              View.List(basicVars).forall(_._2.isInteger) match {
                 case true => {
                   end = true
-                  cnt = Optimized(p.z, xs)
+                  cnt = {
+                    val xs = Array.fill(p.varSize)(Rational.zero)
+                    View.List(basicVars).foreach {
+                      case (col, bi, ai) => if (col < p.varSize) xs(col) = bi else ()
+                    }
+                    Optimized(p.z, xs)
+                  }
                 }
                 case false => problem = p
               }

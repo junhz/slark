@@ -11,7 +11,7 @@ object TestLinear {
 
   val vectorPattern = """(?i) *(max|min)((?: +-?\d+)+) *""".r
   
-  val subjectPattern = """ *(-?\d+) *(>=|=|<=) *((?: +-?\d+)+) *""".r
+  val subjectPattern = """ *(-?\d+) *(>=|=|<=|>|<) *((?: +-?\d+)+) *""".r
 
   val cmdPattern = """(?i)(solve|exit)""".r
   
@@ -23,30 +23,34 @@ object TestLinear {
     while (!stop) {
       val line = StdIn.readLine()
       line match {
-        case vectorPattern(name, coe) => {
+        case vectorPattern(name, c) => {
+          val coe = splitPattern.split(c).tail.map(s => Rational.fromInt(s.toInt))
           val kind = name.toUpperCase() match {
             case "MAX" => LinearProgram.Max
             case "MIN" => LinearProgram.Min
           }
-          problem = Some(Right(LinearProgram(kind(splitPattern.split(coe).tail.map(s => Rational.fromInt(s.toInt))), Vector.empty)))
+          problem = Some(Right(LinearProgram(kind, View.Array(coe), Vector.empty)))
           println(problem.get.merge)
         }
         case subjectPattern(b, r, a) => {
           val coe = splitPattern.split(a).tail.map(s => Rational.fromInt(s.toInt))
           val const = Rational.fromInt(b.toInt)
-          problem match {
-            case None => ()
+          problem = problem match {
+            case None => None
             case Some(e) => e match {
               case Left(p) => {
-                Some(Left(p.strict(i => if (i < coe.length) coe(i) else Rational.zero, const)))
+                val (ai, bi) = p.format(View.Array(coe), const)
+                Some(Left(p.strict(ai, bi)))
               }
               case Right(p) => {
                 val kind = r match {
-                  case ">=" => LinearProgram.≤
-                  case "<=" => LinearProgram.≥
+                  case ">=" => LinearProgram.<=
+                  case "<=" => LinearProgram.>=
                   case "="  => LinearProgram.`=`
+                  case ">" => LinearProgram.<
+                  case "<" => LinearProgram.>
                 }
-                problem = Some(Right(p.withConstraint(kind(i => if (i < coe.length) coe(i) else Rational.zero, const))))
+                Some(Right(p.withConstraint(LinearProgram.Constraint(View.Array(coe), kind, const))))
               }
             }
           }

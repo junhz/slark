@@ -37,10 +37,10 @@ object Dual extends Simplex {
       problem.c.forall(!_.isPositive) match {
         case true => {
           val tableau =
-            (problem.z +: problem.c) +:
-            View.Array(problem.a).indexed.map({
+            ((problem.z +: problem.c) +:
+            problem.a.indexed.map({
               case (i, arr) => problem.b(i) +: arr
-            }).toArray
+            })).map(_.toArray).toArray
           //show(tableau)
           var selected = selector(tableau)
           while (selected._1 >= 0 && selected._2 >= 0) {
@@ -50,30 +50,13 @@ object Dual extends Simplex {
           }
           selected match {
             case (-1, -1) => {
-              var col = 1
-              while (col < tableau(0).length) {
-                if (tableau(0)(col).isZero) {
-                  var row = 1
-                  while (row < tableau.length) {
-                    var factor = tableau(row)(col)
-                    if (factor.isZero) ()
-                    else {
-                      var i = 0
-                      while (i < tableau(0).length) {
-                        tableau(row)(i) /= factor
-                        i += 1
-                      }
-                    }
-                    row += 1
-                  }
-                } else ()
-                col += 1
-              }
-              Optimized(StandardForm(tableau.tail.map(_.tail),
-                                     View.Cols(tableau)(0).toArray.tail,
-                                     tableau(0).tail,
+              Optimized(StandardForm(View.Rows(tableau).tail.map(_.tail),
+                                     View.Cols(tableau)(0).tail,
+                                     View.Rows(tableau)(0).tail,
                                      tableau(0)(0),
-                                     problem.originalSize))
+                                     problem.varSize,
+                                     problem.slackSize,
+                                     problem.constraintSize))
             }
             case _ => Unbounded
           }
