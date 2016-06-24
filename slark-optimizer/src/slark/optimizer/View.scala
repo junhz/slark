@@ -329,7 +329,7 @@ object View {
     
     final def :+(a: A): Indexed[A] = IndexedAppended(self, a)
     
-    final def +:(a: A) = IndexedPrepended(self, a)
+    final def +:(a: A): Indexed[A] = IndexedPrepended(self, a)
     
     final def tail() = IndexedRanged(self, 1, length)
     
@@ -390,12 +390,11 @@ object View {
     def apply(idx: Int) = if (idx == 0) value else underlying(idx - 1)
   }
   
-  case class Cols[A](array: scala.Array[scala.Array[A]]) extends Indexed[Indexed[A]] {
+  case class Cols[A](array: scala.Array[scala.Array[A]], length: Int) extends Indexed[Indexed[A]] {
     def apply(col: Int) = new Indexed[A] {
       def apply(row: Int) = array(row)(col)
       def length: Int = array.length
     }
-    val length: Int = Array(array).map(_.length).max
   }
   case class Rows[A](array: scala.Array[scala.Array[A]]) extends Indexed[Indexed[A]] {
     val colLen = Array(array).map(_.length).max

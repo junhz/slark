@@ -16,7 +16,7 @@ object Dual extends Simplex {
       leave match {
         case Some(row) => {
           val enter = View.Range(1, tableau(0).length) some {
-            col => tableau(0)(col).signum() * tableau(row)(col).signum() > 0
+            col => tableau(row)(col).isNegative
           } minBy {
             col => tableau(0)(col) / tableau(row)(col)
           }
@@ -34,10 +34,13 @@ object Dual extends Simplex {
     def solve(problem: StandardForm): SolveResult = {
       problem.c.forall(!_.isPositive) match {
         case true => {
-          val tableau =
-            ((problem.z +: problem.c) +:
-             View.Range(0, problem.constraintSize).map(row => problem.b(row) +: problem.a(row))
-            ).map(_.toArray).toArray
+          val tableau = {
+            val view = 
+              (problem.z +: problem.c) +:
+              View.Range(0, problem.constraintSize).map(row => problem.b(row) +: problem.a(row))
+            view.map(_.toArray).toArray
+          }
+          
           //show(tableau)
           var selected = selector(tableau)
           while (selected._1 >= 0 && selected._2 >= 0) {
@@ -48,7 +51,7 @@ object Dual extends Simplex {
           selected match {
             case (-1, -1) => {
               Optimized(StandardForm(View.Rows(tableau).tail.map(_.tail),
-                                     View.Cols(tableau)(0).tail,
+                                     View.Cols(tableau, 1)(0).tail,
                                      View.Rows(tableau)(0).tail,
                                      tableau(0)(0),
                                      problem.varSize,

@@ -19,21 +19,13 @@ case class LinearProgram(obj: LinearProgram.Objection,
                       varSize);
   
   override def toString = {
-    val objStr = {
-      val coeStr = View.Range(0, varSize).map(i => {
-        val r = coefficients(i)
-        if (r.isZero) "" else if (r.isPositive) s"+ ${r}x$i" else s"- ${r.negate}x$i"
-      }).mkString(" ")
-      s"${obj} $coeStr"
-    }
+    def toString(coefficients: View.Indexed[Rational]) = View.Range(0, varSize).map(i => {
+      val r = coefficients(i)
+      if (r.isZero) "" else if (r.isPositive) s" + ${r}x$i" else s" - ${r.negate}x$i"
+    }).mkString
+    val objStr = s"${obj} ${toString(coefficients)}"
     val constStr = consts.map {
-      const => {
-        val coeStr = View.Range(0, varSize).map(i => {
-          val r = const.coefficients(i)
-          if (r.isZero) "" else if (r.isPositive) s" + ${r}x$i" else s" - ${r.negate}x$i"
-        }).mkString
-        s"$coeStr ${const.relation} ${const.constant}"
-      }
+      const => s"${toString(const.coefficients)} ${const.relation} ${const.constant}"
     }
     (objStr +: constStr).mkString("\r\n")
   }
@@ -50,30 +42,38 @@ object LinearProgram {
       val lhs = View.Range(0, coefficients.length).fold(Rational.zero, (i: Int, r: Rational) => r + coefficients(i) * nxs(i))
       relation.isViolated(lhs, constant)
     }
+    
+    def negate() = Constraint(coefficients.map(_.negate), relation.negate(), constant.negate)
   }
   trait Relation {
     def isEquality: Boolean
     def isViolated(lhs: Rational, rhs: Rational): Boolean
+    def negate(): Relation
   }
   case object `<=` extends Relation {
     def isEquality = false
-    def isViolated(lhs: Rational, rhs: Rational) = lhs <= rhs
+    def isViolated(lhs: Rational, rhs: Rational) = lhs > rhs
+    def negate = `>=`
   }
   case object `>=` extends Relation {
     def isEquality = false
-    def isViolated(lhs: Rational, rhs: Rational) = lhs >= rhs
+    def isViolated(lhs: Rational, rhs: Rational) = lhs < rhs
+    def negate = `<=`
   }
   case object `=` extends Relation {
     def isEquality = true
-    def isViolated(lhs: Rational, rhs: Rational) = lhs == rhs
+    def isViolated(lhs: Rational, rhs: Rational) = (lhs compareTo rhs) != 0
+    def negate = this
   }
   case object `>` extends Relation {
     def isEquality = false
-    def isViolated(lhs: Rational, rhs: Rational) = lhs > rhs
+    def isViolated(lhs: Rational, rhs: Rational) = lhs <= rhs
+    def negate = `<`
   }
   case object `<` extends Relation {
     def isEquality = false
-    def isViolated(lhs: Rational, rhs: Rational) = lhs < rhs
+    def isViolated(lhs: Rational, rhs: Rational) = lhs >= rhs
+    def negate = `>`
   }
   
   def ofGoal(obj: Objection, coefficients: View.Indexed[Rational]): LinearProgram = {

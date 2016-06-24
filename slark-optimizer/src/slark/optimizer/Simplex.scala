@@ -92,7 +92,7 @@ object Simplex {
             } else if (aij.isPositive) s"+ $aij$n" else s"- ${aij.negate}$n"
           }
         })).map(_.toArray).toArray
-        val ajMaxStrLen = View.Cols(aStr).map(_.map(_.length).max).toArray
+        val ajMaxStrLen = View.Cols(aStr, varSize + slackSize).map(_.map(_.length).max).toArray
         View.Rows(aStr).map(arr => View.Range(0, varSize + slackSize).map(col => {
           val s = arr(col)
           new String(Array.fill(ajMaxStrLen(col) - s.length())(' ')) + s
@@ -136,7 +136,7 @@ object Simplex {
     }
 
     final def show(matrix: Array[Array[Rational]]): Unit = {
-      val textLen = View.Cols(matrix).map(arr => arr.map(_.toString().length()).max).toArray
+      val textLen = View.Cols(matrix, matrix(0).length).map(arr => arr.map(_.toString().length()).max).toArray
       val s = View.Rows(matrix).map(arr => View.Range(0, textLen.length).map(col => {
         val s = arr(col).toString()
         new String(Array.fill(textLen(col) - s.length)(' ')) + s
@@ -152,11 +152,14 @@ object Simplex {
   def format(problem: LinearProgram): StandardForm = {
     import LinearProgram._
     val varSize = problem.varSize
-    val constraintSize = problem.consts.size
+    val consts = problem.consts map {
+      const => if (const.constant.isNegative) const.negate() else const
+    }
+    val constraintSize = consts.length
     val slackIdx = new Array[Int](constraintSize)
     var slackSize = 0
     View.Range(0, constraintSize).foreach(i => {
-      val const = problem.consts(i)
+      val const = consts(i)
       if (const.relation.isEquality) slackIdx(i) = -1 
       else {
         slackIdx(i) = slackSize
@@ -168,19 +171,14 @@ object Simplex {
       case Max => problem.coefficients.fill(cLen, Rational.zero)
       case Min => problem.coefficients.map(_.negate).fill(cLen, Rational.zero)
     }
-    val b = View.Vector(problem.consts).map {
-      case Constraint(_, <=, bi) => bi
-      case Constraint(_, `=`, bi) => bi
-      case Constraint(_, >=, bi) => bi.negate
-      case _ => throw new IllegalArgumentException("only >=, <=, = are acceptable")
-    }
+    val b = View.Vector(consts).map(_.constant)
     
     val a = View.Range(0, constraintSize).map { i => {
-      val const = problem.consts(i)
+      val const = consts(i)
       const match {
         case Constraint(ai, <=, _) => ai.fill(cLen, Rational.zero).updated(slackIdx(i) + varSize, Rational.one)
         case Constraint(ai, `=`, _) => ai.fill(cLen, Rational.zero)
-        case Constraint(ai, >=, _) => ai.map(_.negate).fill(cLen, Rational.zero).updated(slackIdx(i) + varSize, Rational.one)
+        case Constraint(ai, >=, _) => ai.fill(cLen, Rational.zero).updated(slackIdx(i) + varSize, Rational.one.negate)
         case _ => throw new IllegalArgumentException("only >=, <=, = are acceptable")
       }
     }}
