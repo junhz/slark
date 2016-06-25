@@ -40,12 +40,14 @@ object Dual extends Simplex {
               View.Range(0, problem.constraintSize).map(row => problem.b(row) +: problem.a(row))
             view.map(_.toArray).toArray
           }
+          val nonBasic = problem.n.toArray
           
           //show(tableau)
           var selected = selector(tableau)
           while (selected._1 >= 0 && selected._2 >= 0) {
             val (row, col) = selected
             pivot(tableau, row, col)
+            nonBasic(row - 1) = col - 1
             selected = selector(tableau)
           }
           selected match {
@@ -54,9 +56,7 @@ object Dual extends Simplex {
                                      View.Cols(tableau, 1)(0).tail,
                                      View.Rows(tableau)(0).tail,
                                      tableau(0)(0),
-                                     problem.varSize,
-                                     problem.slackSize,
-                                     problem.constraintSize))
+                                     View.Array(nonBasic)))
             }
             case _ => Unbounded
           }

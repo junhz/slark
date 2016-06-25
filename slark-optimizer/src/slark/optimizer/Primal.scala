@@ -35,7 +35,7 @@ object Primal extends Simplex { self =>
   
   val phase1 = new Phase {
     def solve(problem: StandardForm): SolveResult = {
-      val nonArtifactWidth = problem.varSize + problem.slackSize + 1
+      val nonArtifactWidth = problem.varSize + 1
       val tableauWidth = nonArtifactWidth + problem.constraintSize
       val tableau = {
         val tableauView =
@@ -49,6 +49,7 @@ object Primal extends Simplex { self =>
         })
         array
       }
+      val nonBasic = View.Range(problem.varSize, problem.varSize + problem.constraintSize).toArray
       
       //show(tableau)
       val selector = new self.Selector {
@@ -59,6 +60,7 @@ object Primal extends Simplex { self =>
       while (selected._1 >= 0 && selected._2 >= 0) {
         val (row, col) = selected
         pivot(tableau, row, col)
+        nonBasic(row - 2) = col - 1
         selected = selector(tableau)
       }
       selected match {
@@ -67,9 +69,7 @@ object Primal extends Simplex { self =>
                                               View.Cols(tableau, 1)(0).tail.tail,
                                               View.Rows(tableau)(1).range(1, nonArtifactWidth),
                                               tableau(1)(0),
-                                              problem.varSize,
-                                              problem.slackSize,
-                                              problem.constraintSize))
+                                              View.Array(nonBasic)))
           case false => Infeasible
         }
         case _ => Unbounded
@@ -87,6 +87,7 @@ object Primal extends Simplex { self =>
               View.Range(0, problem.constraintSize).map(row => problem.b(row) +: problem.a(row))
             view.map(_.toArray).toArray
           }
+          val nonBasic = problem.n.toArray
           
           //show(tableau)
           val selector = new self.Selector {
@@ -97,6 +98,7 @@ object Primal extends Simplex { self =>
           while (selected._1 >= 0 && selected._2 >= 0) {
             val (row, col) = selected
             pivot(tableau, row, col)
+            nonBasic(row - 1) = col - 1
             selected = selector(tableau)
           }
           selected match {
@@ -105,9 +107,7 @@ object Primal extends Simplex { self =>
                                      View.Cols(tableau, 1)(0).tail,
                                      View.Rows(tableau)(0).tail,
                                      tableau(0)(0),
-                                     problem.varSize,
-                                     problem.slackSize,
-                                     problem.constraintSize))
+                                     View.Array(nonBasic)))
             }
             case _ => Unbounded
           }

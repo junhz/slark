@@ -52,8 +52,8 @@ trait BranchAndBound { self =>
                 val basicVars = p.basicVars().toList
                 View.List(basicVars).some(!_._2.isInteger).minBy(x => (x._2.fraction - Rational(1, 2)).abs()) match {
                   case Some((col, bi, ai)) => {
-                    queue.enqueue(p.strict(ai.map(_.negate).updated(col, Rational.zero), bi.floor - bi),
-                                  p.strict(ai.updated(col, Rational.zero), bi - bi.ceil))
+                    queue.enqueue(p.strict(ai.map(_.negate).update(col, Rational.zero), bi.floor - bi),
+                                  p.strict(ai.update(col, Rational.zero), bi - bi.ceil))
                     lowerBound
                   }
                   case None => {

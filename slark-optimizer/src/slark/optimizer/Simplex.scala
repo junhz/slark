@@ -14,34 +14,31 @@ object Simplex {
   case class StandardForm(a: View.Indexed[View.Indexed[Rational]], 
                           b: View.Indexed[Rational], 
                           c: View.Indexed[Rational], 
-                          z: Rational, 
-                          varSize: Int,
-                          slackSize: Int,
-                          constraintSize: Int) {
+                          z: Rational,
+                          n: View.Indexed[Int]) {
+    val varSize = c.length
+    val constraintSize = b.length
     def strict(ai: View.Indexed[Rational], bi: Rational) = {
-      val len = varSize + slackSize
-      val nai = ai.fill(len + 1, Rational.zero).updated(len, Rational.one)
-      StandardForm(a.map(_ :+ Rational.zero) :+ nai, b :+ bi, c :+ Rational.zero, z, varSize, slackSize + 1, constraintSize + 1)
+      val nai = ai.fill(varSize + 1, Rational.zero).update(varSize, Rational.one)
+      StandardForm(a.map(_ :+ Rational.zero) :+ nai, b :+ bi, c :+ Rational.zero, z, n :+ varSize)
     }
     
     def strict(constraints: View.Travesal[(View.Indexed[Rational], Rational)]) = {
-      val len = varSize + slackSize
       val consts = constraints.toList.toArray(Array[(View.Indexed[Rational], Rational)]())
       val size = consts.length
-      val na = View.Range(0, size).map(i => consts(i)._1.fill(len + size, Rational.zero).updated(len + i, Rational.one))
-      StandardForm(a.map(_ .fill(len + size, Rational.zero)) :++ na, b :++ View.Array(consts).map(_._2), c.fill(len + size, Rational.zero), z, varSize, slackSize + size, constraintSize + size)
+      val na = View.Range(0, size).map(i => consts(i)._1.fill(varSize + size, Rational.zero).update(varSize + i, Rational.one))
+      StandardForm(a.map(_ .fill(varSize + size, Rational.zero)) :++ na, b :++ View.Array(consts).map(_._2), c.fill(varSize + size, Rational.zero), z, n :++ View.Range(varSize, varSize + size))
     }
     
     def format(ai: View.Indexed[Rational], bi: Rational): (View.Indexed[Rational], Rational) = {
-      val len = varSize + slackSize
-      val nai = ai.fill(len, Rational.zero).toArray
+      val nai = ai.fill(varSize, Rational.zero).toArray
       var nbi = bi
       val bVars = basicVars()
       bVars.foreach {
         case (col, bi, ai) => {
           val factor = nai(col)
           var idx = 0
-          while (idx < len) {
+          while (idx < varSize) {
             nai(idx) -= factor * ai(idx)
             idx += 1
           }
@@ -50,13 +47,11 @@ object Simplex {
       }
       (View.Array(nai), nbi)
     }
-    
+    // TODO: use n instead
     def basicVars(): View.Travesal[(Int, Rational, View.Indexed[Rational])] = {
-      val colLen = varSize + slackSize
-      val rowLen = constraintSize
-      View.Range(0, colLen).some(c(_).isZero)
-                             .some(col => (View.Range(0, rowLen).count(row => !a(row)(col).isZero)) == 1)
-                             .map(col => (View.Range(0, rowLen).first(row => !a(row)(col).isZero), col))
+      View.Range(0, varSize).some(c(_).isZero)
+                             .some(col => (View.Range(0, constraintSize).count(row => !a(row)(col).isZero)) == 1)
+                             .map(col => (View.Range(0, constraintSize).first(row => !a(row)(col).isZero), col))
                              .map {
         case (row, col) => {
           val factor = a(row)(col)
@@ -64,11 +59,11 @@ object Simplex {
         }
       }
     }
-    
+    // TODO: use lhs rhs instead
     override def toString = {
       def name(idx: Int) = if (idx < varSize) s"x$idx" else s"s${idx - varSize}"
       val max = {
-        val coeStr = View.Range(0, varSize + slackSize).map(i => {
+        val coeStr = View.Range(0, varSize).map(i => {
           val ci = c(i)
           if (ci.isZero) "" else { if(ci.isPositive) s"+ $ci${name(i)}" else s"- ${ci.negate}${name(i)}" }
         }).mkString(" ")
@@ -77,11 +72,11 @@ object Simplex {
       
       val subjectTo = if (constraintSize > 0) {
         val firstIdx = Array.fill(constraintSize)(-1)
-        View.Range(0, constraintSize).foreach(row => View.Range(0, varSize + slackSize).foreach(col => {
+        View.Range(0, constraintSize).foreach(row => View.Range(0, varSize).foreach(col => {
           if(firstIdx(row) < 0 && a(row)(col).isZero) firstIdx(row) = col
           else ()
         }))
-        val aStr = View.Range(0, constraintSize).map(row => View.Range(0, varSize + slackSize).map(col => {
+        val aStr = View.Range(0, constraintSize).map(row => View.Range(0, varSize).map(col => {
           val aij = a(row)(col)
           if (aij.isZero) ""
           else {
@@ -92,14 +87,14 @@ object Simplex {
             } else if (aij.isPositive) s"+ $aij$n" else s"- ${aij.negate}$n"
           }
         })).map(_.toArray).toArray
-        val ajMaxStrLen = View.Cols(aStr, varSize + slackSize).map(_.map(_.length).max).toArray
-        View.Rows(aStr).map(arr => View.Range(0, varSize + slackSize).map(col => {
+        val ajMaxStrLen = View.Cols(aStr, varSize).map(_.map(_.length).max).toArray
+        View.Rows(aStr).map(arr => View.Range(0, varSize).map(col => {
           val s = arr(col)
           new String(Array.fill(ajMaxStrLen(col) - s.length())(' ')) + s
         }).mkString(" "))
       } else View.empty[String]()
       
-      (max +: subjectTo).mkString("\r\n")
+      (n.toString() +: max +: subjectTo).mkString("\r\n")
     }
   }
 
@@ -151,7 +146,7 @@ object Simplex {
   
   def format(problem: LinearProgram): StandardForm = {
     import LinearProgram._
-    val varSize = problem.varSize
+    val decideSize = problem.varSize
     val consts = problem.consts map {
       const => if (const.constant.isNegative) const.negate() else const
     }
@@ -166,22 +161,22 @@ object Simplex {
         slackSize += 1
       }
     })
-    val cLen = varSize + slackSize
+    val varSize = decideSize + slackSize
     val c = problem.obj match {
-      case Max => problem.coefficients.fill(cLen, Rational.zero)
-      case Min => problem.coefficients.map(_.negate).fill(cLen, Rational.zero)
+      case Max => problem.coefficients.fill(varSize, Rational.zero)
+      case Min => problem.coefficients.map(_.negate).fill(varSize, Rational.zero)
     }
     val b = View.Vector(consts).map(_.constant)
     
     val a = View.Range(0, constraintSize).map { i => {
       val const = consts(i)
       const match {
-        case Constraint(ai, <=, _) => ai.fill(cLen, Rational.zero).updated(slackIdx(i) + varSize, Rational.one)
-        case Constraint(ai, `=`, _) => ai.fill(cLen, Rational.zero)
-        case Constraint(ai, >=, _) => ai.fill(cLen, Rational.zero).updated(slackIdx(i) + varSize, Rational.one.negate)
+        case Constraint(ai, <=, _) => ai.fill(varSize, Rational.zero).update(slackIdx(i) + decideSize, Rational.one)
+        case Constraint(ai, `=`, _) => ai.fill(varSize, Rational.zero)
+        case Constraint(ai, >=, _) => ai.fill(varSize, Rational.zero).update(slackIdx(i) + decideSize, Rational.one.negate)
         case _ => throw new IllegalArgumentException("only >=, <=, = are acceptable")
       }
     }}
-    StandardForm(a, b, c, Rational.zero, varSize, slackSize, a.length)
+    StandardForm(a, b, c, Rational.zero, View.empty())
   }
 }

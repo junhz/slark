@@ -310,7 +310,7 @@ object View {
         }
       }
     }
-    final def updated(pos: Int, value: A): Indexed[A] = IndexedUpdated(self, pos, value)
+    final def update(pos: Int, value: A): Indexed[A] = IndexedUpdated(self, pos, value)
     
     final def fill(length: Int, value: A): Indexed[A] = IndexedFilled(self, length, value)
     
