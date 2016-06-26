@@ -33,31 +33,19 @@ object Simplex {
     def format(ai: View.Indexed[Rational], bi: Rational): (View.Indexed[Rational], Rational) = {
       val nai = ai.fill(varSize, Rational.zero).toArray
       var nbi = bi
-      val bVars = basicVars()
-      bVars.foreach {
-        case (col, bi, ai) => {
+      View.Range(0, n.length).foreach(
+        row => {
+          val col = n(row)
           val factor = nai(col)
           var idx = 0
           while (idx < varSize) {
-            nai(idx) -= factor * ai(idx)
+            nai(idx) -= factor * a(row)(idx)
             idx += 1
           }
-          nbi -= factor * bi
+          nbi -= factor * b(row)
         }
-      }
+      )
       (View.Array(nai), nbi)
-    }
-    // TODO: use n instead
-    def basicVars(): View.Travesal[(Int, Rational, View.Indexed[Rational])] = {
-      View.Range(0, varSize).some(c(_).isZero)
-                             .some(col => (View.Range(0, constraintSize).count(row => !a(row)(col).isZero)) == 1)
-                             .map(col => (View.Range(0, constraintSize).first(row => !a(row)(col).isZero), col))
-                             .map {
-        case (row, col) => {
-          val factor = a(row)(col)
-          (col, b(row) / factor, a(row).map(_ / factor))
-        }
-      }
     }
     // TODO: use lhs rhs instead
     override def toString = {
@@ -88,10 +76,13 @@ object Simplex {
           }
         })).map(_.toArray).toArray
         val ajMaxStrLen = View.Cols(aStr, varSize).map(_.map(_.length).max).toArray
-        View.Rows(aStr).map(arr => View.Range(0, varSize).map(col => {
-          val s = arr(col)
-          new String(Array.fill(ajMaxStrLen(col) - s.length())(' ')) + s
-        }).mkString(" "))
+        View.Range(0, constraintSize).map(row => {
+          val lhs = View.Range(0, varSize).map(col => {
+            val s = aStr(row)(col)
+            new String(Array.fill(ajMaxStrLen(col) - s.length())(' ')) + s
+          }).mkString(" ")
+          s"$lhs = ${b(row)}"
+        })
       } else View.empty[String]()
       
       (n.toString() +: max +: subjectTo).mkString("\r\n")

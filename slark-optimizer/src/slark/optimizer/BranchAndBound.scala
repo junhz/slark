@@ -49,17 +49,19 @@ trait BranchAndBound { self =>
           lowerBound = if (isActive(problem)) {
             Dual.solve(cuttingPlanes.foldLeft(problem)((p, cp) => cp(p))) match {
               case Simplex.Optimized(p) if (isActive(p)) => {
-                val basicVars = p.basicVars().toList
-                View.List(basicVars).some(!_._2.isInteger).minBy(x => (x._2.fraction - Rational(1, 2)).abs()) match {
-                  case Some((col, bi, ai)) => {
+                View.Range(0, p.n.length).some(!p.b(_).isInteger).minBy(row => (p.b(row).fraction - Rational(1, 2)).abs()) match {
+                  case Some(row) => {
+                    val col = p.n(row)
+                    val ai = p.a(row)
+                    val bi = p.b(row)
                     queue.enqueue(p.strict(ai.map(_.negate).update(col, Rational.zero), bi.floor - bi),
                                   p.strict(ai.update(col, Rational.zero), bi - bi.ceil))
                     lowerBound
                   }
                   case None => {
                     val xs = Array.fill(p.varSize)(Rational.zero)
-                    View.List(basicVars).foreach {
-                      case (col, bi, ai) => if (col < p.varSize) xs(col) = bi else ()
+                    View.Range(0, p.n.length).foreach {
+                      row => xs(p.n(row)) = p.b(row)
                     }
                     Optimized(p.z, xs)
                   }

@@ -40,14 +40,13 @@ trait CuttingPlane {
           val cut = apply(problem)
           Dual.solve(cut) match {
             case Simplex.Optimized(p) => {
-              val basicVars = p.basicVars().toList
-              View.List(basicVars).forall(_._2.isInteger) match {
+              p.b.forall(_.isInteger) match {
                 case true => {
                   end = true
                   cnt = {
                     val xs = Array.fill(p.varSize)(Rational.zero)
-                    View.List(basicVars).foreach {
-                      case (col, bi, ai) => if (col < p.varSize) xs(col) = bi else ()
+                    View.Range(0, p.n.length).foreach {
+                      row => xs(p.n(row)) = p.b(row)
                     }
                     Optimized(p.z, xs)
                   }
