@@ -50,7 +50,7 @@ object Primal extends Simplex { self =>
       val basic = problem.bv.toArray
       val nonBasic = View.Range(problem.varSize, problem.varSize + problem.constraintSize).toArray
       
-      show(tableau)
+      //show(tableau)
       val selector = new self.Selector {
         def enterStart: Int = 1
         def leaveStart: Int = 2
@@ -59,7 +59,7 @@ object Primal extends Simplex { self =>
       while (selected._1 >= 0 && selected._2 >= 0) {
         val (row, col) = selected
         pivot(tableau, row, col)
-        show(tableau)
+        //show(tableau)
         val enter = nonBasic(row - 2)
         val leave = basic(col - 1)
         nonBasic(row - 2) = leave
@@ -68,12 +68,19 @@ object Primal extends Simplex { self =>
       }
       selected match {
         case (-1, -1) => tableau(0)(0).isZero match {
-          case true => Optimized(StandardForm(View.Rows(tableau).tail.tail.map(_.tail),
-                                              View.Cols(tableau, 1)(0).tail.tail,
-                                              View.Rows(tableau)(1).tail,
-                                              tableau(1)(0),
-                                              View.Array(nonBasic),
-                                              View.Array(basic)))
+          case true => {
+            val basicIndex = new Array[Int](basic.length - problem.constraintSize)
+            var idx = 0
+            View.Range(0, problem.bv.length).foreach {
+              col => if (basic(col) < problem.varSize) { basicIndex(idx) = col; idx += 1 } else ()
+            }
+            Optimized(StandardForm(View.Rows(tableau).tail.tail.map(ai => View.Array(basicIndex).map(col => ai(col + 1))),
+                                   View.Cols(tableau, 1)(0).tail.tail,
+                                   View.Array(basicIndex).map(col => tableau(1)(col + 1)),
+                                   tableau(1)(0),
+                                   View.Array(nonBasic),
+                                   View.Array(basicIndex).map(basic(_))))
+          }
           case false => Infeasible
         }
         case _ => Unbounded
@@ -94,7 +101,7 @@ object Primal extends Simplex { self =>
           val basic = problem.bv.toArray
           val nonBasic = problem.n.toArray
           
-          show(tableau)
+          //show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1
             def leaveStart: Int = 1
@@ -103,7 +110,7 @@ object Primal extends Simplex { self =>
           while (selected._1 >= 0 && selected._2 >= 0) {
             val (row, col) = selected
             pivot(tableau, row, col)
-            show(tableau)
+            //show(tableau)
             val enter = nonBasic(row - 1)
             val leave = basic(col - 1)
             nonBasic(row - 1) = leave

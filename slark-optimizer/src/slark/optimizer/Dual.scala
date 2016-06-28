@@ -43,12 +43,12 @@ object Dual extends Simplex {
           val basic = problem.bv.toArray
           val nonBasic = problem.n.toArray
           
-          show(tableau)
+          //show(tableau)
           var selected = selector(tableau)
           while (selected._1 >= 0 && selected._2 >= 0) {
             val (row, col) = selected
             pivot(tableau, row, col)
-            show(tableau)
+            //show(tableau)
             val enter = nonBasic(row - 1)
             val leave = basic(col - 1)
             nonBasic(row - 1) = leave

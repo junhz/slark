@@ -104,7 +104,7 @@ object Simplex {
     def solve(problem: StandardForm): SolveResult
 
     final def pivot(matrix: Array[Array[Rational]], row: Int, col: Int): Unit = {
-      println(s"pivot at ($row, $col)")
+      //println(s"pivot at ($row, $col)")
       var r = 0
       val pr = View.Array(matrix(row)).toArray
       while (r < matrix.length) {
