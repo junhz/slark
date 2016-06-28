@@ -15,43 +15,45 @@ object Simplex {
                           b: View.Indexed[Rational], 
                           c: View.Indexed[Rational], 
                           z: Rational,
-                          n: View.Indexed[Int]) {
-    val varSize = c.length
+                          n: View.Indexed[Int],
+                          bv: View.Indexed[Int]) {
+    val varSize = bv.length + n.length
     val constraintSize = b.length
     def strict(ai: View.Indexed[Rational], bi: Rational) = {
-      val nai = ai.fill(varSize + 1, Rational.zero).update(varSize, Rational.one)
-      StandardForm(a.map(_ :+ Rational.zero) :+ nai, b :+ bi, c :+ Rational.zero, z, n :+ varSize)
+      val nai = ai.fill(bv.length, Rational.zero)
+      StandardForm(a :+ nai, b :+ bi, c, z, n :+ varSize, bv)
     }
     
     def strict(constraints: View.Travesal[(View.Indexed[Rational], Rational)]) = {
       val consts = constraints.toList.toArray(Array[(View.Indexed[Rational], Rational)]())
       val size = consts.length
-      val na = View.Range(0, size).map(i => consts(i)._1.fill(varSize + size, Rational.zero).update(varSize + i, Rational.one))
-      StandardForm(a.map(_ .fill(varSize + size, Rational.zero)) :++ na, b :++ View.Array(consts).map(_._2), c.fill(varSize + size, Rational.zero), z, n :++ View.Range(varSize, varSize + size))
+      val na = View.Array(consts).map(_._1.fill(bv.length, Rational.zero))
+      StandardForm(a :++ na, b :++ View.Array(consts).map(_._2), c, z, n :++ View.Range(varSize, varSize + size), bv)
     }
     
-    def format(ai: View.Indexed[Rational], bi: Rational): (View.Indexed[Rational], Rational) = {
-      val nai = ai.fill(varSize, Rational.zero).toArray
+    def add(coe: View.Indexed[Rational], bi: Rational): StandardForm = {
+      val ncoe = coe.fill(varSize, Rational.zero)
+      val nai = View.Range(0, bv.length).map(i => ncoe(bv(i))).toArray
       var nbi = bi
       View.Range(0, n.length).foreach(
         row => {
           val col = n(row)
-          val factor = nai(col)
+          val factor = ncoe(col)
           var idx = 0
-          while (idx < varSize) {
+          while (idx < bv.length) {
             nai(idx) -= factor * a(row)(idx)
             idx += 1
           }
           nbi -= factor * b(row)
         }
       )
-      (View.Array(nai), nbi)
+      StandardForm(a :+ View.Array(nai), b :+ nbi, c, z, n :+ varSize, bv)
     }
     // TODO: use lhs rhs instead
     override def toString = {
-      def name(idx: Int) = if (idx < varSize) s"x$idx" else s"s${idx - varSize}"
+      def name(idx: Int) = s"x${bv(idx)}"
       val max = {
-        val coeStr = View.Range(0, varSize).map(i => {
+        val coeStr = View.Range(0, bv.length).map(i => {
           val ci = c(i)
           if (ci.isZero) "" else { if(ci.isPositive) s"+ $ci${name(i)}" else s"- ${ci.negate}${name(i)}" }
         }).mkString(" ")
@@ -60,11 +62,11 @@ object Simplex {
       
       val subjectTo = if (constraintSize > 0) {
         val firstIdx = Array.fill(constraintSize)(-1)
-        View.Range(0, constraintSize).foreach(row => View.Range(0, varSize).foreach(col => {
+        View.Range(0, constraintSize).foreach(row => View.Range(0, bv.length).foreach(col => {
           if(firstIdx(row) < 0 && a(row)(col).isZero) firstIdx(row) = col
           else ()
         }))
-        val aStr = View.Range(0, constraintSize).map(row => View.Range(0, varSize).map(col => {
+        val aStr = View.Range(0, constraintSize).map(row => View.Range(0, bv.length).map(col => {
           val aij = a(row)(col)
           if (aij.isZero) ""
           else {
@@ -75,13 +77,13 @@ object Simplex {
             } else if (aij.isPositive) s"+ $aij$n" else s"- ${aij.negate}$n"
           }
         })).map(_.toArray).toArray
-        val ajMaxStrLen = View.Cols(aStr, varSize).map(_.map(_.length).max).toArray
+        val ajMaxStrLen = View.Cols(aStr, bv.length).map(_.map(_.length).max).toArray
         View.Range(0, constraintSize).map(row => {
-          val lhs = View.Range(0, varSize).map(col => {
+          val lhs = View.Range(0, bv.length).map(col => {
             val s = aStr(row)(col)
             new String(Array.fill(ajMaxStrLen(col) - s.length())(' ')) + s
           }).mkString(" ")
-          s"$lhs = ${b(row)}"
+          s"$lhs = ${b(row)} - x${n(row)}"
         })
       } else View.empty[String]()
       
@@ -102,17 +104,20 @@ object Simplex {
     def solve(problem: StandardForm): SolveResult
 
     final def pivot(matrix: Array[Array[Rational]], row: Int, col: Int): Unit = {
-      //println(s"pivot at ($row, $col)")
+      println(s"pivot at ($row, $col)")
       var r = 0
+      val pr = View.Array(matrix(row)).toArray
       while (r < matrix.length) {
         val vector = matrix(r)
         var c = 0
         val factor = vector(col)
         while (c < vector.length) {
           if (r == row) {
-            vector(c) /= factor
+            if (c == col) vector(c) = Rational.one / factor
+            else vector(c) /= factor
           } else {
-            vector(c) -= matrix(row)(c) * factor / matrix(row)(col)
+            if (c == col) vector(c) = -factor / pr(col)
+            else vector(c) -= pr(c) * factor / pr(col)
           }
           c += 1
         }
@@ -168,6 +173,6 @@ object Simplex {
         case _ => throw new IllegalArgumentException("only >=, <=, = are acceptable")
       }
     }}
-    StandardForm(a, b, c, Rational.zero, View.empty())
+    StandardForm(a, b, c, Rational.zero, View.empty(), View.Range(0, varSize))
   }
 }

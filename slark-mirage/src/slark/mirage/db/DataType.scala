@@ -70,7 +70,7 @@ object DataType {
         val buf = CharBuffer.allocate(1024)
         while (r.read(buf) > 0) {
           buf.flip()
-          w.write(buf.array(), 0, buf.position())
+          w.write(buf.array(), 0, buf.limit())
           buf.clear()
         }
         w.close()

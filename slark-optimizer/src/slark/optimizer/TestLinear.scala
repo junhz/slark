@@ -38,10 +38,7 @@ object TestLinear {
           problem = problem match {
             case None => None
             case Some(e) => e match {
-              case Left(p) => {
-                val (ai, bi) = p.format(View.Array(coe), const)
-                Some(Left(p.strict(ai, bi)))
-              }
+              case Left(p) => Some(Left(p.add(View.Array(coe), const)))
               case Right(p) => {
                 val kind = r match {
                   case ">=" => LinearProgram.<=

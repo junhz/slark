@@ -35,23 +35,22 @@ object Primal extends Simplex { self =>
   
   val phase1 = new Phase {
     def solve(problem: StandardForm): SolveResult = {
-      val nonArtifactWidth = problem.varSize + 1
-      val tableauWidth = nonArtifactWidth + problem.constraintSize
+      val tableauWidth = problem.bv.length + 1
       val tableau = {
         val tableauView =
-          View.empty[Rational]().fill(nonArtifactWidth, Rational.zero) +:
+          View.empty[Rational]().fill(tableauWidth, Rational.zero) +:
           (problem.z +: problem.c) +:
           View.Range(0, problem.constraintSize).map(row => (problem.b(row) +: problem.a(row)))
-        val array = tableauView.map(_.fill(tableauWidth, Rational.zero).toArray).toArray
+        val array = tableauView.map(_.toArray).toArray
         View.Range(0, problem.constraintSize).foreach(row => {
-          array(row + 2)(nonArtifactWidth + row) = Rational.one
-          View.Range(0, nonArtifactWidth).foreach(col => array(0)(col) += array(row + 2)(col))
+          View.Range(0, tableauWidth).foreach(col => array(0)(col) += array(row + 2)(col))
         })
         array
       }
+      val basic = problem.bv.toArray
       val nonBasic = View.Range(problem.varSize, problem.varSize + problem.constraintSize).toArray
       
-      //show(tableau)
+      show(tableau)
       val selector = new self.Selector {
         def enterStart: Int = 1
         def leaveStart: Int = 2
@@ -60,16 +59,21 @@ object Primal extends Simplex { self =>
       while (selected._1 >= 0 && selected._2 >= 0) {
         val (row, col) = selected
         pivot(tableau, row, col)
-        nonBasic(row - 2) = col - 1
+        show(tableau)
+        val enter = nonBasic(row - 2)
+        val leave = basic(col - 1)
+        nonBasic(row - 2) = leave
+        basic(col - 1) = enter
         selected = selector(tableau)
       }
       selected match {
         case (-1, -1) => tableau(0)(0).isZero match {
-          case true => Optimized(StandardForm(View.Rows(tableau).tail.tail.map(_.range(1, nonArtifactWidth)),
+          case true => Optimized(StandardForm(View.Rows(tableau).tail.tail.map(_.tail),
                                               View.Cols(tableau, 1)(0).tail.tail,
-                                              View.Rows(tableau)(1).range(1, nonArtifactWidth),
+                                              View.Rows(tableau)(1).tail,
                                               tableau(1)(0),
-                                              View.Array(nonBasic)))
+                                              View.Array(nonBasic),
+                                              View.Array(basic)))
           case false => Infeasible
         }
         case _ => Unbounded
@@ -87,9 +91,10 @@ object Primal extends Simplex { self =>
               View.Range(0, problem.constraintSize).map(row => problem.b(row) +: problem.a(row))
             view.map(_.toArray).toArray
           }
+          val basic = problem.bv.toArray
           val nonBasic = problem.n.toArray
           
-          //show(tableau)
+          show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1
             def leaveStart: Int = 1
@@ -98,7 +103,11 @@ object Primal extends Simplex { self =>
           while (selected._1 >= 0 && selected._2 >= 0) {
             val (row, col) = selected
             pivot(tableau, row, col)
-            nonBasic(row - 1) = col - 1
+            show(tableau)
+            val enter = nonBasic(row - 1)
+            val leave = basic(col - 1)
+            nonBasic(row - 1) = leave
+            basic(col - 1) = enter
             selected = selector(tableau)
           }
           selected match {
@@ -107,7 +116,8 @@ object Primal extends Simplex { self =>
                                      View.Cols(tableau, 1)(0).tail,
                                      View.Rows(tableau)(0).tail,
                                      tableau(0)(0),
-                                     View.Array(nonBasic)))
+                                     View.Array(nonBasic),
+                                     View.Array(basic)))
             }
             case _ => Unbounded
           }
