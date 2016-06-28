@@ -49,9 +49,8 @@ trait BranchAndBound { self =>
           lowerBound = if (isActive(problem)) {
             Dual.solve(cuttingPlanes.foldLeft(problem)((p, cp) => cp(p))) match {
               case Simplex.Optimized(p) if (isActive(p)) => {
-                View.Range(0, p.n.length).some(!p.b(_).isInteger).minBy(row => (p.b(row).fraction - Rational(1, 2)).abs()) match {
+                View.Range(0, p.nonBasicCount).some(!p.b(_).isInteger).minBy(row => (p.b(row).fraction - Rational(1, 2)).abs()) match {
                   case Some(row) => {
-                    val col = p.n(row)
                     val ai = p.a(row)
                     val bi = p.b(row)
                     queue.enqueue(p.strict(ai.map(_.negate), bi.floor - bi),
@@ -60,8 +59,8 @@ trait BranchAndBound { self =>
                   }
                   case None => {
                     val xs = Array.fill(p.varSize)(Rational.zero)
-                    View.Range(0, p.n.length).foreach {
-                      row => xs(p.n(row)) = p.b(row)
+                    View.Range(0, p.nonBasicCount).foreach {
+                      row => xs(p.nbv(row)) = p.b(row)
                     }
                     Optimized(p.z, xs)
                   }

@@ -45,8 +45,8 @@ trait CuttingPlane {
                   end = true
                   cnt = {
                     val xs = Array.fill(p.varSize)(Rational.zero)
-                    View.Range(0, p.n.length).foreach {
-                      row => xs(p.n(row)) = p.b(row)
+                    View.Range(0, p.nonBasicCount).foreach {
+                      row => xs(p.nbv(row)) = p.b(row)
                     }
                     Optimized(p.z, xs)
                   }

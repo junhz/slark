@@ -41,7 +41,7 @@ object Dual extends Simplex {
             view.map(_.toArray).toArray
           }
           val basic = problem.bv.toArray
-          val nonBasic = problem.n.toArray
+          val nonBasic = problem.nbv.toArray
           
           //show(tableau)
           var selected = selector(tableau)

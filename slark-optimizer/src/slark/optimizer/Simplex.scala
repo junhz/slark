@@ -15,45 +15,47 @@ object Simplex {
                           b: View.Indexed[Rational], 
                           c: View.Indexed[Rational], 
                           z: Rational,
-                          n: View.Indexed[Int],
+                          nbv: View.Indexed[Int],
                           bv: View.Indexed[Int]) {
-    val varSize = bv.length + n.length
+    val basicCount = bv.length
+    val nonBasicCount = nbv.length
     val constraintSize = b.length
+    val varSize = basicCount + nonBasicCount
     def strict(ai: View.Indexed[Rational], bi: Rational) = {
-      val nai = ai.fill(bv.length, Rational.zero)
-      StandardForm(a :+ nai, b :+ bi, c, z, n :+ varSize, bv)
+      val nai = ai.fill(basicCount, Rational.zero)
+      StandardForm(a :+ nai, b :+ bi, c, z, nbv :+ varSize, bv)
     }
     
     def strict(constraints: View.Travesal[(View.Indexed[Rational], Rational)]) = {
       val consts = constraints.toList.toArray(Array[(View.Indexed[Rational], Rational)]())
       val size = consts.length
-      val na = View.Array(consts).map(_._1.fill(bv.length, Rational.zero))
-      StandardForm(a :++ na, b :++ View.Array(consts).map(_._2), c, z, n :++ View.Range(varSize, varSize + size), bv)
+      val na = View.Array(consts).map(_._1.fill(basicCount, Rational.zero))
+      StandardForm(a :++ na, b :++ View.Array(consts).map(_._2), c, z, nbv :++ View.Range(varSize, varSize + size), bv)
     }
     
     def add(coe: View.Indexed[Rational], bi: Rational): StandardForm = {
       val ncoe = coe.fill(varSize, Rational.zero)
-      val nai = View.Range(0, bv.length).map(i => ncoe(bv(i))).toArray
+      val nai = View.Range(0, basicCount).map(i => ncoe(bv(i))).toArray
       var nbi = bi
-      View.Range(0, n.length).foreach(
+      View.Range(0, basicCount).foreach(
         row => {
-          val col = n(row)
+          val col = nbv(row)
           val factor = ncoe(col)
           var idx = 0
-          while (idx < bv.length) {
+          while (idx < basicCount) {
             nai(idx) -= factor * a(row)(idx)
             idx += 1
           }
           nbi -= factor * b(row)
         }
       )
-      StandardForm(a :+ View.Array(nai), b :+ nbi, c, z, n :+ varSize, bv)
+      StandardForm(a :+ View.Array(nai), b :+ nbi, c, z, nbv :+ varSize, bv)
     }
     // TODO: use lhs rhs instead
     override def toString = {
       def name(idx: Int) = s"x${bv(idx)}"
       val max = {
-        val coeStr = View.Range(0, bv.length).map(i => {
+        val coeStr = View.Range(0, basicCount).map(i => {
           val ci = c(i)
           if (ci.isZero) "" else { if(ci.isPositive) s"+ $ci${name(i)}" else s"- ${ci.negate}${name(i)}" }
         }).mkString(" ")
@@ -62,11 +64,11 @@ object Simplex {
       
       val subjectTo = if (constraintSize > 0) {
         val firstIdx = Array.fill(constraintSize)(-1)
-        View.Range(0, constraintSize).foreach(row => View.Range(0, bv.length).foreach(col => {
+        View.Range(0, constraintSize).foreach(row => View.Range(0, basicCount).foreach(col => {
           if(firstIdx(row) < 0 && a(row)(col).isZero) firstIdx(row) = col
           else ()
         }))
-        val aStr = View.Range(0, constraintSize).map(row => View.Range(0, bv.length).map(col => {
+        val aStr = View.Range(0, constraintSize).map(row => View.Range(0, basicCount).map(col => {
           val aij = a(row)(col)
           if (aij.isZero) ""
           else {
@@ -77,17 +79,17 @@ object Simplex {
             } else if (aij.isPositive) s"+ $aij$n" else s"- ${aij.negate}$n"
           }
         })).map(_.toArray).toArray
-        val ajMaxStrLen = View.Cols(aStr, bv.length).map(_.map(_.length).max).toArray
+        val ajMaxStrLen = View.Cols(aStr, basicCount).map(_.map(_.length).max).toArray
         View.Range(0, constraintSize).map(row => {
-          val lhs = View.Range(0, bv.length).map(col => {
+          val lhs = View.Range(0, basicCount).map(col => {
             val s = aStr(row)(col)
             new String(Array.fill(ajMaxStrLen(col) - s.length())(' ')) + s
           }).mkString(" ")
-          s"$lhs = ${b(row)} - x${n(row)}"
+          s"$lhs = ${b(row)} - x${nbv(row)}"
         })
       } else View.empty[String]()
       
-      (n.toString() +: max +: subjectTo).mkString("\r\n")
+      (nbv.toString() +: max +: subjectTo).mkString("\r\n")
     }
   }
 

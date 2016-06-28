@@ -35,7 +35,7 @@ object Primal extends Simplex { self =>
   
   val phase1 = new Phase {
     def solve(problem: StandardForm): SolveResult = {
-      val tableauWidth = problem.bv.length + 1
+      val tableauWidth = problem.basicCount + 1
       val tableau = {
         val tableauView =
           View.empty[Rational]().fill(tableauWidth, Rational.zero) +:
@@ -69,9 +69,9 @@ object Primal extends Simplex { self =>
       selected match {
         case (-1, -1) => tableau(0)(0).isZero match {
           case true => {
-            val basicIndex = new Array[Int](basic.length - problem.constraintSize)
+            val basicIndex = new Array[Int](problem.basicCount - problem.constraintSize)
             var idx = 0
-            View.Range(0, problem.bv.length).foreach {
+            View.Range(0, problem.basicCount).foreach {
               col => if (basic(col) < problem.varSize) { basicIndex(idx) = col; idx += 1 } else ()
             }
             Optimized(StandardForm(View.Rows(tableau).tail.tail.map(ai => View.Array(basicIndex).map(col => ai(col + 1))),
@@ -99,7 +99,7 @@ object Primal extends Simplex { self =>
             view.map(_.toArray).toArray
           }
           val basic = problem.bv.toArray
-          val nonBasic = problem.n.toArray
+          val nonBasic = problem.nbv.toArray
           
           //show(tableau)
           val selector = new self.Selector {
