@@ -53,8 +53,8 @@ trait BranchAndBound { self =>
                   case Some(row) => {
                     val ai = p.a(row)
                     val bi = p.b(row)
-                    queue.enqueue(p.strict(ai.map(_.negate), bi.floor - bi),
-                                  p.strict(ai, bi - bi.ceil))
+                    queue.enqueue(p.newVariable(ai.map(_.negate), bi.floor - bi),
+                                  p.newVariable(ai, bi - bi.ceil))
                     lowerBound
                   }
                   case None => {

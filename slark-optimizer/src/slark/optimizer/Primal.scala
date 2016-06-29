@@ -35,15 +35,14 @@ object Primal extends Simplex { self =>
   
   val phase1 = new Phase {
     def solve(problem: StandardForm): SolveResult = {
-      val tableauWidth = problem.basicCount + 1
       val tableau = {
         val tableauView =
-          View.empty[Rational]().fill(tableauWidth, Rational.zero) +:
+          View.empty[Rational]().fill(problem.basicCount + 1, Rational.zero) +:
           (problem.z +: problem.c) +:
           View.Range(0, problem.constraintSize).map(row => (problem.b(row) +: problem.a(row)))
         val array = tableauView.map(_.toArray).toArray
         View.Range(0, problem.constraintSize).foreach(row => {
-          View.Range(0, tableauWidth).foreach(col => array(0)(col) += array(row + 2)(col))
+          View.Range(0, problem.basicCount + 1).foreach(col => array(0)(col) += array(row + 2)(col))
         })
         array
       }
@@ -69,17 +68,20 @@ object Primal extends Simplex { self =>
       selected match {
         case (-1, -1) => tableau(0)(0).isZero match {
           case true => {
+            def pick[T](indexed: View.Indexed[T], indices: View.Indexed[Int]) = indices.map(indexed(_))
+            // TODO: negative
             val basicIndex = new Array[Int](problem.basicCount - problem.constraintSize)
             var idx = 0
             View.Range(0, problem.basicCount).foreach {
               col => if (basic(col) < problem.varSize) { basicIndex(idx) = col; idx += 1 } else ()
             }
-            Optimized(StandardForm(View.Rows(tableau).tail.tail.map(ai => View.Array(basicIndex).map(col => ai(col + 1))),
+            val basicIdx = View.Array(basicIndex)
+            Optimized(StandardForm(View.Rows(tableau).tail.tail.map(ai => pick(ai.tail, basicIdx)),
                                    View.Cols(tableau, 1)(0).tail.tail,
-                                   View.Array(basicIndex).map(col => tableau(1)(col + 1)),
+                                   pick(View.Array(tableau(1)).tail(), basicIdx),
                                    tableau(1)(0),
                                    View.Array(nonBasic),
-                                   View.Array(basicIndex).map(basic(_))))
+                                   pick(View.Array(basic), basicIdx)))
           }
           case false => Infeasible
         }

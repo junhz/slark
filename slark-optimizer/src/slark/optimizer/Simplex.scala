@@ -21,19 +21,19 @@ object Simplex {
     val nonBasicCount = nbv.length
     val constraintSize = b.length
     val varSize = basicCount + nonBasicCount
-    def strict(ai: View.Indexed[Rational], bi: Rational) = {
+    def newVariable(ai: View.Indexed[Rational], bi: Rational) = {
       val nai = ai.fill(basicCount, Rational.zero)
       StandardForm(a :+ nai, b :+ bi, c, z, nbv :+ varSize, bv)
     }
     
-    def strict(constraints: View.Travesal[(View.Indexed[Rational], Rational)]) = {
-      val consts = constraints.toList.toArray(Array[(View.Indexed[Rational], Rational)]())
-      val size = consts.length
-      val na = View.Array(consts).map(_._1.fill(basicCount, Rational.zero))
-      StandardForm(a :++ na, b :++ View.Array(consts).map(_._2), c, z, nbv :++ View.Range(varSize, varSize + size), bv)
+    def newVariables(variables: View.Travesal[(View.Indexed[Rational], Rational)]) = {
+      val vars = variables.toList.toArray(Array[(View.Indexed[Rational], Rational)]())
+      val na = View.Array(vars).map(_._1.fill(basicCount, Rational.zero))
+      StandardForm(a :++ na, b :++ View.Array(vars).map(_._2), c, z, nbv :++ View.Range(varSize, varSize + vars.length), bv)
     }
     
-    def add(coe: View.Indexed[Rational], bi: Rational): StandardForm = {
+    // TODO: use LinearProgram.Constraint
+    def subjectTo(coe: View.Indexed[Rational], bi: Rational): StandardForm = {
       val ncoe = coe.fill(varSize, Rational.zero)
       val nai = View.Range(0, basicCount).map(i => ncoe(bv(i))).toArray
       var nbi = bi
@@ -79,24 +79,25 @@ object Simplex {
             } else if (aij.isPositive) s"+ $aij$n" else s"- ${aij.negate}$n"
           }
         })).map(_.toArray).toArray
-        val ajMaxStrLen = View.Cols(aStr, basicCount).map(_.map(_.length).max).toArray
+        val ajLen = View.Cols(aStr, basicCount).map(_.map(_.length).max).toArray
         View.Range(0, constraintSize).map(row => {
           val lhs = View.Range(0, basicCount).map(col => {
             val s = aStr(row)(col)
-            new String(Array.fill(ajMaxStrLen(col) - s.length())(' ')) + s
+            new String(Array.fill(ajLen(col) - s.length())(' ')) + s
           }).mkString(" ")
-          s"$lhs = ${b(row)} - x${nbv(row)}"
+          val nonBasicStr = if (row < basicCount) s" - x${nbv(row)}" else ""
+          s"$lhs = ${b(row)}$nonBasicStr"
         })
       } else View.empty[String]()
       
-      (nbv.toString() +: max +: subjectTo).mkString("\r\n")
+      (max +: subjectTo).mkString("\r\n")
     }
   }
 
   sealed trait SolveResult
 
-  case class Optimized(problem: StandardForm) extends SolveResult {
-    override def toString = s"Optimized\r\n$problem"
+  case class Optimized(solution: StandardForm) extends SolveResult {
+    override def toString = s"Optimized\r\n$solution"
   }
   case object Infeasible extends SolveResult
   case object Unbounded extends SolveResult
@@ -138,6 +139,7 @@ object Simplex {
     }
   }
   
+  // TODO: iterator from
   trait Selector {
     def apply(tableau: Array[Array[Rational]]): (Int, Int)
   }
@@ -153,7 +155,7 @@ object Simplex {
     var slackSize = 0
     View.Range(0, constraintSize).foreach(i => {
       val const = consts(i)
-      if (const.relation.isEquality) slackIdx(i) = -1 
+      if (const.relation.isEquality) ()
       else {
         slackIdx(i) = slackSize
         slackSize += 1
