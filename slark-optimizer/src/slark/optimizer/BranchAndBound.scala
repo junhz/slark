@@ -60,7 +60,10 @@ trait BranchAndBound { self =>
                   case None => {
                     val xs = Array.fill(p.varSize)(Rational.zero)
                     View.Range(0, p.nonBasicCount).foreach {
-                      row => xs(p.nbv(row)) = p.b(row)
+                      row => p.nbv(row) match {
+                        case Simplex.DecideVar(ord) => xs(ord) = p.b(row)
+                        case _ => ()
+                      }
                     }
                     Optimized(p.z, xs)
                   }

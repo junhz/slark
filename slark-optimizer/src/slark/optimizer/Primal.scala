@@ -35,57 +35,67 @@ object Primal extends Simplex { self =>
   
   val phase1 = new Phase {
     def solve(problem: StandardForm): SolveResult = {
-      val tableau = {
-        val tableauView =
-          View.empty[Rational]().fill(problem.basicCount + 1, Rational.zero) +:
-          (problem.z +: problem.c) +:
-          View.Range(0, problem.constraintSize).map(row => (problem.b(row) +: problem.a(row)))
-        val array = tableauView.map(_.toArray).toArray
-        View.Range(0, problem.constraintSize).foreach(row => {
-          View.Range(0, problem.basicCount + 1).foreach(col => array(0)(col) += array(row + 2)(col))
-        })
-        array
-      }
-      val basic = problem.bv.toArray
-      val nonBasic = View.Range(problem.varSize, problem.varSize + problem.constraintSize).toArray
-      
-      //show(tableau)
-      val selector = new self.Selector {
-        def enterStart: Int = 1
-        def leaveStart: Int = 2
-      }
-      var selected = selector(tableau)
-      while (selected._1 >= 0 && selected._2 >= 0) {
-        val (row, col) = selected
-        pivot(tableau, row, col)
-        //show(tableau)
-        val enter = nonBasic(row - 2)
-        val leave = basic(col - 1)
-        nonBasic(row - 2) = leave
-        basic(col - 1) = enter
-        selected = selector(tableau)
-      }
-      selected match {
-        case (-1, -1) => tableau(0)(0).isZero match {
-          case true => {
-            def pick[T](indexed: View.Indexed[T], indices: View.Indexed[Int]) = indices.map(indexed(_))
-            // TODO: negative
-            val basicIndex = new Array[Int](problem.basicCount - problem.constraintSize)
-            var idx = 0
-            View.Range(0, problem.basicCount).foreach {
-              col => if (basic(col) < problem.varSize) { basicIndex(idx) = col; idx += 1 } else ()
-            }
-            val basicIdx = View.Array(basicIndex)
-            Optimized(StandardForm(View.Rows(tableau).tail.tail.map(ai => pick(ai.tail, basicIdx)),
-                                   View.Cols(tableau, 1)(0).tail.tail,
-                                   pick(View.Array(tableau(1)).tail(), basicIdx),
-                                   tableau(1)(0),
-                                   View.Array(nonBasic),
-                                   pick(View.Array(basic), basicIdx)))
+      problem.nbv.count(_.isInstanceOf[Simplex.ArtifactVar]) match {
+        case 0 => Optimized(problem)
+        case artifactCount => {
+          val tableau = {
+            val tableauView =
+              View.empty[Rational]().fill(problem.basicCount + 1, Rational.zero) +:
+                (problem.z +: problem.c) +:
+                View.Range(0, problem.nonBasicCount).map(row => (problem.b(row) +: problem.a(row)))
+            val array = tableauView.map(_.toArray).toArray
+            View.Range(0, problem.nonBasicCount).foreach(row => problem.nbv(row) match {
+              case ArtifactVar(_) => View.Range(0, problem.basicCount + 1).foreach(col => array(0)(col) += array(row + 2)(col))
+              case _              => ()
+            })
+            array
           }
-          case false => Infeasible
+          val basic = problem.bv.toArray
+          val nonBasic = problem.nbv.toArray
+
+          //show(tableau)
+          val selector = new self.Selector {
+            def enterStart: Int = 1
+            def leaveStart: Int = 2
+          }
+          var selected = selector(tableau)
+          while (selected._1 >= 0 && selected._2 >= 0) {
+            val (row, col) = selected
+            pivot(tableau, row, col)
+            //show(tableau)
+            val enter = nonBasic(row - 2)
+            val leave = basic(col - 1)
+            nonBasic(row - 2) = leave
+            basic(col - 1) = enter
+            selected = selector(tableau)
+          }
+          selected match {
+            case (-1, -1) => tableau(0)(0).isZero match {
+              case true => {
+                def pick[T](indexed: View.Indexed[T], indices: View.Indexed[Int]) = indices.map(indexed(_))
+                // TODO: negative
+                val basicIndex = new Array[Int](problem.basicCount - artifactCount)
+                var idx = 0
+                View.Range(0, problem.basicCount).foreach {
+                  col =>
+                    basic(col) match {
+                      case ArtifactVar(_) => ()
+                      case _              => { basicIndex(idx) = col; idx += 1 }
+                    }
+                }
+                val basicIdx = View.Array(basicIndex)
+                Optimized(StandardForm(View.Rows(tableau).tail.tail.map(ai => pick(ai.tail, basicIdx)),
+                  View.Cols(tableau, 1)(0).tail.tail,
+                  pick(View.Array(tableau(1)).tail(), basicIdx),
+                  tableau(1)(0),
+                  View.Array(nonBasic),
+                  pick(View.Array(basic), basicIdx)))
+              }
+              case false => Infeasible
+            }
+            case _ => Unbounded
+          }
         }
-        case _ => Unbounded
       }
     }
   }
@@ -97,7 +107,7 @@ object Primal extends Simplex { self =>
           val tableau = {
             val view = 
               (problem.z +: problem.c) +:
-              View.Range(0, problem.constraintSize).map(row => problem.b(row) +: problem.a(row))
+              View.Range(0, problem.nonBasicCount).map(row => problem.b(row) +: problem.a(row))
             view.map(_.toArray).toArray
           }
           val basic = problem.bv.toArray
