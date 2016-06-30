@@ -34,13 +34,13 @@ object Simplex {
                           bv: View.Indexed[Variable]) {
     val m = bv.length
     val n = nbv.length
-    def newSlackVar(ai: View.Indexed[Rational], bi: Rational) = {
+    def newSlack(ai: View.Indexed[Rational], bi: Rational) = {
       val nai = ai.fill(m, Rational.zero)
       StandardForm(a :+ nai, b :+ bi, c, z, nbv :+ SlackVar(n), bv)
     }
     
-    def newSlackVars(variables: View.Travesal[(View.Indexed[Rational], Rational)]) = {
-      val vars = variables.toList.toArray(Array[(View.Indexed[Rational], Rational)]())
+    def newSlacks(variables: View.Travesal[(View.Indexed[Rational], Rational)]) = {
+      val vars = variables.toArray
       val na = View.Array(vars).map(_._1.fill(m, Rational.zero))
       StandardForm(a :++ na, b :++ View.Array(vars).map(_._2), c, z, nbv :++ View.Range(0, vars.length).map(n => SlackVar(n + n)), bv)
     }

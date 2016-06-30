@@ -83,25 +83,25 @@ object View {
       }
       r
     }
+    
     final def some(cond: A => Boolean): Travesal[A] = TravesalTravesal(self, cond)
     
-    final def toList: java.util.List[A] = {
-      val l = new java.util.LinkedList[A]()
+    final def toArray(implicit tag: reflect.ClassTag[A]): scala.Array[A] = {
+      var v: List[A] = Nil
+      var length = 0
       val it = iterator
       while (it.hasNext) {
-        l.add(it.next())
+        v = it.next() :: v
+        length += 1
       }
-      l
-    }
-  }
-  
-  case class List[A](list: java.util.List[A]) extends Travesal[A] {
-    def iterator = {
-      val it = list.iterator()
-      new Iterator[A] {
-        def hasNext = it.hasNext()
-        def next = it.next()
+      
+      val array = tag.newArray(length)
+      while (length > 0) {
+        length -= 1
+        array(length) = v.head
+        v = v.tail
       }
+      array
     }
   }
   
@@ -341,14 +341,14 @@ object View {
     def apply(idx: Int) = array(idx)
   }
   
-  case class Range(start: Int, end: Int/*exclude*/) extends Indexed[Int] {
-    def length = end - start
-    def apply(idx: Int) = idx + start
-  }
-  
   case class Vector[A](vector: scala.collection.immutable.Vector[A]) extends Indexed[A] {
     def length = vector.length
     def apply(idx: Int) = vector(idx)
+  }
+  
+  case class Range(start: Int, end: Int/*exclude*/) extends Indexed[Int] {
+    def length = end - start
+    def apply(idx: Int) = idx + start
   }
   
   case class IndexedMapped[A, B](underlying: Indexed[A], mapping: A => B) extends Indexed[B] {
