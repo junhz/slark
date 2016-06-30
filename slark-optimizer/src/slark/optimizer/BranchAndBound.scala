@@ -49,23 +49,23 @@ trait BranchAndBound { self =>
           lowerBound = if (isActive(problem)) {
             Dual.solve(cuttingPlanes.foldLeft(problem)((p, cp) => cp(p))) match {
               case Simplex.Optimized(p) if (isActive(p)) => {
-                View.Range(0, p.nonBasicCount).some(!p.b(_).isInteger).minBy(row => (p.b(row).fraction - Rational(1, 2)).abs()) match {
+                View.Range(0, p.n).some(!p.b(_).isInteger).minBy(row => (p.b(row).fraction - Rational(1, 2)).abs()) match {
                   case Some(row) => {
                     val ai = p.a(row)
                     val bi = p.b(row)
-                    queue.enqueue(p.newVariable(ai.map(_.negate), bi.floor - bi),
-                                  p.newVariable(ai, bi - bi.ceil))
+                    queue.enqueue(p.newSlackVar(ai.map(_.negate), bi.floor - bi),
+                                  p.newSlackVar(ai, bi - bi.ceil))
                     lowerBound
                   }
                   case None => {
-                    val xs = Array.fill(p.varSize)(Rational.zero)
-                    View.Range(0, p.nonBasicCount).foreach {
+                    val xs = Array.fill(originProblem.m + originProblem.n)(Rational.zero)
+                    View.Range(0, p.n).foreach {
                       row => p.nbv(row) match {
                         case Simplex.DecideVar(ord) => xs(ord) = p.b(row)
                         case _ => ()
                       }
                     }
-                    Optimized(p.z, xs)
+                    Optimized(p.z, View.Array(xs))
                   }
                 }
               }
@@ -90,7 +90,7 @@ trait BranchAndBound { self =>
 object BranchAndBound {
   
   trait SolveResult
-  case class Optimized(z: Rational, xs: Array[Rational]) extends SolveResult {
+  case class Optimized(z: Rational, xs: View.Indexed[Rational]) extends SolveResult {
     override def toString = s"$z <- (${xs.mkString(",")})"
   }
   case object Infeasible extends SolveResult

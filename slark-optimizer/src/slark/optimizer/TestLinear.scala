@@ -35,20 +35,19 @@ object TestLinear {
         case subjectPattern(b, r, a) => {
           val coe = splitPattern.split(a).tail.map(s => Rational.fromInt(s.toInt))
           val const = Rational.fromInt(b.toInt)
+          val kind = r match {
+            case ">=" => LinearProgram.<=
+            case "<=" => LinearProgram.>=
+            case "="  => LinearProgram.`=`
+            case ">"  => LinearProgram.<
+            case "<"  => LinearProgram.>
+          }
+          val constraint = LinearProgram.Constraint(View.Array(coe), kind, const)
           problem = problem match {
             case None => None
             case Some(e) => e match {
-              case Left(p) => Some(Left(p.subjectTo(View.Array(coe), const)))
-              case Right(p) => {
-                val kind = r match {
-                  case ">=" => LinearProgram.<=
-                  case "<=" => LinearProgram.>=
-                  case "="  => LinearProgram.`=`
-                  case ">" => LinearProgram.<
-                  case "<" => LinearProgram.>
-                }
-                Some(Right(p.subjectTo(LinearProgram.Constraint(View.Array(coe), kind, const))))
-              }
+              case Left(p) => Some(Left(p.subjectTo(constraint)))
+              case Right(p) => Some(Right(p.subjectTo(constraint)))
             }
           }
           println(problem.get.merge)

@@ -37,7 +37,7 @@ object Dual extends Simplex {
           val tableau = {
             val view = 
               (problem.z +: problem.c) +:
-              View.Range(0, problem.nonBasicCount).map(row => problem.b(row) +: problem.a(row))
+              View.Range(0, problem.n).map(row => problem.b(row) +: problem.a(row))
             view.map(_.toArray).toArray
           }
           val basic = problem.bv.toArray

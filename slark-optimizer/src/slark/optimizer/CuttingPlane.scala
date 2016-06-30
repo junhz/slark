@@ -44,14 +44,14 @@ trait CuttingPlane {
                 case true => {
                   end = true
                   cnt = {
-                    val xs = Array.fill(p.varSize)(Rational.zero)
-                    View.Range(0, p.nonBasicCount).foreach {
+                    val xs = Array.fill(originProblem.m + originProblem.n)(Rational.zero)
+                    View.Range(0, p.n).foreach {
                       row => p.nbv(row) match {
                         case Simplex.DecideVar(ord) => xs(ord) = p.b(row)
                         case _ => ()
                       }
                     }
-                    Optimized(p.z, xs)
+                    Optimized(p.z, View.Array(xs))
                   }
                 }
                 case false => problem = p
@@ -74,7 +74,7 @@ trait CuttingPlane {
 
 object CuttingPlane {
   trait SolveResult
-  case class Optimized(z: Rational, xs: Array[Rational]) extends SolveResult {
+  case class Optimized(z: Rational, xs: View.Indexed[Rational]) extends SolveResult {
     override def toString = s"$z <- (${xs.mkString(",")})"
   }
   case object Infeasible extends SolveResult

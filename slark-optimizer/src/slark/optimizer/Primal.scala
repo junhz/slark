@@ -40,12 +40,12 @@ object Primal extends Simplex { self =>
         case artifactCount => {
           val tableau = {
             val tableauView =
-              View.empty[Rational]().fill(problem.basicCount + 1, Rational.zero) +:
+              View.empty[Rational]().fill(problem.m + 1, Rational.zero) +:
                 (problem.z +: problem.c) +:
-                View.Range(0, problem.nonBasicCount).map(row => (problem.b(row) +: problem.a(row)))
+                View.Range(0, problem.n).map(row => (problem.b(row) +: problem.a(row)))
             val array = tableauView.map(_.toArray).toArray
-            View.Range(0, problem.nonBasicCount).foreach(row => problem.nbv(row) match {
-              case ArtifactVar(_) => View.Range(0, problem.basicCount + 1).foreach(col => array(0)(col) += array(row + 2)(col))
+            View.Range(0, problem.n).foreach(row => problem.nbv(row) match {
+              case ArtifactVar(_) => View.Range(0, problem.m + 1).foreach(col => array(0)(col) += array(row + 2)(col))
               case _              => ()
             })
             array
@@ -74,9 +74,9 @@ object Primal extends Simplex { self =>
               case true => {
                 def pick[T](indexed: View.Indexed[T], indices: View.Indexed[Int]) = indices.map(indexed(_))
                 // TODO: negative
-                val basicIndex = new Array[Int](problem.basicCount - artifactCount)
+                val basicIndex = new Array[Int](problem.m - artifactCount)
                 var idx = 0
-                View.Range(0, problem.basicCount).foreach {
+                View.Range(0, problem.m).foreach {
                   col =>
                     basic(col) match {
                       case ArtifactVar(_) => ()
@@ -107,7 +107,7 @@ object Primal extends Simplex { self =>
           val tableau = {
             val view = 
               (problem.z +: problem.c) +:
-              View.Range(0, problem.nonBasicCount).map(row => problem.b(row) +: problem.a(row))
+              View.Range(0, problem.n).map(row => problem.b(row) +: problem.a(row))
             view.map(_.toArray).toArray
           }
           val basic = problem.bv.toArray
