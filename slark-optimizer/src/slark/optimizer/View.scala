@@ -327,6 +327,7 @@ object View {
     
     final def :++(that: Indexed[A]): Indexed[A] = IndexedAppendedIndexed(self, that)
     
+    // TODO: remove append
     final def :+(a: A): Indexed[A] = IndexedAppended(self, a)
     
     final def +:(a: A): Indexed[A] = IndexedPrepended(self, a)
@@ -335,7 +336,7 @@ object View {
     
     final override def toString = s"[${mkString(", ")}]"
   }
-  
+  //TODO: rename with of pattern
   case class Array[A](array: scala.Array[A]) extends Indexed[A] {
     def length = array.length
     def apply(idx: Int) = array(idx)
@@ -349,6 +350,11 @@ object View {
   case class Range(start: Int, end: Int/*exclude*/) extends Indexed[Int] {
     def length = end - start
     def apply(idx: Int) = idx + start
+  }
+  
+  case class OfString(str: String) extends Indexed[Char] {
+    def length = str.length()
+    def apply(idx: Int) = str.charAt(idx)
   }
   
   case class IndexedMapped[A, B](underlying: Indexed[A], mapping: A => B) extends Indexed[B] {

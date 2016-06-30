@@ -42,87 +42,60 @@ object Simplex {
     def newSlacks(variables: View.Travesal[(View.Indexed[Rational], Rational)]) = {
       val vars = variables.toArray
       val na = View.Array(vars).map(_._1.fill(m, Rational.zero))
-      StandardForm(a :++ na, b :++ View.Array(vars).map(_._2), c, z, nbv :++ View.Range(0, vars.length).map(n => SlackVar(n + n)), bv)
+      StandardForm(a :++ na, b :++ View.Array(vars).map(_._2), c, z, nbv :++ View.Range(0, vars.length).map(ord => SlackVar(ord + n)), bv)
     }
     
     def subjectTo(constraint: LinearProgram.Constraint): StandardForm = {
       import LinearProgram._
-      constraint match {
-        case Constraint(coe, `<=`, const) => {
-          val ncoe = coe.fill(m + n, Rational.zero)
-          val nai = View.Range(0, m).map(i => bv(i) match {
-            case DecideVar(ord) => ncoe(ord)
-            case _              => Rational.zero
-          }).toArray
-          var nbi = const
-          View.Range(0, n).foreach(
-            row => {
-              nbv(row) match {
-                case DecideVar(ord) => {
-                  val factor = ncoe(ord)
-                  var idx = 0
-                  while (idx < m) {
-                    nai(idx) -= factor * a(row)(idx)
-                    idx += 1
-                  }
-                  nbi -= factor * b(row)
-                }
-                case _ => ()
-              }
-          })
-          StandardForm(a :+ View.Array(nai), b :+ nbi, c, z, nbv :+ SlackVar(n), bv)
+      val ncoe = constraint.coefficients.fill(m + n, Rational.zero)
+      val nai = View.Range(0, m).map(i => bv(i) match {
+        case DecideVar(ord) => ncoe(ord)
+        case _              => Rational.zero
+      }).toArray
+      var nbi = constraint.constant
+      var row = 0
+      while (row < n) {
+        nbv(row) match {
+          case DecideVar(ord) => {
+            val factor = ncoe(ord)
+            var col = 0
+            while (col < m) {
+              nai(col) -= factor * a(row)(col)
+              col += 1
+            }
+            nbi -= factor * b(row)
+          }
+          case _ => ()
         }
-        case Constraint(coe, `=`, const) => subjectTo(Constraint(coe, `<=`, const)).subjectTo(Constraint(coe, `>=`, const))
-        case Constraint(coe, `>=`, const) => subjectTo(constraint.negate())
+        row += 1
+      }
+      constraint.relation match {
+        case `<=` => newSlack(View.Array(nai), nbi)
+        case `>=` => newSlack(View.Array(nai).map(_.negate), nbi.negate)
+        case `=` => newSlack(View.Array(nai), nbi).newSlack(View.Array(nai).map(_.negate), nbi.negate)
         case _ => throw new IllegalArgumentException("only >=, <=, = are acceptable")
       }
     }
     // TODO: use lhs rhs instead
     override def toString = {
-      val max = {
-        val coeStr = View.Range(0, m).map(i => {
-          val ci = c(i)
-          if (ci.isZero) "" else { if(ci.isPositive) s"+ $ci${bv(i)}" else s"- ${ci.negate}${bv(i)}" }
-        }).mkString(" ")
-        s"max $z $coeStr"
+      case class Tapped(pre: String, post: String) {
+        def fill(len: Int) = new String((View.OfString(pre).fill(len - post.length(), ' ') :++ View.OfString(post)).toArray)
+        def length = pre.length() + post.length()
       }
-      
-      val subjectTo = if (n > 0) {
-        val firstIdx = View.Range(0, n).map(row => View.Range(0, m).first(!a(row)(_).isZero)).toArray
-        val aSign = View.Range(0, n).map(row => View.Range(0, m).map(col => {
-          val aij = a(row)(col)
-          if (col == 0) s""
-          else {
-            if (aij.isZero) "   "
-            else {
-              if (aij.isNegative) " - "
-              else {
-                if (col == firstIdx(row)) "   " else " + "
-              }
-            }
-          }
-        })).map(_.toArray).toArray
-        val aStr = View.Range(0, n).map(row => View.Range(0, m).map(col => {
-          val aij = a(row)(col)
-          if (aij.isZero) ""
-          else {
-            if (aij.isNegative) {
-              if (col == 0) s"$aij${bv(col)}" else s"${aij.negate}${bv(col)}"
-            } else s"$aij${bv(col)}"
-          }
-        })).map(_.toArray).toArray
-        val ajLen = View.Cols(aStr, m).map(_.map(_.length).max).toArray
-        View.Range(0, n).map(row => {
-          val lhs = View.Range(0, m).map(col => {
-            val aij = aStr(row)(col)
-            val span = new String(Array.fill(ajLen(col) - aij.length())(' '))
-            s"${aSign(row)(col)}$span$aij"
-          }).mkString(" ")
-          s"$lhs = ${b(row)} - ${nbv(row)}"
-        })
-      } else View.empty[String]()
-      
-      (max +: subjectTo).mkString("\r\n")
+      def tapped(coe: View.Indexed[Rational], col: Int) = {
+        val r = coe(col)
+        r.signum() match {
+          case 0 => Tapped("   ", "")
+          case 1 => Tapped(" - ", s"$r${bv(col)}")
+          case -1 => Tapped(" + ", s"${r.negate}${bv(col)}")
+        }
+      }
+      val tappedView = (Tapped("max", "") +: View.Range(0, n).map(row => Tapped(nbv(row).toString(), s" = "))) +:
+                       (z +: b).map(r => Tapped("", r.toString())) +: 
+                       View.Range(0, m).map(col => tapped(c, col) +: View.Range(0, n).map(row => tapped(a(row), col)))
+      val t = tappedView.map(_.toArray).toArray
+      val len = View.Rows(t).map(col => col.map(_.length).max).toArray
+      View.Range(0, n + 1).map(row => View.Range(0, m + 2).map(col => t(col)(row).fill(len(col))).mkString).mkString("\r\n")
     }
   }
 
