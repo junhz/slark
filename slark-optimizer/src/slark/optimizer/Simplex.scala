@@ -36,19 +36,19 @@ object Simplex {
     val n = nbv.length
     def newSlack(ai: View.Indexed[Rational], bi: Rational) = {
       val nai = ai.fill(m, Rational.zero)
-      StandardForm(a :+ nai, b :+ bi, c, z, nbv :+ SlackVar(n), bv)
+      StandardForm(nai +: a, bi +: b, c, z, SlackVar(n) +: nbv , bv)
     }
     
     def newSlacks(variables: View.Travesal[(View.Indexed[Rational], Rational)]) = {
       val vars = variables.toArray
-      val na = View.Array(vars).map(_._1.fill(m, Rational.zero))
-      StandardForm(a :++ na, b :++ View.Array(vars).map(_._2), c, z, nbv :++ View.Range(0, vars.length).map(ord => SlackVar(ord + n)), bv)
+      val na = View.OfArray(vars).map(_._1.fill(m, Rational.zero))
+      StandardForm(a :++ na, b :++ View.OfArray(vars).map(_._2), c, z, nbv :++ View.OfRange(0, vars.length).map(ord => SlackVar(ord + n)), bv)
     }
     
     def subjectTo(constraint: LinearProgram.Constraint): StandardForm = {
       import LinearProgram._
       val ncoe = constraint.coefficients.fill(m + n, Rational.zero)
-      val nai = View.Range(0, m).map(i => bv(i) match {
+      val nai = View.OfRange(0, m).map(i => bv(i) match {
         case DecideVar(ord) => ncoe(ord)
         case _              => Rational.zero
       }).toArray
@@ -70,18 +70,14 @@ object Simplex {
         row += 1
       }
       constraint.relation match {
-        case `<=` => newSlack(View.Array(nai), nbi)
-        case `>=` => newSlack(View.Array(nai).map(_.negate), nbi.negate)
-        case `=` => newSlack(View.Array(nai), nbi).newSlack(View.Array(nai).map(_.negate), nbi.negate)
+        case `<=` => newSlack(View.OfArray(nai), nbi)
+        case `>=` => newSlack(View.OfArray(nai).map(_.negate), nbi.negate)
+        case `=` => newSlack(View.OfArray(nai), nbi).newSlack(View.OfArray(nai).map(_.negate), nbi.negate)
         case _ => throw new IllegalArgumentException("only >=, <=, = are acceptable")
       }
     }
-    // TODO: use lhs rhs instead
+    
     override def toString = {
-      case class Tapped(pre: String, post: String) {
-        def fill(len: Int) = new String((View.OfString(pre).fill(len - post.length(), ' ') :++ View.OfString(post)).toArray)
-        def length = pre.length() + post.length()
-      }
       def tapped(coe: View.Indexed[Rational], col: Int) = {
         val r = coe(col)
         r.signum() match {
@@ -90,12 +86,12 @@ object Simplex {
           case -1 => Tapped(" + ", s"${r.negate}${bv(col)}")
         }
       }
-      val tappedView = (Tapped("max", "") +: View.Range(0, n).map(row => Tapped(nbv(row).toString(), s" = "))) +:
+      val tappedView = (Tapped("max", "") +: View.OfRange(0, n).map(row => Tapped(nbv(row).toString(), s" = "))) +:
                        (z +: b).map(r => Tapped("", r.toString())) +: 
-                       View.Range(0, m).map(col => tapped(c, col) +: View.Range(0, n).map(row => tapped(a(row), col)))
+                       View.OfRange(0, m).map(col => tapped(c, col) +: View.OfRange(0, n).map(row => tapped(a(row), col)))
       val t = tappedView.map(_.toArray).toArray
-      val len = View.Rows(t).map(col => col.map(_.length).max).toArray
-      View.Range(0, n + 1).map(row => View.Range(0, m + 2).map(col => t(col)(row).fill(len(col))).mkString).mkString("\r\n")
+      val len = View.OfArray(t).map(col => View.OfArray(col).map(_.length).max).toArray
+      View.OfRange(0, n + 1).map(row => View.OfRange(0, m + 2).map(col => t(col)(row).fill(len(col))).mkString).mkString("\r\n")
     }
   }
 
@@ -114,7 +110,7 @@ object Simplex {
     final def pivot(matrix: Array[Array[Rational]], row: Int, col: Int): Unit = {
       //println(s"pivot at ($row, $col)")
       var r = 0
-      val pr = View.Array(matrix(row)).toArray
+      val pr = View.OfArray(matrix(row)).toArray
       while (r < matrix.length) {
         val vector = matrix(r)
         var c = 0
@@ -135,12 +131,19 @@ object Simplex {
     }
 
     final def show(matrix: Array[Array[Rational]]): Unit = {
-      val textLen = View.Cols(matrix, matrix(0).length).map(arr => arr.map(_.toString().length()).max).toArray
-      val s = View.Rows(matrix).map(arr => View.Range(0, textLen.length).map(col => {
-        val s = arr(col).toString()
-        new String(Array.fill(textLen(col) - s.length)(' ')) + s
-      }).mkString(" "))
-      println(s.mkString("\r\n"))
+      val tapped = View.OfArray(matrix).map(View.OfArray(_).map(r => Tapped(" ", r.toString)).toArray).toArray
+      val len = View.OfRange(0, matrix(0).length).map(col => View.OfRange(0, matrix.length).map(row => tapped(row)(col).length).max).toArray
+      var row = 0
+      while (row < tapped.length) {
+        val line = tapped(row)
+        var col = 0
+        while (col < line.length) {
+          print(line(col).fill(len(col)))
+          col += 1
+        }
+        println
+        row += 1
+      }
     }
   }
   
@@ -155,36 +158,27 @@ object Simplex {
       const => if (const.constant.isNegative) const.negate() else const
     }
     val constraintSize = consts.length
-    val surplusIdx = new Array[Int](constraintSize)
-    var surplusSize = 0
-    val surplus = new Array[Variable](constraintSize)
-    val nonBasic = new Array[Variable](constraintSize)
-    View.Range(0, constraintSize).foreach(i => consts(i) match {
-      case Constraint(_, <=, _)   => nonBasic(i) = SlackVar(i)
-      case Constraint(ai, `=`, _) => nonBasic(i) = ArtifactVar(i)
-      case Constraint(ai, >=, _) => {
-        nonBasic(i) = ArtifactVar(i)
-        surplus(i) = SurplusVar(i)
-        surplusIdx(i) = surplusSize
-        surplusSize += 1
-      }
-      case _ => throw new IllegalArgumentException("only >=, <=, = are acceptable")
+    val surplus = View.OfRange(0, constraintSize).some(consts(_).relation == `>=`).toArray
+    val nonBasic = View.OfRange(0, constraintSize).map(i => consts(i).relation match {
+      case `<=` => SlackVar(i): Variable
+      case _ => ArtifactVar(i): Variable
     })
-    val basic = View.Range(0, decideSize).map(ord => DecideVar(ord): Variable) :++ (View.Array(surplus).range(0, surplusSize))
-    val basicSize = decideSize + surplusSize
+    val aSurplus = View.OfRange(0, constraintSize).map(row => View.OfRange(0, surplus.length).map(col => if (surplus(col) == row) Rational.one.negate else Rational.zero))
+    val basic = View.OfRange(0, decideSize).map(ord => DecideVar(ord): Variable) :++ View.OfArray(surplus).map(ord => SurplusVar(ord): Variable)
+
     val c = problem.obj match {
-      case Max => problem.coefficients.fill(basicSize, Rational.zero)
-      case Min => problem.coefficients.map(_.negate).fill(basicSize, Rational.zero)
+      case Max => problem.coefficients.fill(basic.length, Rational.zero)
+      case Min => problem.coefficients.map(_.negate).fill(basic.length, Rational.zero)
     }
-    val b = View.Vector(consts).map(_.constant)
+    val b = View.OfVector(consts).map(_.constant)
     
-    val a = View.Range(0, constraintSize).map { i => {
+    val a = View.OfRange(0, constraintSize).map { i => {
       val const = consts(i)
       const match {
-        case Constraint(ai, >=, _) => ai.fill(basicSize, Rational.zero).update(surplusIdx(i) + decideSize, Rational.one.negate)
-        case Constraint(ai, _, _) => ai.fill(basicSize, Rational.zero)
+        case Constraint(ai, >=, _) => ai.fill(decideSize, Rational.zero) :++ aSurplus(i)
+        case Constraint(ai, _, _) => ai.fill(decideSize, Rational.zero) :++ aSurplus(i)
       }
     }}
-    StandardForm(a, b, c, Rational.zero, View.Array(nonBasic), basic)
+    StandardForm(a, b, c, Rational.zero, nonBasic, basic)
   }
 }

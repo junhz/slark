@@ -8,14 +8,14 @@ object Dual extends Simplex {
   
   val selector = new Selector {
     def apply(tableau: Array[Array[Rational]]): (Int, Int) = {
-      val leave = View.Range(1, tableau.length) some {
+      val leave = View.OfRange(1, tableau.length) some {
         row => tableau(row)(0).isNegative
       } minBy {
         row => tableau(row)(0)
       }
       leave match {
         case Some(row) => {
-          val enter = View.Range(1, tableau(0).length) some {
+          val enter = View.OfRange(1, tableau(0).length) some {
             col => tableau(row)(col).isNegative
           } minBy {
             col => tableau(0)(col) / tableau(row)(col)
@@ -37,7 +37,7 @@ object Dual extends Simplex {
           val tableau = {
             val view = 
               (problem.z +: problem.c) +:
-              View.Range(0, problem.n).map(row => problem.b(row) +: problem.a(row))
+              View.OfRange(0, problem.n).map(row => problem.b(row) +: problem.a(row))
             view.map(_.toArray).toArray
           }
           val basic = problem.bv.toArray
@@ -57,12 +57,12 @@ object Dual extends Simplex {
           }
           selected match {
             case (-1, -1) => {
-              Optimized(StandardForm(View.Rows(tableau).tail.map(_.tail),
-                                     View.Cols(tableau, 1)(0).tail,
-                                     View.Rows(tableau)(0).tail,
+              Optimized(StandardForm(View.OfArray(tableau).tail.map(View.OfArray(_).tail),
+                                     View.OfArray(tableau).tail.map(_(0)),
+                                     View.OfArray(View.OfArray(tableau)(0)).tail,
                                      tableau(0)(0),
-                                     View.Array(nonBasic),
-                                     View.Array(basic)))
+                                     View.OfArray(nonBasic),
+                                     View.OfArray(basic)))
             }
             case _ => Unbounded
           }

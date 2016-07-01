@@ -11,14 +11,14 @@ object Primal extends Simplex { self =>
     def leaveStart: Int
 
     final def apply(tableau: Array[Array[Rational]]): (Int, Int) = {
-      val enter = View.Range(enterStart, tableau(0).length) some {
+      val enter = View.OfRange(enterStart, tableau(0).length) some {
         col => tableau(0)(col).isPositive
       } maxBy {
         col => tableau(0)(col)
       }
       enter match {
         case Some(col) => {
-          val leave = View.Range(leaveStart, tableau.length) some {
+          val leave = View.OfRange(leaveStart, tableau.length) some {
             row => tableau(row)(col).isPositive
           } minBy {
             row => tableau(row)(0) / tableau(row)(col)
@@ -42,12 +42,22 @@ object Primal extends Simplex { self =>
             val tableauView =
               View.empty[Rational]().fill(problem.m + 1, Rational.zero) +:
                 (problem.z +: problem.c) +:
-                View.Range(0, problem.n).map(row => (problem.b(row) +: problem.a(row)))
+                View.OfRange(0, problem.n).map(row => (problem.b(row) +: problem.a(row)))
             val array = tableauView.map(_.toArray).toArray
-            View.Range(0, problem.n).foreach(row => problem.nbv(row) match {
-              case ArtifactVar(_) => View.Range(0, problem.m + 1).foreach(col => array(0)(col) += array(row + 2)(col))
-              case _              => ()
-            })
+            var row = 0
+            while (row < problem.n) {
+              problem.nbv(row) match {
+                case ArtifactVar(_) => {
+                  var col = 0
+                  while (col < problem.m + 1) {
+                    array(0)(col) += array(row + 2)(col)
+                    col += 1
+                  }
+                }
+                case _              => ()
+              }
+              row += 1
+            }
             array
           }
           val basic = problem.bv.toArray
@@ -73,23 +83,13 @@ object Primal extends Simplex { self =>
             case (-1, -1) => tableau(0)(0).isZero match {
               case true => {
                 def pick[T](indexed: View.Indexed[T], indices: View.Indexed[Int]) = indices.map(indexed(_))
-                // TODO: negative
-                val basicIndex = new Array[Int](problem.m - artifactCount)
-                var idx = 0
-                View.Range(0, problem.m).foreach {
-                  col =>
-                    basic(col) match {
-                      case ArtifactVar(_) => ()
-                      case _              => { basicIndex(idx) = col; idx += 1 }
-                    }
-                }
-                val basicIdx = View.Array(basicIndex)
-                Optimized(StandardForm(View.Rows(tableau).tail.tail.map(ai => pick(ai.tail, basicIdx)),
-                  View.Cols(tableau, 1)(0).tail.tail,
-                  pick(View.Array(tableau(1)).tail(), basicIdx),
+                val basicIdx = View.OfArray(View.OfRange(0, problem.m).some(!basic(_).isInstanceOf[ArtifactVar]).toArray)
+                Optimized(StandardForm(View.OfArray(tableau).tail.tail.map(ai => pick(View.OfArray(ai).tail, basicIdx)),
+                  View.OfArray(tableau).tail.tail.map(_(0)),
+                  pick(View.OfArray(tableau(1)).tail(), basicIdx),
                   tableau(1)(0),
-                  View.Array(nonBasic),
-                  pick(View.Array(basic), basicIdx)))
+                  View.OfArray(nonBasic),
+                  pick(View.OfArray(basic), basicIdx)))
               }
               case false => Infeasible
             }
@@ -107,7 +107,7 @@ object Primal extends Simplex { self =>
           val tableau = {
             val view = 
               (problem.z +: problem.c) +:
-              View.Range(0, problem.n).map(row => problem.b(row) +: problem.a(row))
+              View.OfRange(0, problem.n).map(row => problem.b(row) +: problem.a(row))
             view.map(_.toArray).toArray
           }
           val basic = problem.bv.toArray
@@ -131,12 +131,12 @@ object Primal extends Simplex { self =>
           }
           selected match {
             case (-1, -1) => {
-              Optimized(StandardForm(View.Rows(tableau).tail.map(_.tail),
-                                     View.Cols(tableau, 1)(0).tail,
-                                     View.Rows(tableau)(0).tail,
+              Optimized(StandardForm(View.OfArray(tableau).tail.map(View.OfArray(_).tail),
+                                     View.OfArray(tableau).tail.map(_(0)),
+                                     View.OfArray(View.OfArray(tableau)(0)).tail,
                                      tableau(0)(0),
-                                     View.Array(nonBasic),
-                                     View.Array(basic)))
+                                     View.OfArray(nonBasic),
+                                     View.OfArray(basic)))
             }
             case _ => Unbounded
           }

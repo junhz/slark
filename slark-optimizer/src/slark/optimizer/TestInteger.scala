@@ -25,16 +25,16 @@ object TestInteger {
       val line = StdIn.readLine()
       line match {
         case vectorPattern(name, c) => {
-          val coe = splitPattern.split(c).tail.map(s => Rational.fromInt(s.toInt))
+          val coe = View.OfArray(splitPattern.split(c)).tail.map(s => Rational.fromInt(s.toInt))
           val kind = name.toUpperCase() match {
             case "MAX" => LinearProgram.Max
             case "MIN" => LinearProgram.Min
           }
-          problem = Some(LinearProgram.ofGoal(kind, View.Array(coe)))
+          problem = Some(LinearProgram.ofGoal(kind, coe))
           println(problem.get)
         }
         case subjectPattern(b, r, a) => {
-          val coe = splitPattern.split(a).tail.map(s => Rational.fromInt(s.toInt))
+          val coe = View.OfArray(splitPattern.split(a)).tail.map(s => Rational.fromInt(s.toInt))
           val const = Rational.fromInt(b.toInt)
           problem match {
             case None => ()
@@ -46,7 +46,7 @@ object TestInteger {
                 case ">"  => LinearProgram.<
                 case "<"  => LinearProgram.>
               }
-              problem = Some(p.subjectTo(LinearProgram.Constraint(View.Array(coe), kind, const)))
+              problem = Some(p.subjectTo(LinearProgram.Constraint(coe, kind, const)))
             }
           }
           println(problem.get)

@@ -44,14 +44,16 @@ trait CuttingPlane {
                 case true => {
                   end = true
                   cnt = {
-                    val xs = Array.fill(originProblem.m + originProblem.n)(Rational.zero)
-                    View.Range(0, p.n).foreach {
-                      row => p.nbv(row) match {
+                    val xs = View.empty().fill(originProblem.m + originProblem.n, Rational.zero).toArray
+                    var row = 0
+                    while (row < p.n) {
+                      p.nbv(row) match {
                         case Simplex.DecideVar(ord) => xs(ord) = p.b(row)
                         case _ => ()
                       }
+                      row += 1
                     }
-                    Optimized(p.z, View.Array(xs))
+                    Optimized(p.z, View.OfArray(xs))
                   }
                 }
                 case false => problem = p

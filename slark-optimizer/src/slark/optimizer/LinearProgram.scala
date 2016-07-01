@@ -16,18 +16,23 @@ case class LinearProgram(obj: LinearProgram.Objection,
                       consts :+ LinearProgram.Constraint(const.coefficients.fill(varSize, Rational.zero),
                                                          const.relation,
                                                          const.constant),
-                      varSize);
-  
+                      varSize)
+
   override def toString = {
-    def toString(coefficients: View.Indexed[Rational]) = View.Range(0, varSize).map(i => {
-      val r = coefficients(i)
-      if (r.isZero) "" else if (r.isPositive) s" + ${r}x$i" else s" - ${r.negate}x$i"
-    }).mkString
-    val objStr = s"${obj} ${toString(coefficients)}"
-    val constStr = consts.map {
-      const => s"${toString(const.coefficients)} ${const.relation} ${const.constant}"
-    }
-    (objStr +: constStr).mkString("\r\n")
+    val rhs = coefficients +: View.OfVector(consts).map(_.coefficients)
+    val view = (Tapped("max", "") +: View.OfVector(consts).map(const => Tapped(const.constant.toString(), s" ${const.relation.negate()} "))) +:
+               View.OfRange(0, varSize).map(col => View.OfRange(0, consts.length + 1).map(row => {
+                 val r = rhs(row)(col)
+                 r.signum() match {
+                   case 0 => Tapped("   ", "")
+                   case 1 => Tapped(" + ", s"${r}x$col")
+                   case -1 => Tapped(" - ", s"${r.negate}x$col")
+                 }
+               }))
+    
+    val str = view.map(_.toArray).toArray
+    val len =  View.OfArray(str).map(col => View.OfArray(col).map(_.length).max).toArray
+    View.OfRange(0, consts.length + 1).map(row => View.OfRange(0, varSize + 1).map(col => str(col)(row).fill(len(col))).mkString).mkString("\r\n")
   }
 }
 
@@ -39,7 +44,7 @@ object LinearProgram {
   case class Constraint(coefficients: View.Indexed[Rational], relation: Relation, constant: Rational) {
     def isViolated(xs: View.Indexed[Rational]): Boolean = {
       val nxs = xs.fill(coefficients.length, Rational.zero)
-      val lhs = View.Range(0, coefficients.length).fold(Rational.zero, (i: Int, r: Rational) => r + coefficients(i) * nxs(i))
+      val lhs = View.OfRange(0, coefficients.length).fold(Rational.zero, (i: Int, r: Rational) => r + coefficients(i) * nxs(i))
       relation.isViolated(lhs, constant)
     }
     
