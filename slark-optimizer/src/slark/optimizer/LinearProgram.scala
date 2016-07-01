@@ -7,20 +7,19 @@ import javax.swing.SpringLayout.Constraints
  */
 case class LinearProgram(obj: LinearProgram.Objection, 
                          coefficients: View.Indexed[Rational], 
-                         consts: Vector[LinearProgram.Constraint],
-                         varSize: Int) {
+                         consts: Vector[LinearProgram.Constraint]) {
+  val varSize = coefficients.length
   
   def subjectTo(const: LinearProgram.Constraint) = 
     new LinearProgram(obj, 
                       coefficients, 
                       consts :+ LinearProgram.Constraint(const.coefficients.fill(varSize, Rational.zero),
                                                          const.relation,
-                                                         const.constant),
-                      varSize)
+                                                         const.constant))
 
   override def toString = {
     val rhs = coefficients +: View.OfVector(consts).map(_.coefficients)
-    val view = (Tapped("max", "") +: View.OfVector(consts).map(const => Tapped(const.constant.toString(), s" ${const.relation.negate()} "))) +:
+    val view = (Tapped(obj.toString(), "") +: View.OfVector(consts).map(const => Tapped(const.constant.toString(), s" ${const.relation.negate()} "))) +:
                View.OfRange(0, varSize).map(col => View.OfRange(0, consts.length + 1).map(row => {
                  val r = rhs(row)(col)
                  r.signum() match {
@@ -82,6 +81,6 @@ object LinearProgram {
   }
   
   def ofGoal(obj: Objection, coefficients: View.Indexed[Rational]): LinearProgram = {
-    LinearProgram(obj, coefficients, Vector.empty, coefficients.length)
+    LinearProgram(obj, coefficients, Vector.empty)
   }
 }
