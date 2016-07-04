@@ -18,20 +18,19 @@ case class LinearProgram(obj: LinearProgram.Objection,
                                                          const.constant))
 
   override def toString = {
-    val rhs = coefficients +: View.OfVector(consts).map(_.coefficients)
-    val view = (Tapped(obj.toString(), "") +: View.OfVector(consts).map(const => Tapped(const.constant.toString(), s" ${const.relation.negate()} "))) +:
-               View.OfRange(0, varSize).map(col => View.OfRange(0, consts.length + 1).map(row => {
-                 val r = rhs(row)(col)
-                 r.signum() match {
-                   case 0 => Tapped("   ", "")
-                   case 1 => Tapped(" + ", s"${r}x$col")
-                   case -1 => Tapped(" - ", s"${r.negate}x$col")
-                 }
-               }))
-    
-    val str = view.map(_.toArray).toArray
-    val len =  View.OfArray(str).map(col => View.OfArray(col).map(_.length).max).toArray
-    View.OfRange(0, consts.length + 1).map(row => View.OfRange(0, varSize + 1).map(col => str(col)(row).fill(len(col))).mkString).mkString("\r\n")
+    def trOf(ri: View.Indexed[Rational]): View.Indexed[Table.Cell] = {
+      View.OfRange(0, varSize).map(col => {
+        val r = ri(col)
+        r.signum() match {
+          case 0  => Table.Cell("  ", "")
+          case 1  => Table.Cell("+ ", s"${r}x$col")
+          case -1 => Table.Cell("- ", s"${r.negate}x$col")
+        }
+      })
+    }
+    val table = (Table.Cell(obj.toString(), "") +: trOf(coefficients)) +:
+                View.OfVector(consts).map(const => Table.Cell(const.constant.toString(), "") +: trOf(const.coefficients))
+    Table.mkString(table, " ", "\r\n")
   }
 }
 

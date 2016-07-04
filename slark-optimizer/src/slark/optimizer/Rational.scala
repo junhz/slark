@@ -29,6 +29,16 @@ final class Rational private (val numerator: BigInteger, val denominator: BigInt
     }
   }
   
+  def *(that: BigInteger): Rational = apply(this.numerator * that, this.denominator)
+  
+  def /(that: BigInteger): Rational = {
+    if (that.signum() == 0) throw new ArithmeticException("divide by zero")
+    else {
+      if (that.signum() > 0) apply(this.numerator, this.denominator * that)
+      else apply(this.numerator, this.denominator * that.negate())
+    }
+  }
+  
   def fraction = new Rational(numerator.mod(denominator), denominator)
   
   def isInteger = denominator.compareTo(BigInteger.ONE) == 0

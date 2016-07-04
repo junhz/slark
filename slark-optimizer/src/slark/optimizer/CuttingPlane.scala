@@ -6,29 +6,11 @@ import java.math.BigInteger
  * @author a554114
  */
 trait CuttingPlane {
-  import CuttingPlane._
+  import IntegerProgram._
   
   def apply(problem: Simplex.StandardForm): Simplex.StandardForm
   
-  final def solve(problem: LinearProgram): SolveResult = {
-    import LinearProgram._
-    
-    def lcm(arr: View.Indexed[Rational]) = arr.fold(BigInteger.ONE, (a, r: BigInteger) => a.denominator.multiply(r).divide(a.denominator.gcd(r)))
-    
-    val consts = problem.consts map {
-      case Constraint(ai, <, bi) => {
-        val factor = Rational(lcm(ai), BigInteger.ONE)
-        Constraint(ai, <=, ((bi * factor).ceil - Rational.one) / factor)
-      }
-      case Constraint(ai, >, bi) => {
-        val factor = Rational(lcm(ai), BigInteger.ONE)
-        Constraint(ai, >=, ((bi * factor).floor + Rational.one) / factor)
-      }
-      case c => c
-    }
-    
-    solve(Simplex.format(LinearProgram(problem.obj, problem.coefficients, consts)))
-  }
+  final def solve(problem: LinearProgram): SolveResult = solve(Simplex.format(IntegerProgram.format(problem)))
   
   final def solve(originProblem: Simplex.StandardForm): SolveResult = {
     Primal.solve(originProblem) match {
@@ -72,13 +54,4 @@ trait CuttingPlane {
     }
   }
   
-}
-
-object CuttingPlane {
-  trait SolveResult
-  case class Optimized(z: Rational, xs: View.Indexed[Rational]) extends SolveResult {
-    override def toString = s"$z <- (${xs.mkString(",")})"
-  }
-  case object Infeasible extends SolveResult
-  case object Unbounded extends SolveResult
 }
