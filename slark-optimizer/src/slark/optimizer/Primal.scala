@@ -63,7 +63,7 @@ object Primal extends Simplex { self =>
           val basic = problem.bv.toArray
           val nonBasic = problem.nbv.toArray
 
-          //show(tableau)
+          show(tableau)
           val selector = new self.Selector {
             def enterStart: Int = 1
             def leaveStart: Int = 2
@@ -72,7 +72,7 @@ object Primal extends Simplex { self =>
           while (selected._1 >= 0 && selected._2 >= 0) {
             val (row, col) = selected
             pivot(tableau, row, col)
-            //show(tableau)
+            show(tableau)
             val enter = nonBasic(row - 2)
             val leave = basic(col - 1)
             nonBasic(row - 2) = leave
@@ -84,11 +84,12 @@ object Primal extends Simplex { self =>
               case true => {
                 def pick[T](indexed: View.Indexed[T], indices: View.Indexed[Int]) = indices.map(indexed(_))
                 val basicIdx = View.OfArray(View.OfRange(0, problem.m).some(!basic(_).isInstanceOf[ArtifactVar]).toArray)
-                Optimized(StandardForm(View.OfArray(tableau).tail.tail.map(ai => pick(View.OfArray(ai).tail, basicIdx)),
-                                       View.OfArray(tableau).tail.tail.map(_(0)),
+                val nonBasicIdx = View.OfArray(View.OfRange(0, problem.n).some(!nonBasic(_).isInstanceOf[ArtifactVar]).toArray)
+                Optimized(StandardForm(pick(View.OfArray(tableau).tail.tail.map(ai => pick(View.OfArray(ai).tail, basicIdx)), nonBasicIdx),
+                                       pick(View.OfArray(tableau).tail.tail.map(_(0)), nonBasicIdx),
                                        pick(View.OfArray(tableau(1)).tail(), basicIdx),
                                        tableau(1)(0),
-                                       View.OfArray(nonBasic),
+                                       pick(View.OfArray(nonBasic), nonBasicIdx),
                                        pick(View.OfArray(basic), basicIdx)))
               }
               case false => Infeasible

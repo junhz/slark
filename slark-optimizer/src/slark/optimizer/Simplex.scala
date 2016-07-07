@@ -78,9 +78,9 @@ object Simplex {
     }
     
     override def toString = {
-      def trOf(ri: View.Indexed[Rational]): View.Indexed[Table.Cell] = {
+      def trOf(ri: View.Indexed[Rational], negate: Boolean): View.Indexed[Table.Cell] = {
         View.OfRange(0, m).map(col => {
-          val r = ri(col)
+          val r = if (negate) ri(col).negate else ri(col)
           r.signum() match {
             case 0  => Table.Cell("  ", "")
             case 1  => Table.Cell("- ", s"$r${bv(col)}")
@@ -88,8 +88,8 @@ object Simplex {
           }
         })
       }
-      val table = (Table.Cell("max", "") +: Table.Cell("", z.toString()) +: trOf(c)) +:
-                  View.OfRange(0, n).map(row => Table.Cell(nbv(row).toString(), " =") +: Table.Cell("", b(row).toString()) +: trOf(a(row)))
+      val table = (Table.Cell("max", "") +: Table.Cell("", z.toString()) +: trOf(c, false)) +:
+                  View.OfRange(0, n).map(row => Table.Cell(nbv(row).toString(), " =") +: Table.Cell("", b(row).toString()) +: trOf(a(row), true))
       Table.mkString(table, " ", "\r\n")
     }
   }

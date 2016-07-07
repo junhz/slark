@@ -18,17 +18,18 @@ object IntegerProgram {
     
     def lcm(arr: View.Indexed[Rational]) = arr.fold(BigInteger.ONE, (a, r: BigInteger) => a.denominator.multiply(r).divide(a.denominator.gcd(r)))
     
-    val consts = problem.consts map {
-      case Constraint(ai, <, bi) => {
-        val factor = lcm(ai)
-        Constraint(ai, <=, ((bi * factor).ceil - Rational.one) / factor)
+    val consts = problem.consts map(const => {
+      val lcm = const.coefficients.fold(BigInteger.ONE, (r, i: BigInteger) => r.denominator.multiply(i).divide(r.denominator.gcd(i)))
+      val coe = const.coefficients.map(_ * lcm)
+      val c = Rational.fromBigInt(lcm) * const.constant
+      const.relation match {
+        case `<`  => Constraint(coe, <=, c.ceil - Rational.one)
+        case `>`  => Constraint(coe, >=, c.floor + Rational.one)
+        case `<=` => Constraint(coe, <=, c.floor)
+        case `>=` => Constraint(coe, >=, c.ceil)
+        case `=`  => if (c.isInteger) Constraint(coe, `=`, c.ceil) else throw new IllegalArgumentException("invalid constraint")
       }
-      case Constraint(ai, >, bi) => {
-        val factor = lcm(ai)
-        Constraint(ai, >=, ((bi * factor).floor + Rational.one) / factor)
-      }
-      case c => c
-    }
+    })
     
     LinearProgram(problem.obj, problem.coefficients, consts)
   }

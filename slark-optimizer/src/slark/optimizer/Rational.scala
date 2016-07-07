@@ -81,6 +81,7 @@ object Rational extends Numeric[Rational] with Fractional[Rational] {
   override def times(x: Rational, y: Rational): Rational = x * y
   override def negate(x: Rational): Rational = -x
   override def fromInt(x: Int): Rational = new Rational(BigInteger.valueOf(x), BigInteger.ONE)
+  def fromBigInt(x: BigInteger): Rational = new Rational(x, BigInteger.ONE)
   override def toInt(x: Rational): Int = x.toInt()
   override def toLong(x: Rational): Long = x.toLong()
   override def toFloat(x: Rational): Float = x.toFloat()

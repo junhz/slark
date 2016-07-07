@@ -29,7 +29,7 @@ case class LinearProgram(obj: LinearProgram.Objection,
       })
     }
     val table = (Table.Cell(obj.toString(), "") +: trOf(coefficients)) +:
-                View.OfVector(consts).map(const => Table.Cell(const.constant.toString(), "") +: trOf(const.coefficients))
+                View.OfVector(consts).map(const => Table.Cell(const.constant.toString(), s" ${const.relation.negate()}") +: trOf(const.coefficients))
     Table.mkString(table, " ", "\r\n")
   }
 }
@@ -40,42 +40,42 @@ object LinearProgram {
   case object Max extends Objection
   
   case class Constraint(coefficients: View.Indexed[Rational], relation: Relation, constant: Rational) {
-    def isViolated(xs: View.Indexed[Rational]): Boolean = {
+    def test(xs: View.Indexed[Rational]): Boolean = {
       val nxs = xs.fill(coefficients.length, Rational.zero)
       val lhs = View.OfRange(0, coefficients.length).fold(Rational.zero, (i: Int, r: Rational) => r + coefficients(i) * nxs(i))
-      relation.isViolated(lhs, constant)
+      relation.test(lhs, constant)
     }
     
     def negate() = Constraint(coefficients.map(_.negate), relation.negate(), constant.negate)
   }
   trait Relation {
     def isEquality: Boolean
-    def isViolated(lhs: Rational, rhs: Rational): Boolean
+    def test(lhs: Rational, rhs: Rational): Boolean
     def negate(): Relation
   }
   case object `<=` extends Relation {
     def isEquality = false
-    def isViolated(lhs: Rational, rhs: Rational) = lhs > rhs
+    def test(lhs: Rational, rhs: Rational) = lhs <= rhs
     def negate = `>=`
   }
   case object `>=` extends Relation {
     def isEquality = false
-    def isViolated(lhs: Rational, rhs: Rational) = lhs < rhs
+    def test(lhs: Rational, rhs: Rational) = lhs >= rhs
     def negate = `<=`
   }
   case object `=` extends Relation {
     def isEquality = true
-    def isViolated(lhs: Rational, rhs: Rational) = (lhs compareTo rhs) != 0
+    def test(lhs: Rational, rhs: Rational) = lhs equiv rhs
     def negate = this
   }
   case object `>` extends Relation {
     def isEquality = false
-    def isViolated(lhs: Rational, rhs: Rational) = lhs <= rhs
+    def test(lhs: Rational, rhs: Rational) = lhs > rhs
     def negate = `<`
   }
   case object `<` extends Relation {
     def isEquality = false
-    def isViolated(lhs: Rational, rhs: Rational) = lhs >= rhs
+    def test(lhs: Rational, rhs: Rational) = lhs < rhs
     def negate = `>`
   }
   
