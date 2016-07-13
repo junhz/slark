@@ -96,6 +96,8 @@ class Traveler(val from: Connection, val to: Connection, val bypass: Set[String]
                 case None => println(s"unable to resolve $m"); (Nil, exp)
                 case Some(mirage) => (mirage :: m :: Nil, exp)
               }
+              case Some(mirage: Mirage.Synonym) => (mirage :: Nil, exp.updated(m, k))
+              case Some(mirage: Mirage.Table) => (mirage :: Nil, exp.updated(m, k))
               case Some(mirage) => (mirage :: m :: Nil, exp)
             }
           }
